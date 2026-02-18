@@ -1,0 +1,38 @@
+############################
+# BACKEND (Spring Boot)
+############################
+
+backend/target/
+backend/logs/
+backend/.mvn/wrapper/maven-wrapper.jar
+
+# IntelliJ / IDE
+backend/.idea/
+backend/*.iml
+backend/.classpath
+backend/.project
+backend/.settings/
+
+############################
+# FRONTEND (React / Vite)
+############################
+
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+
+# variables entorno
+frontend/.env
+frontend/.env.*
+
+# IDE
+frontend/.idea/
+frontend/*.iml
+
+############################
+# GENERAL
+############################
+
+.DS_Store
+Thumbs.db
+*.log

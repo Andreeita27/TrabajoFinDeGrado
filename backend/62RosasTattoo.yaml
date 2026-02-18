@@ -1,0 +1,1711 @@
+openapi: 3.0.1
+info:
+  title: 62 Rosas Tattoo
+  description: API del estudio de tatuajes 62 Rosas Tattoo.
+  version: 1.0.0
+servers:
+  - url: 'https://localhost:8080'
+paths:
+  /clients:
+    get:
+      summary: Devuelve la lista de clientes.
+      description: Devuelve la lista de clientes, permitiendo filtrar por nombre, apellidos y si acepta mostrar fotos.
+      parameters:
+        - name: clientName
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Filtra por nombre del cliente.
+        - name: clientSurname
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Filtra por apellidos del cliente.
+        - name: showPhoto
+          in: query
+          required: false
+          schema:
+            type: boolean
+          description: Filtra por si el cliente acepta que se muestren sus tatuajes.
+          examples:
+            empty:
+              summary: Sin resultados
+              value: [ ]
+            sample:
+              summary: Dos resultados
+              value:
+                - id: 1
+                  clientName: Andrea
+                  clientSurname: Fernandez de la Rosa
+                  email: andrea@example.com
+                  phone: +34 601375656
+                  birthDate: '1998-01-26'
+                  showPhoto: true
+                  visits: 3
+                - id: 2
+                  clientName: Alejandra
+                  clientSurname: Perbech Royan
+                  email: alejandra@example.com
+                  phone: +34 601070809
+                  birthDate: '1998-01-23'
+                  showPhoto: true
+                  visits: 3
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ClientDto'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InternalServerError'
+
+    post:
+      summary: Crea un nuevo cliente.
+      description: Registra un nuevo cliente
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ClientInDto'
+            examples:
+              example1:
+                summary: Ejemplo 1
+                value:
+                  clientName: Andrea
+                  clientSurname: Fernandez de la Rosa
+                  email: andrea@example.com
+                  phone: +34 601375656
+                  birthDate: '1998-01-26'
+                  showPhoto: true
+              example2:
+                summary: Ejemplo 2
+                value:
+                  clientName: Alejandra
+                  clientSurname: Perbech Royan
+                  email: alejandra@example.com
+                  phone: +34 601070809
+                  birthDate: '1998-01-23'
+                  showPhoto: true
+      responses:
+        '201':
+          description: Cliente creado correctamente.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClientDto'
+        '400':
+          description: Petición no válida.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequest'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InternalServerError'
+
+  /clients/{id}:
+    get:
+      summary: Devuelve un cliente por su identificador.
+      description: Devuelve la información de un cliente concreto.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: number
+            format: int64
+          description: Identificador único del cliente.
+          examples:
+            example1:
+              summary: Ejemplo 1
+              value:
+                id: 1
+                clientName: Andrea
+                clientSurname: Fernandez de la Rosa
+                email: andrea@example.com
+                phone: +34 601375656
+                birthDate: '1998-01-26'
+                showPhoto: true
+                visits: 3
+            example2:
+              summary: Ejemplo 2
+              value:
+                id: 2
+                clientName: Alejandra
+                clientSurname: Perbech Royan
+                email: alejandra@example.com
+                phone: +34 601070809
+                birthDate: '1998-01-23'
+                showPhoto: true
+                visits: 3
+      responses:
+        '200':
+          description: Cliente encontrado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClientDto'
+        '404':
+          description: Cliente no encontrado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InternalServerError'
+
+    put:
+      summary: Actualiza un cliente existente.
+      description: Actualiza los datos de un cliente identificado por su ID.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: number
+            format: int64
+          description: Identificador único del cliente.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ClientInDto'
+            examples:
+              example1:
+                summary: Ejemplo 1
+                value:
+                  clientName: Andrea modificado
+                  clientSurname: Fernandez de la Rosa
+                  email: andrea@example.com
+                  phone: +34 601375656
+                  birthDate: '1998-01-26'
+                  showPhoto: true
+              example2:
+                summary: Ejemplo 2
+                value:
+                  clientName: Alejandra modificado
+                  clientSurname: Perbech Royan
+                  email: alejandra@example.com
+                  phone: +34 601070809
+                  birthDate: '1998-01-23'
+                  showPhoto: true
+      responses:
+        '200':
+          description: Cliente actualizado correctamente.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClientDto'
+        '400':
+          description: Petición no válida.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequest'
+        '404':
+          description: Cliente no encontrado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InternalServerError'
+
+    delete:
+      summary: Elimina un cliente existente.
+      description: Elimina un cliente identificado por su ID.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: number
+            format: int64
+          description: Identificador único del cliente.
+      responses:
+        '204':
+          description: Cliente eliminado correctamente.
+        '404':
+          description: Cliente no encontrado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InternalServerError'
+
+  /professionals:
+    get:
+      summary: Devuelve una lista de profesionales.
+      description: Devuelve una lista de profesionales, permitiendo filtrar por nombre artístico, agenda abierta y años de experiencia.
+      parameters:
+        - name: professionalName
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Filtra por nombre artístico del profesional.
+        - name: booksOpened
+          in: query
+          required: false
+          schema:
+            type: boolean
+          description: Filtra por si la agenda del profesional está abierta.
+        - name: yearsExperience
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int64
+          description: Filtra por años de experiencia.
+          examples:
+            empty:
+              summary: Sin resultados
+              value: [ ]
+            sample:
+              summary: Dos resultados
+              value:
+                - id: 1
+                  professionalName: David el Titi
+                  birthDate: '1986-12-05'
+                  description: Especialista en tatuaje neotradicional
+                  profilePhoto: https://62rosastattoo.com/img/profesionales/davideltiti.jpg
+                  booksOpened: true
+                  yearsExperience: 15
+                - id: 2
+                  professionalName: Sacapunk Tattoo
+                  birthDate: '1986-12-05'
+                  description: Especialista en tatuaje tradicional
+                  profilePhoto: https://62rosastattoo.com/img/profesionales/sacapunk.jpg
+                  booksOpened: true
+                  yearsExperience: 10
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProfessionalDto'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InternalServerError'
+
+    post:
+      summary: Crea un nuevo profesional.
+      description: Registra un nuevo profesional del estudio.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProfessionalInDto'
+            examples:
+              example1:
+                summary: Ejemplo 1
+                value:
+                  professionalName: David el Titi
+                  birthDate: '1986-12-05'
+                  description: Especialista en tatuaje neotradicional.
+                  profilePhoto: https://62rosastattoo.com/img/profesionales/davideltiti.jpg
+                  booksOpened: true
+                  yearsExperience: 15
+              example2:
+                summary: Ejemplo 2
+                value:
+                  professionalName: Sacapunk Tattoo
+                  birthDate: '1986-12-05'
+                  description: Especialista en tatuaje tradicional.
+                  profilePhoto: https://62rosastattoo.com/img/profesionales/sacapunk.jpg
+                  booksOpened: true
+                  yearsExperience: 10
+      responses:
+        '201':
+          description: Profesional creado correctamente.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProfessionalDto'
+        '400':
+          description: Petición no válida.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequest'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InternalServerError'
+
+  /professionals/{id}:
+    get:
+      summary: Devuelve un profesional por su identificador.
+      description: Devuelve la información de un profesional concreto.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: number
+            format: int64
+          description: Identificador único del profesional.
+          examples:
+            example1:
+              summary: Ejemplo 1
+              value:
+                id: 1
+                professionalName: David el Titi
+                birthDate: '1986-12-05'
+                description: Especialista en tatuaje neotradicional
+                profilePhoto: https://62rosastattoo.com/img/profesionales/davideltiti.jpg
+                booksOpened: true
+                yearsExperience: 15
+            example2:
+              summary: Ejemplo 2
+              value:
+                id: 2
+                professionalName: Sacapunk Tattoo
+                birthDate: '1986-12-05'
+                description: Especialista en tatuaje tradicional
+                profilePhoto: https://62rosastattoo.com/img/profesionales/sacapunk.jpg
+                booksOpened: true
+                yearsExperience: 10
+      responses:
+        '200':
+          description: Profesional encontrado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProfessionalDto'
+        '404':
+          description: Profesional no encontrado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InternalServerError'
+
+    put:
+      summary: Actualiza un profesional existente.
+      description: Actualiza los datos de un profesional identificado por su ID.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: number
+            format: int64
+          description: Identificador único del profesional.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProfessionalInDto'
+            examples:
+              example1:
+                summary: Ejemplo 1
+                value:
+                  professionalName: David el Titi
+                  birthDate: '1986-12-05'
+                  description: Especialista en tatuaje neotradicional.
+                  profilePhoto: https://62rosastattoo.com/img/profesionales/davideltiti.jpg
+                  booksOpened: true
+                  yearsExperience: 15
+              ejemplo2:
+                summary: Ejemplo 2
+                value:
+                  professionalName: Sacapunk Tattoo
+                  birthDate: '1986-12-05'
+                  description: Especialista en tatuaje tradicional.
+                  profilePhoto: https://62rosastattoo.com/img/profesionales/sacapunk.jpg
+                  booksOpened: true
+                  yearsExperience: 10
+      responses:
+        '200':
+          description: Profesional actualizado correctamente.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProfessionalDto'
+        '400':
+          description: Petición no válida.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequest'
+        '404':
+          description: Profesional no encontrado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InternalServerError'
+
+    delete:
+      summary: Elimina un profesional existente.
+      description: Elimina un profesional identificado por su ID.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: number
+            format: int64
+          description: Identificador único del profesional.
+      responses:
+        '204':
+          description: Profesional eliminado correctamente.
+        '404':
+          description: Profesional no encontrado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InternalServerError'
+
+  /appointments:
+    get:
+      summary: Devuelve una lista de citas.
+      description: Devuelve una lista de citas, permitiendo filtrar por estado, cliente y profesional.
+      parameters:
+        - name: state
+          in: query
+          required: false
+          schema:
+            type: string
+            enum:
+              - PENDING
+              - CONFIRMED
+              - CANCELLED
+              - COMPLETED
+              - NO_SHOW
+          description: Filtra por el estado actual de la cita.
+        - name: clientId
+          in: query
+          required: false
+          schema:
+            type: number
+            format: int64
+          description: Filtra por identificador del cliente.
+        - name: professionalId
+          in: query
+          required: false
+          schema:
+            type: number
+            format: int64
+          description: Filtra por identificador del profesional.
+          examples:
+            empty:
+              summary: Sin resultados
+              value: [ ]
+            sample:
+              summary: Dos resultados
+              value:
+                - id: 1
+                  clientId: 1
+                  professionalId: 1
+                  professionalName: David el Titi
+                  startDateTime: '2025-02-15T16:00:00'
+                  bodyPlacement: Muñeca
+                  ideaDescription: Nombre Alejandra con letra fina y cursiva.
+                  firstTime: true
+                  tattooSize: SMALL
+                  referenceImageUrl: https://www.ejemplo.com/alejandra.jpg
+                  durationMinutes: 60
+                  price: 80.0
+                  appointmentState: CONFIRMED
+                  depositPaid: true
+                - id: 2
+                  clientId: 2
+                  professionalId: 2
+                  professionalName: Sacapunk Tattoo
+                  startDateTime: '2025-02-15T16:00:00'
+                  bodyPlacement: Muñeca
+                  ideaDescription: Nombre Andrea con letra fina y cursiva.
+                  firstTime: true
+                  tattooSize: SMALL
+                  referenceImageUrl: https://www.ejemplo.com/andrea.jpg
+                  durationMinutes: 60
+                  price: 80.0
+                  appointmentState: CONFIRMED
+                  depositPaid: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AppointmentDto'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InternalServerError'
+
+    post:
+      summary: Crea una nueva cita.
+      description: Registra una nueva cita en el sistema.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AppointmentInDto'
+            examples:
+              example1:
+                summary: Ejemplo 1
+                value:
+                  clientId: 1
+                  professionalId: 1
+                  startDateTime: '2025-02-15T16:00:00'
+                  bodyPlacement: Muñeca
+                  ideaDescription: Nombre Alejandra con letra fina y cursiva.
+                  firstTime: true
+                  tattooSize: SMALL
+                  referenceImageUrl: https://www.ejemplo.com/alejandra.jpg
+              example2:
+                summary: Ejemplo 2
+                value:
+                  clientId: 2
+                  professionalId: 2
+                  startDateTime: '2025-02-15T16:00:00'
+                  bodyPlacement: Muñeca
+                  ideaDescription: Nombre Andrea con letra fina y cursiva.
+                  firstTime: true
+                  tattooSize: SMALL
+                  referenceImageUrl: https://www.ejemplo.com/andrea.jpg
+      responses:
+        '201':
+          description: Cita creada correctamente.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppointmentDto'
+        '400':
+          description: Petición no válida.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequest'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InternalServerError'
+
+  /appointments/{id}:
+    get:
+      summary: Devuelve una cita por su identificador.
+      description: Devuelve la información de una cita concreta.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: number
+            format: int64
+          description: Identificador único de la cita.
+          examples:
+            example1:
+              summary: Ejemplo 1
+              value:
+                id: 1
+                clientId: 1
+                professionalId: 1
+                professionalName: David el Titi
+                startDateTime: '2025-02-15T16:00:00'
+                bodyPlacement: Muñeca
+                ideaDescription: Nombre Alejandra con letra fina y cursiva.
+                firstTime: true
+                tattooSize: SMALL
+                referenceImageUrl: https://www.ejemplo.com/alejandra.jpg
+                durationMinutes: 60
+                price: 80.0
+                appointmentState: CONFIRMED
+                depositPaid: true
+            example2:
+              summary: Ejemplo 2
+              value:
+                id: 2
+                clientId: 2
+                professionalId: 2
+                professionalName: Sacapunk Tattoo
+                startDateTime: '2025-02-15T16:00:00'
+                bodyPlacement: Muñeca
+                ideaDescription: Nombre Andrea con letra fina y cursiva.
+                firstTime: true
+                tattooSize: SMALL
+                referenceImageUrl: https://www.ejemplo.com/andrea.jpg
+                durationMinutes: 60
+                price: 80.0
+                appointmentState: CONFIRMED
+                depositPaid: true
+      responses:
+        '200':
+          description: Cita encontrada.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppointmentDto'
+        '404':
+          description: Cita no encontrada.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InternalServerError'
+
+    put:
+      summary: Actualiza una cita existente.
+      description: Actualiza los datos de una cita identificada por su ID.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: number
+            format: int64
+          description: Identificador único de la cita.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AppointmentInDto'
+            examples:
+              example1:
+                summary: Ejemplo 1
+                value:
+                  clientId: 1
+                  professionalId: 1
+                  startDateTime: '2025-02-15T16:00:00'
+                  bodyPlacement: Muñeca
+                  ideaDescription: Nombre Alejandra con letras góticas.
+                  firstTime: true
+                  tattooSize: SMALL
+                  referenceImageUrl: https://www.ejemplo.com/alejandra.jpg
+              example2:
+                summary: Ejemplo 2
+                value:
+                  clientId: 2
+                  professionalId: 2
+                  startDateTime: '2025-02-15T16:00:00'
+                  bodyPlacement: Muñeca
+                  ideaDescription: Nombre Andrea con letras góticas.
+                  firstTime: true
+                  tattooSize: SMALL
+                  referenceImageUrl: https://www.ejemplo.com/andrea.jpg
+      responses:
+        '200':
+          description: Cita actualizada correctamente.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppointmentDto'
+        '400':
+          description: Petición no válida.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequest'
+        '404':
+          description: Cita no encontrada.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InternalServerError'
+
+    delete:
+      summary: Elimina una cita existente.
+      description: Elimina una cita identificada por su ID.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: number
+            format: int64
+          description: Identificador único de la cita.
+      responses:
+        '204':
+          description: Cita eliminada correctamente (sin contenido en la respuesta).
+        '404':
+          description: Cita no encontrada.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InternalServerError'
+
+  /tattoos:
+    get:
+      summary: Devuelve una lista de tatuajes.
+      description: Devuelve una lista de tatuajes en el showroom, permitiendo filtrar por estilo, cover up y si son a color.
+      parameters:
+        - name: style
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Filtra por estilo del tatuaje.
+        - name: coverUp
+          in: query
+          required: false
+          schema:
+            type: boolean
+          description: Filtra por si el tatuaje es un cover up.
+        - name: color
+          in: query
+          required: false
+          schema:
+            type: boolean
+          description: Filtra por si el tatuaje es a color o en blanco y negro.
+          examples:
+            empty:
+              summary: Sin resultados
+              value: [ ]
+            sample:
+              summary: Dos resultados
+              value:
+                - id: 1
+                  clientId: 1
+                  professionalName: David el Titi
+                  professionalId: 1
+                  tattooDate: '2025-03-10'
+                  style: Blackwork
+                  tattooDescription: Rosa negra en el antebrazo con detalles geométricos.
+                  imageUrl: https://62rosastattoo.com/img/tattoos/rosanegra.jpg
+                  sessions: 2
+                  coverUp: false
+                  color: false
+                - id: 2
+                  clientId: 2
+                  professionalName: Sacapunk Tattoo
+                  professionalId: 1
+                  tattooDate: '2025-03-10'
+                  style: Tradicional
+                  tattooDescription: Rosa roja en el antebrazo con detalles geométricos.
+                  imageUrl: https://62rosastattoo.com/img/tattoos/rosaroja.jpg
+                  sessions: 2
+                  coverUp: false
+                  color: false
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TattooDto'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InternalServerError'
+
+    post:
+      summary: Crea un nuevo tatuaje.
+      description: Registra un nuevo tatuaje en el showroom.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TattooInDto'
+            examples:
+              example1:
+                summary: Ejemplo 1
+                value:
+                  clientId: 1
+                  professionalId: 1
+                  tattooDate: '2025-03-10'
+                  style: Blackwork
+                  tattooDescription: Rosa negra en el antebrazo con detalles geométricos.
+                  imageUrl: https://62rosastattoo.com/img/tattoos/rosanegra.jpg
+                  sessions: 2
+                  coverUp: false
+                  color: false
+              ejemplo2:
+                summary: Ejemplo 2
+                value:
+                  clientId: 2
+                  professionalId: 2
+                  tattooDate: '2025-03-10'
+                  style: Tradicional
+                  tattooDescription: Rosa roja en el antebrazo con detalles geométricos.
+                  imageUrl: https://62rosastattoo.com/img/tattoos/rosaroja.jpg
+                  sessions: 2
+                  coverUp: false
+                  color: false
+      responses:
+        '201':
+          description: Tatuaje creado correctamente.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TattooDto'
+        '400':
+          description: Petición no válida.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequest'
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InternalServerError'
+
+  /tattoos/{id}:
+    get:
+      summary: Devuelve un tatuaje por su identificador.
+      description: Devuelve la información de un tatuaje concreto.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: number
+            format: int64
+          description: Identificador único del tatuaje.
+          examples:
+            example1:
+              summary: Ejemplo 1
+              value:
+                id: 1
+                clientId: 1
+                professionalName: David el Titi
+                professionalId: 1
+                tattooDate: '2025-03-10'
+                style: Blackwork
+                tattooDescription: Rosa negra en el antebrazo con detalles geométricos.
+                imageUrl: https://62rosastattoo.com/img/tattoos/rosanegra.jpg
+                sessions: 2
+                coverUp: false
+                color: false
+            example2:
+              summary: Ejemplo 2
+              value:
+                id: 2
+                clientId: 2
+                professionalName: Sacapunk Tattoo
+                professionalId: 2
+                tattooDate: '2025-03-10'
+                style: Tradicional
+                tattooDescription: Rosa roja en el antebrazo con detalles geométricos.
+                imageUrl: https://62rosastattoo.com/img/tattoos/rosaroja.jpg
+                sessions: 2
+                coverUp: false
+                color: false
+      responses:
+        '200':
+          description: Tatuaje encontrado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TattooDto'
+        '404':
+          description: Tatuaje no encontrado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InternalServerError'
+
+    put:
+      summary: Actualiza un tatuaje existente.
+      description: Actualiza los datos de un tatuaje identificado por su ID.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: number
+            format: int64
+          description: Identificador único del tatuaje.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TattooInDto'
+            examples:
+              example1:
+                summary: Ejemplo 1
+                value:
+                  clientId: 1
+                  professionalId: 1
+                  tattooDate: '2025-03-10'
+                  style: Blackwork
+                  tattooDescription: Amapola negra en el antebrazo con detalles geométricos.
+                  imageUrl: https://62rosastattoo.com/img/tattoos/amapolanegra.jpg
+                  sessions: 2
+                  coverUp: false
+                  color: false
+              example2:
+                summary: Ejemplo 2
+                value:
+                  clientId: 2
+                  professionalId: 2
+                  tattooDate: '2025-03-10'
+                  style: Tradicional
+                  tattooDescription: Amapola roja en el antebrazo con detalles geométricos.
+                  imageUrl: https://62rosastattoo.com/img/tattoos/amapolaroja.jpg
+                  sessions: 2
+                  coverUp: false
+                  color: false
+      responses:
+        '200':
+          description: Tatuaje actualizado correctamente.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TattooDto'
+        '400':
+          description: Petición no válida.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequest'
+        '404':
+          description: Tatuaje no encontrado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InternalServerError'
+
+    delete:
+      summary: Elimina un tatuaje existente.
+      description: Elimina un tatuaje identificado por su ID.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: number
+            format: int64
+          description: Identificador único del tatuaje.
+      responses:
+        '204':
+          description: Tatuaje eliminado correctamente.
+        '404':
+          description: Tatuaje no encontrado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InternalServerError'
+
+  /reviews:
+    get:
+      summary: Devuelve una lista de reseñas.
+      description: Devuelve una lista de reseñas, permitiendo filtrar por puntuación, profesional y si recomiendan o no.
+      parameters:
+        - name: rating
+          in: query
+          required: false
+          schema:
+            type: number
+            format: int32
+            minimum: 1
+            maximum: 5
+          description: Filtra por puntuación de la reseña.
+        - name: professionalId
+          in: query
+          required: false
+          schema:
+            type: number
+            format: int64
+          description: Filtra por identificador del profesional relacionado con la reseña.
+        - name: wouldRecommend
+          in: query
+          required: false
+          schema:
+            type: boolean
+          description: Filtra por si el cliente recomendaría el estudio o no
+          examples:
+            empty:
+              summary: Sin resultados
+              value: [ ]
+            sample:
+              summary: Dos resultados
+              value:
+                - id: 1
+                  appointmentId: 1
+                  clientId: 1
+                  professionalId: 1
+                  rating: 5
+                  comment: Experiencia genial, el trato ha sido increíble y el tatuaje ha quedado perfecto.
+                  wouldRecommend: true
+                  createdAt: '2025-03-12T19:45:00'
+                - id: 2
+                  appointmentId: 2
+                  clientId: 2
+                  professionalId: 2
+                  rating: 4
+                  comment: Me dolió un poco más de lo que me esperaba.
+                  wouldRecommend: true
+                  createdAt: '2025-03-12T19:45:00'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ReviewDto'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InternalServerError'
+
+    post:
+      summary: Crea una nueva reseña.
+      description: Registra una reseña asociada a una cita ya realizada.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReviewInDto'
+            examples:
+              example1:
+                summary: Ejemplo 1
+                value:
+                  appointmentId: 1
+                  rating: 5
+                  comment: Experiencia genial, el trato ha sido increíble y el tatuaje ha quedado perfecto.
+                  wouldRecommend: true
+              example2:
+                summary: Ejemplo 2
+                value:
+                  appointmentId: 2
+                  rating: 4
+                  comment: Me dolió un poco más de lo que me esperaba.
+                  wouldRecommend: true
+      responses:
+        '201':
+          description: Reseña creada correctamente.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReviewDto'
+        '400':
+          description: Petición no válida.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequest'
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InternalServerError'
+
+  /reviews/{id}:
+    get:
+      summary: Devuelve una reseña por su identificador.
+      description: Devuelve la información de una reseña concreta.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: number
+            format: int64
+          description: Identificador único de la reseña.
+          examples:
+            example1:
+              summary: Ejemplo 1
+              value:
+                id: 1
+                appointmentId: 1
+                clientId: 1
+                professionalId: 1
+                rating: 5
+                comment: Experiencia genial, el trato ha sido increíble y el tatuaje ha quedado perfecto.
+                wouldRecommend: true
+                createdAt: '2025-03-12T19:45:00'
+            example2:
+              summary: Ejemplo 2
+              value:
+                id: 2
+                appointmentId: 2
+                clientId: 2
+                professionalId: 2
+                rating: 4
+                comment: Me dolió un poco más de lo que me esperaba.
+                wouldRecommend: true
+                createdAt: '2025-03-12T19:45:00'
+      responses:
+        '200':
+          description: Reseña encontrada.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReviewDto'
+        '404':
+          description: Reseña no encontrada.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InternalServerError'
+
+    put:
+      summary: Actualiza una reseña existente.
+      description: Actualiza los datos de una reseña identificada por su ID.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: number
+            format: int64
+          description: Identificador único de la reseña.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReviewInDto'
+            examples:
+              example1:
+                summary: Ejemplo 1
+                value:
+                  appointmentId: 1
+                  rating: 5
+                  comment: Experiencia genial, David es encantador.
+                  wouldRecommend: true
+              example2:
+                summary: Ejemplo 2
+                value:
+                  appointmentId: 2
+                  rating: 4
+                  comment: Aunque me dolió, Macarena me hizo reír.
+                  wouldRecommend: true
+      responses:
+        '200':
+          description: Reseña actualizada correctamente.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReviewDto'
+        '400':
+          description: Petición no válida.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequest'
+        '404':
+          description: Reseña no encontrada.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InternalServerError'
+
+    delete:
+      summary: Elimina una reseña existente.
+      description: Elimina una reseña identificada por su ID.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: number
+            format: int64
+          description: Identificador único de la reseña.
+      responses:
+        '204':
+          description: Reseña eliminada correctamente.
+        '404':
+          description: Reseña no encontrada.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InternalServerError'
+
+components:
+  schemas:
+    ClientInDto:
+      type: object
+      properties:
+        clientName:
+          type: string
+          description: Nombre del cliente
+        clientSurname:
+          type: string
+          description: Apellidos del cliente
+        email:
+          type: string
+          format: email
+          description: Email del cliente
+        phone:
+          type: string
+          description: Teléfono del cliente
+        birthDate:
+          type: string
+          format: date
+          description: Fecha de nacimiento del cliente
+        showPhoto:
+          type: boolean
+          description: Indica si acepta que se muestren sus tatuajes
+      required:
+        - clientName
+        - clientSurname
+        - email
+      example:
+        clientName: Andrea
+        clientSurname: Fernandez de la Rosa
+        email: andrea@example.com
+        phone: "+34 601375656"
+        birthDate: "1998-01-26"
+        showPhoto: true
+
+    ClientDto:
+      allOf:
+        - $ref: '#/components/schemas/ClientInDto'
+      type: object
+      properties:
+        id:
+          type: number
+          format: int64
+          description: Identificador único del cliente
+        visits:
+          type: number
+          format: int64
+          description: Número de visitas realizadas al estudio
+      example:
+        id: 1
+        clientName: Andrea
+        clientSurname: Fernandez de la Rosa
+        email: andrea@example.com
+        phone: "+34 601375656"
+        birthDate: "1998-01-26"
+        showPhoto: true
+        visits: 3
+
+    ErrorResponse:
+      type: object
+      properties:
+        code:
+          type: number
+          format: int32
+          description: Código de estado HTTP
+        message:
+          type: string
+          description: Mensaje de error
+        title:
+          type: string
+          description: Tipo de error
+
+    InternalServerError:
+      allOf:
+        - $ref: '#/components/schemas/ErrorResponse'
+      example:
+        code: 500
+        message: Internal server error
+        title: internal-server-error
+
+    BadRequest:
+      allOf:
+        - $ref: '#/components/schemas/ErrorResponse'
+      example:
+        code: 400
+        message: Bad request
+        title: bad-request
+
+    ProfessionalInDto:
+      type: object
+      properties:
+        professionalName:
+          type: string
+          description: Nombre artístico del profesional
+        birthDate:
+          type: string
+          format: date
+          description: Fecha de nacimiento del profesional
+        description:
+          type: string
+          description: Descripción o biografía del profesional
+        profilePhoto:
+          type: string
+          description: URL o ruta de la foto de perfil
+        booksOpened:
+          type: boolean
+          description: Indica si la agenda está abierta para coger citas
+        yearsExperience:
+          type: number
+          format: int64
+          description: Años de experiencia del profesional
+      required:
+        - professionalName
+        - description
+      example:
+        professionalName: "David el Titi"
+        birthDate: "1986-12-05"
+        description: "Especialista en tatuaje neotradicional."
+        profilePhoto: "https://62rosastattoo.com/img/profesionales/davideltiti.jpg"
+        booksOpened: true
+        yearsExperience: 15
+
+    ProfessionalDto:
+      allOf:
+        - $ref: '#/components/schemas/ProfessionalInDto'
+      type: object
+      properties:
+        id:
+          type: number
+          format: int64
+          description: Identificador único del profesional
+      example:
+        id: 1
+        professionalName: "David el Titi"
+        birthDate: "1986-12-05"
+        description: "Especialista en tatuaje neotradicional"
+        profilePhoto: "https://62rosastattoo.com/img/profesionales/davideltiti.jpg"
+        booksOpened: true
+        yearsExperience: 15
+
+    AppointmentInDto:
+      type: object
+      properties:
+        clientId:
+          type: number
+          format: int64
+          description: Identificador único del cliente que reserva la cita
+        professionalId:
+          type: number
+          format: int64
+          description: Identificador único del profesional con el que se reserva la cita
+        startDateTime:
+          type: string
+          format: date-time
+          description: Fecha y hora de inicio de la cita
+        bodyPlacement:
+          type: string
+          description: Parte del cuerpo donde se realizará el tatuaje
+        ideaDescription:
+          type: string
+          description: Descripción de la idea del tatuaje
+        firstTime:
+          type: boolean
+          description: Indica si es la primera visita del cliente al estudio
+        tattooSize:
+          type: string
+          description: Tamaño aproximado del tatuaje
+          enum:
+            - SMALL
+            - MEDIUM
+            - LARGE
+            - XL
+        referenceImageUrl:
+          type: string
+          description: URL de una imagen de referencia opcional
+      required:
+        - clientId
+        - professionalId
+        - startDateTime
+        - bodyPlacement
+        - ideaDescription
+      example:
+        clientId: 1
+        professionalId: 1
+        startDateTime: "2025-02-15T16:00:00"
+        bodyPlacement: "Muñeca"
+        ideaDescription: "Nombre Manuel con letra fina y cursiva."
+        firstTime: true
+        tattooSize: "SMALL"
+        referenceImageUrl: "https://www.ejemplo.com/manuel.jpg"
+
+    AppointmentDto:
+      allOf:
+        - $ref: '#/components/schemas/AppointmentInDto'
+      type: object
+      properties:
+        id:
+          type: number
+          format: int64
+          description: Identificador único de la cita
+        professionalName:
+          type: string
+          description: Nombre del profesional con el que se reserva la cita
+        durationMinutes:
+          type: number
+          format: int32
+          description: Duración de la cita en minutos
+        price:
+          type: number
+          format: float
+          description: Precio de la cita en euros
+        appointmentState:
+          type: string
+          description: Estado actual de la cita
+          enum:
+            - PENDING
+            - CONFIRMED
+            - CANCELLED
+            - COMPLETED
+            - NO_SHOW
+        depositPaid:
+          type: boolean
+          description: Indica si el cliente ha pagado la señal de 50€
+      example:
+        id: 1
+        clientId: 1
+        professionalId: 1
+        professionalName: "David el Titi"
+        startDateTime: "2025-02-15T16:00:00"
+        bodyPlacement: "Muñeca"
+        ideaDescription: "Nombre Manuel con letra fina y cursiva."
+        firstTime: true
+        tattooSize: "SMALL"
+        referenceImageUrl: "https://www.ejemplo.com/manuel.jpg"
+        durationMinutes: 60
+        price: 80.0
+        appointmentState: "CONFIRMED"
+        depositPaid: true
+
+    TattooInDto:
+      type: object
+      properties:
+        clientId:
+          type: number
+          format: int64
+          description: Identificador interno del cliente
+        professionalId:
+          type: number
+          format: int64
+          description: Identificador único del profesional que realizó el tatuaje
+        tattooDate:
+          type: string
+          format: date
+          description: Fecha en la que se realizó el tatuaje
+        style:
+          type: string
+          description: Estilo del tatuaje (blackwork, fine line, realismo, etc.)
+        tattooDescription:
+          type: string
+          description: Descripción del tatuaje
+        imageUrl:
+          type: string
+          description: URL o ruta de la imagen del tatuaje
+        sessions:
+          type: number
+          format: int32
+          description: Número de sesiones necesarias para completar el tatuaje
+        coverUp:
+          type: boolean
+          description: Indica si el tatuaje es un cover up de otro tatuaje anterior
+        color:
+          type: boolean
+          description: Indica si el tatuaje es a color o en blanco y negro
+      required:
+        - clientId
+        - professionalId
+        - tattooDate
+        - style
+        - tattooDescription
+        - imageUrl
+      example:
+        clientId: 1
+        professionalId: 1
+        tattooDate: "2025-03-10"
+        style: "Blackwork"
+        tattooDescription: "Rosa negra en el antebrazo con detalles geométricos."
+        imageUrl: "https://62rosastattoo.com/img/tattoos/rosa-negra-antebrazo.jpg"
+        sessions: 2
+        coverUp: false
+        color: false
+
+    TattooDto:
+      allOf:
+        - $ref: '#/components/schemas/TattooInDto'
+      type: object
+      properties:
+        id:
+          type: number
+          format: int64
+          description: Identificador único del tatuaje realizado
+        professionalName:
+          type: string
+          description: Nombre del profesional que realizó el tatuaje
+      example:
+        id: 1
+        clientId: 1
+        professionalName: "David el Titi"
+        professionalId: 1
+        tattooDate: "2025-03-10"
+        style: "Blackwork"
+        tattooDescription: "Rosa negra en el antebrazo con detalles geométricos."
+        imageUrl: "https://62rosastattoo.com/img/tattoos/rosa-negra-antebrazo.jpg"
+        sessions: 2
+        coverUp: false
+        color: false
+
+    ReviewInDto:
+      type: object
+      properties:
+        appointmentId:
+          type: number
+          format: int64
+          description: Identificador de la cita que se está valorando
+        rating:
+          type: number
+          format: int32
+          minimum: 1
+          maximum: 5
+          description: Puntuación de la reseña
+        comment:
+          type: string
+          description: Comentario del cliente sobre la experiencia
+        wouldRecommend:
+          type: boolean
+          description: Indica si el cliente recomendaría el estudio o al profesional
+      required:
+        - appointmentId
+        - comment
+      example:
+        appointmentId: 1
+        rating: 5
+        comment: "Experiencia genial, el trato ha sido increíble y el tatuaje ha quedado perfecto."
+        wouldRecommend: true
+
+    ReviewDto:
+      allOf:
+        - $ref: '#/components/schemas/ReviewInDto'
+      type: object
+      properties:
+        id:
+          type: number
+          format: int64
+          description: Identificador único de la reseña
+        clientId:
+          type: number
+          format: int64
+          description: Identificador único del cliente que ha dejado la reseña
+        professionalId:
+          type: number
+          format: int64
+          description: Identificador del profesional relacionado con la reseña
+        createdAt:
+          type: string
+          format: date-time
+          description: Fecha y hora en la que se creó la reseña
+      example:
+        id: 1
+        appointmentId: 1
+        clientId: 1
+        professionalId: 1
+        rating: 5
+        comment: "Experiencia genial, el trato ha sido increíble y el tatuaje ha quedado perfecto."
+        wouldRecommend: true
+        createdAt: "2025-03-12T19:45:00"

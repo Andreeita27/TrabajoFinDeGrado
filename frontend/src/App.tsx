@@ -11,6 +11,7 @@ import CalendarPage from "./pages/CalendarPage";
 import MyAppointmentsPage from "./pages/MyAppointmentsPage";
 import AdminPanelPage from "./pages/AdminPanelPage";
 import TattooDetailPage from "./pages/TattooDetailPage";
+import AdminTattoosPage from "./pages/AdminTattoosPage";
 
 import ProtectedRoute from "./auth/ProtectedRoute";
 import AdminRoute from "./auth/AdminRoute";
@@ -41,6 +42,7 @@ export default function App() {
         {/* Admin */}
         <Route element={<AdminRoute />}>
           <Route path="/admin" element={<AdminPanelPage />} />
+          <Route path="/admin/tattoos" element={<AdminTattoosPage />} />
         </Route>
 
         <Route path="*" element={<div style={{ padding: 16 }}>404</div>} />

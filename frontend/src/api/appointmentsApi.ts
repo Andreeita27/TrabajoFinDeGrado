@@ -33,3 +33,11 @@ export function getAllAppointments(
   const suffix = qs.toString() ? `?${qs.toString()}` : "";
   return apiFetch<AppointmentDto[]>(`/appointments${suffix}`, { method: "GET", token });
 }
+
+export function markNoShow(token: string, id: number) {
+  return apiFetch<AppointmentDto>(`/appointments/${id}/mark-no-show`, { method: "POST", token });
+}
+
+export function markCompleted(token: string, id: number) {
+  return apiFetch<AppointmentDto>(`/appointments/${id}/mark-completed`, { method: "POST", token });
+}

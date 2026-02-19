@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import { getProfessionals } from "../api/showroomApi";
+import type { ProfessionalDto } from "../types/professional";
 
 export default function ProfessionalsPage() {
-  const [items, setItems] = useState<any[]>([]);
+  const [items, setItems] = useState<ProfessionalDto[]>([]);
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -14,14 +15,29 @@ export default function ProfessionalsPage() {
   return (
     <div style={{ padding: 16 }}>
       <h1>Profesionales</h1>
+
       {error && <div style={{ color: "tomato" }}>{error}</div>}
-      <ul>
+
+      <div style={{ display: "grid", gap: 16 }}>
         {items.map((p) => (
-          <li key={p.id}>
-            {p.name} — {p.yearsExperience} años — {p.booksOpened ? "Books opened" : "Books closed"}
-          </li>
+          <div key={p.id} style={{ border: "1px solid #333", padding: 12 }}>
+            <img
+              src={p.profilePhoto}
+              alt={p.professionalName}
+              style={{ width: 150 }}
+            />
+
+            <h3>{p.professionalName}</h3>
+
+            <p>{p.description}</p>
+
+            <p>
+              {p.yearsExperience} años de experiencia —{" "}
+              {p.booksOpened ? "Books opened" : "Books closed"}
+            </p>
+          </div>
         ))}
-      </ul>
+      </div>
     </div>
   );
 }

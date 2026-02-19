@@ -12,7 +12,7 @@ import MyAppointmentsPage from "./pages/MyAppointmentsPage";
 import AdminPanelPage from "./pages/AdminPanelPage";
 import TattooDetailPage from "./pages/TattooDetailPage";
 import AdminTattoosPage from "./pages/AdminTattoosPage";
-import AdminCompletedAppointmentsPage from "./pages/AdminCompletedAppointmentsPage";
+import AdminAppointmentsPage from "./pages/AdminAppointmentsPage";
 
 
 import ProtectedRoute from "./auth/ProtectedRoute";
@@ -45,7 +45,7 @@ export default function App() {
         <Route element={<AdminRoute />}>
           <Route path="/admin" element={<AdminPanelPage />} />
           <Route path="/admin/tattoos" element={<AdminTattoosPage />} />
-          <Route path="/admin/appointments/completed" element={<AdminCompletedAppointmentsPage />} />
+          <Route path="/admin/appointments" element={<AdminAppointmentsPage />} />
         </Route>
 
         <Route path="*" element={<div style={{ padding: 16 }}>404</div>} />

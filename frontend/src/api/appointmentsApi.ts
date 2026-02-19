@@ -21,7 +21,7 @@ export function confirmDeposit(token: string, id: number) {
   return apiFetch<AppointmentDto>(`/appointments/${id}/confirm-deposit`, { method: "POST", token });
 }
 
-export function getAppointmentsAdmin(
+export function getAllAppointments(
   token: string,
   params?: { state?: string; clientId?: number; professionalId?: number }
 ) {

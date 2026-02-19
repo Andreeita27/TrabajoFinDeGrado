@@ -6,7 +6,7 @@ import { useAuth } from "../auth/AuthContext";
 import type { AppointmentDto } from "../types/appointment";
 
 export default function MyAppointmentsPage() {
-  const { token } = useAuth();
+  const { token, role } = useAuth();
   const nav = useNavigate();
   const [items, setItems] = useState<AppointmentDto[]>([]);
   const [error, setError] = useState("");
@@ -32,6 +32,12 @@ export default function MyAppointmentsPage() {
 
   const onPayDeposit = async (id: number) => {
     if (!token) return;
+
+    if (role !== "ADMIN") {
+      setError("Solo el tatuador puede confirmar la señal.");
+      return;
+    }
+
     try {
       await confirmDeposit(token, id);
       await load();
@@ -67,9 +73,10 @@ export default function MyAppointmentsPage() {
               </div>
 
               <div style={{ display: "flex", gap: 8 }}>
-                {!a.depositPaid && a.state === "PENDING" && (
+                {role === "ADMIN" && !a.depositPaid && a.state === "PENDING" && (
                   <button onClick={() => onPayDeposit(a.id)}>Confirmar señal</button>
                 )}
+
                 {a.state === "PENDING" || a.state === "CONFIRMED" ? (
                   <button onClick={() => onCancel(a.id)}>Cancelar</button>
                 ) : null}

@@ -86,7 +86,7 @@ public class AppointmentController {
         return ResponseEntity.noContent().build();
     }
 
-    @PreAuthorize("hasAnyRole('ADMIN','CLIENT')")
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/appointments/{id}/confirm-deposit")
     public ResponseEntity<AppointmentDto> confirmDeposit(@PathVariable long id, Authentication authentication)
             throws AppointmentNotFoundException, ClientNotFoundException {

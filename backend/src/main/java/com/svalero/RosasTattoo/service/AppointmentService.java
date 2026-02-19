@@ -86,10 +86,12 @@ public class AppointmentService {
     private void validateNoOverlap(long professionalId, LocalDateTime start, int durationMinutes, Long excludeId) {
         LocalDateTime end = start.plusMinutes(durationMinutes);
 
-        boolean overlaps = appointmentRepository.existsOverlapping(professionalId, start, end, excludeId);
-        if (overlaps) {
+        long overlapsCount = appointmentRepository.countOverlapping(professionalId, start, end, excludeId);
+
+        if (overlapsCount > 0) {
             throw new AppointmentConflictException("The selected time slot is not available");
         }
+
     }
 
     public List<AppointmentDto> findAll(AppointmentState state, Long clientId, Long professionalId) {
@@ -307,12 +309,12 @@ public class AppointmentService {
             while (slotStart.plusMinutes(duration).isBefore(rangeEnd) || slotStart.plusMinutes(duration).isEqual(rangeEnd)) {
                 LocalDateTime slotEnd = slotStart.plusMinutes(duration);
 
-                boolean overlaps = appointmentRepository.existsOverlapping(
+                boolean overlaps = appointmentRepository.countOverlapping(
                         professionalId,
                         slotStart,
                         slotEnd,
                         null
-                );
+                ) > 0;
 
                 if (!overlaps) {
                     slots.add(new AvailabilitySlotDto(slotStart, slotEnd));
@@ -323,6 +325,7 @@ public class AppointmentService {
 
             currentDay = currentDay.plusDays(1);
         }
+
         return slots;
     }
 }

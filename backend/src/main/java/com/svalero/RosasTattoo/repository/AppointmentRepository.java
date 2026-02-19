@@ -33,15 +33,15 @@ public interface AppointmentRepository extends CrudRepository<Appointment, Long>
      */
 
     @Query(value = """
-            SELECT CASE WHEN COUNT(*) > 0 THEN true ELSE false END
-            FROM appointment a
-            WHERE a.professional_id = :professionalId
-              AND a.appointment_state <> 'CANCELLED'
-              AND a.start_date_time < :endDateTime
-              AND TIMESTAMPADD(MINUTE, a.duration_minutes, a.start_date_time) > :startDateTime
-              AND (:excludeId IS NULL OR a.id <> :excludeId)
-            """, nativeQuery = true)
-    boolean existsOverlapping(
+        SELECT CASE WHEN COUNT(*) > 0 THEN 1 ELSE 0 END
+        FROM appointment a
+        WHERE a.professional_id = :professionalId
+          AND a.appointment_state <> 'CANCELLED'
+          AND a.start_date_time < :endDateTime
+          AND TIMESTAMPADD(MINUTE, a.duration_minutes, a.start_date_time) > :startDateTime
+          AND (:excludeId IS NULL OR a.id <> :excludeId)
+        """, nativeQuery = true)
+    int countOverlapping(
             @Param("professionalId") long professionalId,
             @Param("startDateTime") LocalDateTime startDateTime,
             @Param("endDateTime") LocalDateTime endDateTime,

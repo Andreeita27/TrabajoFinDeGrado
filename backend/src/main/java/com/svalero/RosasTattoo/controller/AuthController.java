@@ -56,7 +56,8 @@ public class AuthController {
         userAccountRepository.save(account);
 
         String token = jwtService.generateToken(account.getEmail(), account.getRole());
-        return new ResponseEntity<>(new AuthResponseDto(token, account.getRole().name()), HttpStatus.CREATED);
+        return new ResponseEntity<>(new AuthResponseDto(token, account.getRole().name(), savedClient.getId()),
+                HttpStatus.CREATED);
     }
 
     @PostMapping("/auth/login")
@@ -70,6 +71,11 @@ public class AuthController {
         }
 
         String token = jwtService.generateToken(account.getEmail(), account.getRole());
-        return ResponseEntity.ok(new AuthResponseDto(token, account.getRole().name()));
+        Long clientId = null;
+        if (account.getRole() == Role.CLIENT && account.getClient() != null) {
+            clientId = account.getClient().getId();
+        }
+
+        return ResponseEntity.ok(new AuthResponseDto(token, account.getRole().name(), clientId));
     }
 }

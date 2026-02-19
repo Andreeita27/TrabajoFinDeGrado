@@ -6,8 +6,9 @@ export default function AdminPanelPage() {
       <h1>Panel Admin</h1>
 
       <div style={{ display: "flex", gap: 20 }}>
-        <Link to="/admin/tattoos">Gestionar Tattoos</Link>
+        <Link to="/admin/tattoos">Gestionar Tattoos Existentes</Link>
         <Link to="/admin/professionals">Gestionar Profesionales</Link>
+        <Link to="/admin/appointments/completed">Crear Tattoos</Link>
       </div>
     </div>
   );

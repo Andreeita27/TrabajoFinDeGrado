@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ApiError } from "../api/apiFetch";
 import { getAvailability } from "../api/availabilityApi";
@@ -9,27 +9,46 @@ import type { AvailabilitySlotDto } from "../types/availability";
 import type { ProfessionalDto } from "../types/professional";
 import type { TattooSize } from "../types/appointment";
 
+const OPEN_HOUR = "12:00:00";
+const CLOSE_HOUR = "20:00:00";
+
+const DURATION_BY_SIZE: Record<TattooSize, number> = {
+  SMALL: 60,
+  MEDIUM: 120,
+  LARGE: 240,
+  XL: 480,
+};
+
+const stepMinutes = 30;
+
+function withSeconds(isoOrLocal: string) {
+  return isoOrLocal.length === 16 ? `${isoOrLocal}:00` : isoOrLocal;
+}
+
 export default function CalendarPage() {
-  const { token, role } = useAuth();
+  const { token, role, clientId } = useAuth();
   const nav = useNavigate();
 
   const [professionals, setProfessionals] = useState<ProfessionalDto[]>([]);
   const [professionalId, setProfessionalId] = useState<number>(0);
 
-  const [dateFrom, setDateFrom] = useState<string>("");
-  const [dateTo, setDateTo] = useState<string>("");
+  //En vez de dateFrom/dateTo: solo día
+  const [day, setDay] = useState<string>("");
 
-  const [durationMinutes, setDurationMinutes] = useState<number>(60);
-  const [stepMinutes, setStepMinutes] = useState<number>(30);
+  //Tamaño elegido por el usuario
+  const [tattooSize, setTattooSize] = useState<TattooSize>("SMALL");
+
+  //Duración calculada automáticamente
+  const durationMinutes = useMemo(() => DURATION_BY_SIZE[tattooSize], [tattooSize]);
 
   const [slots, setSlots] = useState<AvailabilitySlotDto[]>([]);
+  const [selectedStart, setSelectedStart] = useState<string>("");
+
   const [error, setError] = useState<string>("");
 
   const [bodyPlacement, setBodyPlacement] = useState("");
   const [ideaDescription, setIdeaDescription] = useState("");
   const [firstTime, setFirstTime] = useState(false);
-  const [tattooSize, setTattooSize] = useState<TattooSize>("SMALL");
-  const [selectedStart, setSelectedStart] = useState<string>("");
 
   useEffect(() => {
     getProfessionals()
@@ -40,53 +59,54 @@ export default function CalendarPage() {
       .catch((e: any) => setError(e?.message || "Error cargando profesionales"));
   }, []);
 
-  const fetchAvailability = async () => {
+  useEffect(() => {
     if (!token) return;
+    if (!professionalId) return;
+    if (!day) return;
 
     setError("");
     setSlots([]);
+    setSelectedStart("");
 
-    try {
-      if (!professionalId) throw new Error("Selecciona un profesional");
-      if (!dateFrom || !dateTo) throw new Error("Selecciona dateFrom y dateTo");
+    const fromIso = `${day}T${OPEN_HOUR}`;
+    const toIso = `${day}T${CLOSE_HOUR}`;
 
-      const fromIso = dateFrom.length === 16 ? `${dateFrom}:00` : dateFrom;
-      const toIso = dateTo.length === 16 ? `${dateTo}:00` : dateTo;
-
-      const data = await getAvailability(token, {
-        professionalId,
-        dateFrom: fromIso,
-        dateTo: toIso,
-        durationMinutes,
-        stepMinutes,
+    getAvailability(token, {
+      professionalId,
+      dateFrom: fromIso,
+      dateTo: toIso,
+      durationMinutes,
+      stepMinutes: 30,
+    })
+      .then(setSlots)
+      .catch((e: any) => {
+        if (e instanceof ApiError && e.status === 401) {
+          nav("/login", { replace: true, state: { from: "/calendar" } });
+          return;
+        }
+        setError(e?.message || "Error cargando disponibilidad");
       });
-
-      setSlots(data);
-    } catch (e: any) {
-      if (e instanceof ApiError && e.status === 401) {
-        nav("/login", { replace: true, state: { from: "/calendar" } });
-        return;
-      }
-      setError(e?.message || "Error cargando availability");
-    }
-  };
+  }, [token, professionalId, day, durationMinutes, stepMinutes, nav]);
 
   const onCreateAppointment = async () => {
     if (!token) return;
-
     setError("");
 
     try {
       if (!selectedStart) throw new Error("Selecciona un slot primero");
-      if (!bodyPlacement.trim()) throw new Error("bodyPlacement obligatorio");
-      if (!ideaDescription.trim()) throw new Error("ideaDescription obligatorio");
+      if (!bodyPlacement.trim()) throw new Error("Indica en qué parte del cuerpo quieres el tattoo.");
+      if (!ideaDescription.trim()) throw new Error("Describe tu idea.");
 
-      const clientId = role === "ADMIN" ? 0 : 0;
+      if (role === "CLIENT") {
+        if (!clientId) throw new Error("No se ha podido identificar tu usuario (clientId). Cierra sesión e inicia de nuevo.");
+      } else {
+        throw new Error("Como ADMIN, de momento no se pueden crear citas desde aquí sin seleccionar cliente.");
+      }
 
       await createAppointment(token, {
-        clientId,
+        clientId: clientId!,
         professionalId,
-        startDateTime: selectedStart,
+        startDateTime: withSeconds(selectedStart),
         bodyPlacement,
         ideaDescription,
         firstTime,
@@ -123,26 +143,20 @@ export default function CalendarPage() {
         </label>
 
         <label>
-          dateFrom:
-          <input type="datetime-local" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} />
+          Día:
+          <input type="date" value={day} onChange={(e) => setDay(e.target.value)} />
         </label>
 
         <label>
-          dateTo:
-          <input type="datetime-local" value={dateTo} onChange={(e) => setDateTo(e.target.value)} />
+          Tamaño:
+          <select value={tattooSize} onChange={(e) => setTattooSize(e.target.value as TattooSize)}>
+            <option value="SMALL">Pequeño (5-10 cm)</option>
+            <option value="MEDIUM">Mediano (10-20 cm)</option>
+            <option value="LARGE">Grande (20-50 cm)</option>
+            <option value="XL">XL (+50 cm o piezas enteras)</option>
+          </select>
+          <span style={{ marginLeft: 10 }}>(Duración: {durationMinutes} min)</span>
         </label>
-
-        <label>
-          durationMinutes:
-          <input type="number" value={durationMinutes} onChange={(e) => setDurationMinutes(Number(e.target.value))} />
-        </label>
-
-        <label>
-          stepMinutes:
-          <input type="number" value={stepMinutes} onChange={(e) => setStepMinutes(Number(e.target.value))} />
-        </label>
-
-        <button onClick={fetchAvailability}>Ver disponibilidad</button>
       </section>
 
       <hr style={{ margin: "16px 0" }} />
@@ -162,7 +176,7 @@ export default function CalendarPage() {
                   checked={selectedStart === s.startDateTime}
                   onChange={() => setSelectedStart(s.startDateTime)}
                 />
-                {s.startDateTime} → {s.endDateTime}
+                {s.startDateTime}
               </label>
             </li>
           ))}
@@ -174,12 +188,12 @@ export default function CalendarPage() {
       <h2>Datos de la cita</h2>
       <section style={{ display: "grid", gap: 10, maxWidth: 720 }}>
         <input
-          placeholder="Zona del cuerpo (bodyPlacement)"
+          placeholder="Zona del cuerpo"
           value={bodyPlacement}
           onChange={(e) => setBodyPlacement(e.target.value)}
         />
         <textarea
-          placeholder="Describe la idea (ideaDescription)"
+          placeholder="Describe la idea"
           value={ideaDescription}
           onChange={(e) => setIdeaDescription(e.target.value)}
           rows={4}
@@ -187,17 +201,7 @@ export default function CalendarPage() {
 
         <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
           <input type="checkbox" checked={firstTime} onChange={(e) => setFirstTime(e.target.checked)} />
-          ¿Primera vez? (firstTime)
-        </label>
-
-        <label>
-          Tamaño (tattooSize):
-          <select value={tattooSize} onChange={(e) => setTattooSize(e.target.value as any)}>
-            <option value="SMALL">SMALL</option>
-            <option value="MEDIUM">MEDIUM</option>
-            <option value="LARGE">LARGE</option>
-            <option value="XL">XL</option>
-          </select>
+          ¿Primera vez?
         </label>
 
         <button onClick={onCreateAppointment} disabled={!selectedStart}>

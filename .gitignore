@@ -2,6 +2,10 @@
 # BACKEND (Spring Boot)
 ############################
 
+# Logs
+*.log
+logs/
+
 backend/target/
 backend/logs/
 backend/.mvn/wrapper/maven-wrapper.jar

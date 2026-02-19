@@ -186,6 +186,16 @@ public class AppointmentService {
 
         assertOwnership(appointment, email);
 
+        if (appointment.getState() == AppointmentState.CANCELLED) {
+            throw new IllegalStateException("You cannot confirm deposit for a cancelled appointment");
+        }
+        if (appointment.getState() == AppointmentState.NO_SHOW) {
+            throw new IllegalStateException("You cannot confirm deposit for a NO_SHOW appointment");
+        }
+        if (appointment.getState() == AppointmentState.COMPLETED) {
+            throw new IllegalStateException("You cannot confirm deposit for a completed appointment");
+        }
+
         appointment.setDepositPaid(true);
         appointment.setState(AppointmentState.CONFIRMED);
 
@@ -218,7 +228,25 @@ public class AppointmentService {
         Appointment appointment = appointmentRepository.findById(id)
                 .orElseThrow(AppointmentNotFoundException::new);
 
+        if (appointment.getState() != AppointmentState.CONFIRMED) {
+            throw new IllegalStateException("Only CONFIRMED appointments can be marked as NO_SHOW");
+        }
+
         appointment.setState(AppointmentState.NO_SHOW);
+
+        Appointment saved = appointmentRepository.save(appointment);
+        return modelMapper.map(saved, AppointmentDto.class);
+    }
+
+    public AppointmentDto markCompleted(long id) throws AppointmentNotFoundException {
+        Appointment appointment = appointmentRepository.findById(id)
+                .orElseThrow(AppointmentNotFoundException::new);
+
+        if (appointment.getState() != AppointmentState.CONFIRMED) {
+            throw new IllegalStateException("Only CONFIRMED appointments can be marked as COMPLETED");
+        }
+
+        appointment.setState(AppointmentState.COMPLETED);
 
         Appointment saved = appointmentRepository.save(appointment);
         return modelMapper.map(saved, AppointmentDto.class);

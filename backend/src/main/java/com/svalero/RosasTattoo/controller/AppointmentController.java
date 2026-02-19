@@ -120,6 +120,12 @@ public class AppointmentController {
         return ResponseEntity.ok(appointmentService.getAvailability(professionalId, dateFrom, dateTo, durationMinutes, stepMinutes));
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
+    @PostMapping("/appointments/{id}/mark-completed")
+    public ResponseEntity<AppointmentDto> markCompleted(@PathVariable long id) throws AppointmentNotFoundException {
+        return ResponseEntity.ok(appointmentService.markCompleted(id));
+    }
+
     @ExceptionHandler(AppointmentNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleException(AppointmentNotFoundException anfe) {
         ErrorResponse errorResponse = ErrorResponse.notFound(anfe.getMessage());

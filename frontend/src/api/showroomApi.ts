@@ -32,3 +32,7 @@ export function getReviews(params?: { rating?: number; professionalId?: number; 
   const suffix = qs.toString() ? `?${qs.toString()}` : "";
   return apiFetch<ReviewDto[]>(`/reviews${suffix}`);
 }
+
+export function getTattooById(id: number) {
+  return apiFetch<TattooDto>(`/tattoos/${id}`);
+}

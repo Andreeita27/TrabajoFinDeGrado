@@ -10,6 +10,7 @@ import RegisterPage from "./pages/RegisterPage";
 import CalendarPage from "./pages/CalendarPage";
 import MyAppointmentsPage from "./pages/MyAppointmentsPage";
 import AdminPanelPage from "./pages/AdminPanelPage";
+import TattooDetailPage from "./pages/TattooDetailPage";
 
 import ProtectedRoute from "./auth/ProtectedRoute";
 import AdminRoute from "./auth/AdminRoute";
@@ -28,6 +29,8 @@ export default function App() {
 
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
+
+        <Route path="/showroom/:id" element={<TattooDetailPage />} />
 
         {/* Privado */}
         <Route element={<ProtectedRoute />}>

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { getTattoos } from "../api/showroomApi";
 import type { TattooDto } from "../types/tattoo";
+import { Link } from "react-router-dom";
 
 export default function ShowroomPage() {
   const [items, setItems] = useState<TattooDto[]>([]);
@@ -52,26 +53,36 @@ export default function ShowroomPage() {
 
       <div style={{ display: "grid", gap: 20 }}>
         {items.map((t) => (
-          <div key={t.id} style={{ border: "1px solid #333", padding: 12 }}>
-            <img
-              src={t.imageUrl}
-              alt={t.tattooDescription}
-              style={{ width: 200 }}
-            />
+          <Link
+            key={t.id}
+            to={`/showroom/${t.id}`}
+            style={{ textDecoration: "none", color: "inherit" }}
+          >
+            <div
+              style={{
+                border: "1px solid #333",
+                padding: 12,
+                borderRadius: 8
+              }}
+            >
+              <img
+                src={t.imageUrl}
+                alt={t.tattooDescription}
+                style={{
+                  width: "100%",
+                  height: 220,
+                  objectFit: "cover",
+                  borderRadius: 6
+                }}
+              />
 
-            <h3>{t.tattooDescription}</h3>
+              <h3 style={{ marginTop: 10 }}>{t.style}</h3>
 
-            <p>Estilo: {t.style}</p>
-
-            <p>
-              Profesional: {t.professionalName ?? "Estudio 62 Rosas"}
-            </p>
-
-            <p>
-              {t.color ? "Color" : "Blanco y negro"} —{" "}
-              {t.coverUp ? "Cover Up" : "No Cover Up"}
-            </p>
-          </div>
+              <p style={{ color: "#888" }}>
+                {t.professionalName ?? "Estudio 62 Rosas"}
+              </p>
+            </div>
+          </Link>
         ))}
       </div>
     </div>

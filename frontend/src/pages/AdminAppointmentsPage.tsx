@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ApiError } from "../api/apiFetch";
-import { cancelAppointment, confirmDeposit, getAllAppointments } from "../api/appointmentsApi";
+import { cancelAppointment, confirmDeposit, getAllAppointments, markCompleted, markNoShow } from "../api/appointmentsApi";
 import { useAuth } from "../auth/AuthContext";
 import type { AppointmentDto, AppointmentState } from "../types/appointment";
 
@@ -67,6 +67,36 @@ export default function AdminAppointmentsPage() {
     }
   };
 
+  const onMarkCompleted = async (id: number) => {
+  if (!token) return;
+
+  const ok = window.confirm("¿Marcar esta cita como COMPLETADA?");
+  if (!ok) return;
+
+  setError("");
+  try {
+    await markCompleted(token, id);
+    await load();
+  } catch (e: any) {
+    setError(e?.message || "Error marcando como completada");
+  }
+};
+
+const onMarkNoShow = async (id: number) => {
+  if (!token) return;
+
+  const ok = window.confirm("¿Marcar esta cita como NO-SHOW?");
+  if (!ok) return;
+
+  setError("");
+  try {
+    await markNoShow(token, id);
+    await load();
+  } catch (e: any) {
+    setError(e?.message || "Error marcando como no-show");
+  }
+};
+
   const filtered = stateFilter === "ALL" ? items : items.filter((a) => a.state === stateFilter);
 
   return (
@@ -98,7 +128,7 @@ export default function AdminAppointmentsPage() {
           {filtered.map((a) => (
             <li key={a.id} style={{ marginBottom: 10 }}>
               <div>
-                <b>#{a.id}</b> — {a.startDateTime} — prof:{a.professionalId} — client:{a.clientId} —{" "}
+                <b>#{a.id}</b> — {a.startDateTime} — prof:{a.professionalName} — client:{a.clientId} —{" "}
                 <b>{a.state}</b> — señal:{String(a.depositPaid)}
               </div>
 
@@ -109,6 +139,13 @@ export default function AdminAppointmentsPage() {
 
                 {a.state === "PENDING" || a.state === "CONFIRMED" ? (
                   <button onClick={() => onCancel(a.id)}>Cancelar</button>
+                ) : null}
+
+                {a.state === "CONFIRMED" ? (
+                  <>
+                    <button onClick={() => onMarkCompleted(a.id)}>Marcar completada</button>
+                    <button onClick={() => onMarkNoShow(a.id)}>El cliente no ha aparecido</button>
+                  </>
                 ) : null}
               </div>
             </li>

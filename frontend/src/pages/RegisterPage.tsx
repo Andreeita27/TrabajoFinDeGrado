@@ -36,7 +36,7 @@ export default function RegisterPage() {
         password,
       });
 
-      nav("/calendar", { replace: true });
+      nav("/", { replace: true });
     } catch (err: any) {
       setMsg(err?.message || "Error en registro");
     }

@@ -6,7 +6,7 @@ export default function LoginPage() {
   const { login } = useAuth();
   const nav = useNavigate();
   const location = useLocation() as any;
-  const from = location.state?.from || "/calendar";
+  const from = location.state?.from || "/";
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");

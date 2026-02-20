@@ -5,6 +5,10 @@ export function getAllTattoos(token: string) {
   return apiFetch<TattooDto[]>("/tattoos", { method: "GET", token });
 }
 
+export function getTattoo(token: string, id: number) {
+  return apiFetch<TattooDto>(`/tattoos/${id}`, { method: "GET", token });
+}
+
 export function createTattoo(token: string, payload: TattooInDto) {
   return apiFetch<TattooDto>("/tattoos", {
     method: "POST",

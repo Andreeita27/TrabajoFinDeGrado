@@ -76,8 +76,8 @@ export default function AdminTattoosPage() {
             </div>
 
             <div style={{ display: "flex", gap: 8, marginTop: 6 }}>
-              <button onClick={() => nav(`/admin/tattoos/${t.id}/edit`)} disabled>
-                Editar (pendiente)
+              <button onClick={() => nav(`/admin/tattoos/${t.id}/edit`)}>
+                Editar
               </button>
 
               <button onClick={() => onDelete(t.id)}>Eliminar</button>

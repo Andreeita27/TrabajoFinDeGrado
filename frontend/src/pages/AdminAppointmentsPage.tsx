@@ -147,6 +147,11 @@ const onMarkNoShow = async (id: number) => {
                     <button onClick={() => onMarkNoShow(a.id)}>El cliente no ha aparecido</button>
                   </>
                 ) : null}
+                {a.state === "COMPLETED" && (
+                  <button onClick={() => nav(`/admin/appointments/${a.id}/tattoo/new`)}>
+                    Añadir tattoo a Showroom
+                  </button>
+                )}
               </div>
             </li>
           ))}

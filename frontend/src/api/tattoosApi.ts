@@ -1,29 +1,26 @@
 import { apiFetch } from "./apiFetch";
-import type { TattooDto } from "../types/tattoo";
+import type { TattooDto, TattooInDto } from "../types/tattoo";
 
-export function getAllTattoos() {
-  return apiFetch<TattooDto[]>("/tattoos");
+export function getAllTattoos(token: string) {
+  return apiFetch<TattooDto[]>("/tattoos", { method: "GET", token });
 }
 
-export function createTattoo(token: string, data: Omit<TattooDto, "id">) {
+export function createTattoo(token: string, payload: TattooInDto) {
   return apiFetch<TattooDto>("/tattoos", {
     method: "POST",
     token,
-    body: JSON.stringify(data)
+    body: JSON.stringify(payload),
   });
 }
 
-export function updateTattoo(token: string, id: number, data: TattooDto) {
+export function updateTattoo(token: string, id: number, payload: TattooInDto) {
   return apiFetch<TattooDto>(`/tattoos/${id}`, {
     method: "PUT",
     token,
-    body: JSON.stringify(data)
+    body: JSON.stringify(payload),
   });
 }
 
 export function deleteTattoo(token: string, id: number) {
-  return apiFetch<void>(`/tattoos/${id}`, {
-    method: "DELETE",
-    token
-  });
+  return apiFetch<void>(`/tattoos/${id}`, { method: "DELETE", token });
 }

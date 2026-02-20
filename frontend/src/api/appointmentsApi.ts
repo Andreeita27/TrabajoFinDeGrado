@@ -41,3 +41,7 @@ export function markNoShow(token: string, id: number) {
 export function markCompleted(token: string, id: number) {
   return apiFetch<AppointmentDto>(`/appointments/${id}/mark-completed`, { method: "POST", token });
 }
+
+export function getAppointment(token: string, id: number) {
+  return apiFetch<AppointmentDto>(`/appointments/${id}`, { method: "GET", token });
+}

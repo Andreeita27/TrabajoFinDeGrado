@@ -15,6 +15,7 @@ import AdminTattoosPage from "./pages/AdminTattoosPage";
 import AdminAppointmentsPage from "./pages/AdminAppointmentsPage";
 import ReviewCreatePage from "./pages/ReviewCreatePage";
 import AdminProfessionalsPage from "./pages/AdminProfessionalsPage";
+import AdminTattooCreatePage from "./pages/AdminTattooCreatePage";
 
 
 import ProtectedRoute from "./auth/ProtectedRoute";
@@ -50,6 +51,7 @@ export default function App() {
           <Route path="/admin/tattoos" element={<AdminTattoosPage />} />
           <Route path="/admin/appointments" element={<AdminAppointmentsPage />} />
           <Route path="/admin/professionals" element={<AdminProfessionalsPage />} />
+          <Route path="/admin/appointments/:id/tattoo/new" element={<AdminTattooCreatePage />} />
         </Route>
 
         <Route path="*" element={<div style={{ padding: 16 }}>404</div>} />

@@ -11,3 +11,12 @@ export type TattooDto = {
   coverUp: boolean;
   color: boolean;
 };
+
+export type TattooInDto = {
+  clientId: number;
+  professionalId: number;
+  style: string;
+  tattooDescription: string;
+  tattooDate: string;
+  imageUrl?: string | null;
+};

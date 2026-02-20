@@ -61,7 +61,7 @@ export default function RegisterPage() {
 
         <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
           <input type="checkbox" checked={showPhoto} onChange={(e) => setShowPhoto(e.target.checked)} />
-          Mostrar mi foto en la app (showPhoto)
+          Permito que mis tatuajes se enseñen en la web
         </label>
 
         <input placeholder="Contraseña" type="password" value={password} onChange={(e) => setPassword(e.target.value)} />

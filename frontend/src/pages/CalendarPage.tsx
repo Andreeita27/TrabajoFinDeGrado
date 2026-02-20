@@ -8,6 +8,8 @@ import { useAuth } from "../auth/AuthContext";
 import type { AvailabilitySlotDto } from "../types/availability";
 import type { ProfessionalDto } from "../types/professional";
 import type { TattooSize } from "../types/appointment";
+import ClientPicker from "../components/ClientPicker";
+import type { ClientDto } from "../types/client";
 
 const OPEN_HOUR = "12:00:00";
 const CLOSE_HOUR = "20:00:00";
@@ -28,6 +30,8 @@ function withSeconds(isoOrLocal: string) {
 export default function CalendarPage() {
   const { token, role, clientId } = useAuth();
   const nav = useNavigate();
+
+  const [selectedClient, setSelectedClient] = useState<ClientDto | null>(null);
 
   const [professionals, setProfessionals] = useState<ProfessionalDto[]>([]);
   const [professionalId, setProfessionalId] = useState<number>(0);
@@ -86,43 +90,60 @@ export default function CalendarPage() {
         }
         setError(e?.message || "Error cargando disponibilidad");
       });
-  }, [token, professionalId, day, durationMinutes, stepMinutes, nav]);
+  }, [token, professionalId, day, durationMinutes, nav]);
 
   const onCreateAppointment = async () => {
-    if (!token) return;
-    setError("");
+  if (!token) return;
+  setError("");
 
-    try {
-      if (!selectedStart) throw new Error("Selecciona un slot primero");
-      if (!bodyPlacement.trim()) throw new Error("Indica en qué parte del cuerpo quieres el tattoo.");
-      if (!ideaDescription.trim()) throw new Error("Describe tu idea.");
+  try {
+    if (!selectedStart) throw new Error("Selecciona un slot primero");
+    if (!bodyPlacement.trim()) throw new Error("Indica en qué parte del cuerpo quieres el tattoo.");
+    if (!ideaDescription.trim()) throw new Error("Describe tu idea.");
 
-      if (role === "CLIENT") {
-        if (!clientId) throw new Error("No se ha podido identificar tu usuario (clientId). Cierra sesión e inicia de nuevo.");
-      } else {
-        throw new Error("Como ADMIN, de momento no se pueden crear citas desde aquí sin seleccionar cliente.");
+    let finalClientId: number | null = null;
+
+    if (role === "CLIENT") {
+      if (!clientId) {
+        throw new Error("No se ha podido identificar tu usuario. Cierra sesión e inicia de nuevo.");
       }
-
-      await createAppointment(token, {
-        clientId: clientId!,
-        professionalId,
-        startDateTime: withSeconds(selectedStart),
-        bodyPlacement,
-        ideaDescription,
-        firstTime,
-        tattooSize,
-        referenceImageUrl: null,
-      });
-
-      nav("/my-appointments", { replace: true });
-    } catch (e: any) {
-      if (e instanceof ApiError && e.status === 401) {
-        nav("/login", { replace: true, state: { from: "/calendar" } });
-        return;
+      finalClientId = clientId;
+    } else if (role === "ADMIN") {
+      if (!selectedClient) {
+        throw new Error("Selecciona un cliente antes de crear la cita.");
       }
-      setError(e?.message || "Error creando cita");
+      finalClientId = selectedClient.id;
+    } else {
+      throw new Error("Rol no soportado para crear cita.");
     }
-  };
+
+    await createAppointment(token, {
+      clientId: finalClientId!,
+      professionalId,
+      startDateTime: withSeconds(selectedStart),
+      bodyPlacement,
+      ideaDescription,
+      firstTime,
+      tattooSize,
+      referenceImageUrl: null,
+    });
+
+    if (role === "ADMIN") {
+      nav("/admin/appointments", { replace: true });
+    } else {
+      nav("/my-appointments", { replace: true });
+    }
+  } catch (e: any) {
+    if (e instanceof ApiError && e.status === 401) {
+      nav("/login", { replace: true, state: { from: "/calendar" } });
+      return;
+    }
+    setError(e?.message || "Error creando cita");
+  }
+};
+
+  const disableCreate =
+    !selectedStart || (role === "ADMIN" && !selectedClient);
 
   return (
     <div style={{ padding: 16 }}>
@@ -183,6 +204,26 @@ export default function CalendarPage() {
         </ul>
       )}
 
+      {role === "ADMIN" && (
+        <>
+          <hr style={{ margin: "16px 0" }} />
+
+          <ClientPicker
+            valueClientId={selectedClient?.id ?? null}
+            onChangeClient={(c) => setSelectedClient(c)}
+          />
+
+          {selectedClient && (
+            <div style={{ marginTop: 8, marginBottom: 8, opacity: 0.9 }}>
+              Cliente seleccionado:{" "}
+              <b>
+                {selectedClient.clientName} {selectedClient.clientSurname}
+              </b>
+            </div>
+          )}
+        </>
+      )}
+
       <hr style={{ margin: "16px 0" }} />
 
       <h2>Datos de la cita</h2>
@@ -204,9 +245,15 @@ export default function CalendarPage() {
           ¿Primera vez?
         </label>
 
-        <button onClick={onCreateAppointment} disabled={!selectedStart}>
+        <button onClick={onCreateAppointment} disabled={disableCreate}>
           Crear cita
         </button>
+
+        {role === "ADMIN" && !selectedClient && (
+          <div style={{ opacity: 0.8 }}>
+            Selecciona un cliente para poder crear la cita.
+          </div>
+        )}
       </section>
     </div>
   );

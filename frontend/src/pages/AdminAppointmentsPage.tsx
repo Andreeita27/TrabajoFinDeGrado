@@ -101,7 +101,7 @@ const onMarkNoShow = async (id: number) => {
 
   return (
     <div style={{ padding: 16 }}>
-      <h1>Citas (Admin)</h1>
+      <h1>Todas las citas</h1>
 
       {error && <div style={{ color: "tomato" }}>{error}</div>}
 

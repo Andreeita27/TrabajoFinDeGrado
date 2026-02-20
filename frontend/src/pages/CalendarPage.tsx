@@ -80,7 +80,7 @@ export default function CalendarPage() {
       dateFrom: fromIso,
       dateTo: toIso,
       durationMinutes,
-      stepMinutes: 30,
+      stepMinutes,
     })
       .then(setSlots)
       .catch((e: any) => {
@@ -151,6 +151,25 @@ export default function CalendarPage() {
 
       {error && <div style={{ color: "tomato", marginBottom: 8 }}>{error}</div>}
 
+      {role === "ADMIN" && (
+        <>
+          <ClientPicker
+            valueClientId={selectedClient?.id ?? null}
+            onChangeClient={(c) => setSelectedClient(c)}
+          />
+
+          {selectedClient && (
+            <div style={{ marginTop: 8, marginBottom: 8, opacity: 0.9 }}>
+              Cliente seleccionado:{" "}
+              <b>
+                {selectedClient.clientName} {selectedClient.clientSurname}
+              </b>
+            </div>
+          )}
+          <hr style={{ margin: "16px 0" }} />
+        </>
+      )}
+
       <section style={{ display: "grid", gap: 10, maxWidth: 720 }}>
         <label>
           Profesional:
@@ -202,26 +221,6 @@ export default function CalendarPage() {
             </li>
           ))}
         </ul>
-      )}
-
-      {role === "ADMIN" && (
-        <>
-          <hr style={{ margin: "16px 0" }} />
-
-          <ClientPicker
-            valueClientId={selectedClient?.id ?? null}
-            onChangeClient={(c) => setSelectedClient(c)}
-          />
-
-          {selectedClient && (
-            <div style={{ marginTop: 8, marginBottom: 8, opacity: 0.9 }}>
-              Cliente seleccionado:{" "}
-              <b>
-                {selectedClient.clientName} {selectedClient.clientSurname}
-              </b>
-            </div>
-          )}
-        </>
       )}
 
       <hr style={{ margin: "16px 0" }} />

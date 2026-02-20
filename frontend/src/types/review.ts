@@ -8,3 +8,10 @@ export type ReviewDto = {
   wouldRecommend: boolean;
   createdAt: string;
 };
+
+export type ReviewInDto = {
+  appointmentId: number;
+  rating: number; // 1..5
+  comment: string;
+  wouldRecommend: boolean;
+};

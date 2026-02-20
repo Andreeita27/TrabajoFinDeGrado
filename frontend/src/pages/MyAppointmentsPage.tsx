@@ -73,6 +73,12 @@ export default function MyAppointmentsPage() {
               </div>
 
               <div style={{ display: "flex", gap: 8 }}>
+                {role === "CLIENT" && a.state === "COMPLETED" && (
+                  <button onClick={() => nav(`/reviews/new?appointmentId=${a.id}`)}>
+                    Dejar reseña
+                  </button>
+                )}
+                
                 {role === "ADMIN" && !a.depositPaid && a.state === "PENDING" && (
                   <button onClick={() => onPayDeposit(a.id)}>Confirmar señal</button>
                 )}

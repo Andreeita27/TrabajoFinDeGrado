@@ -12,7 +12,6 @@ import com.svalero.RosasTattoo.repository.ClientRepository;
 import com.svalero.RosasTattoo.repository.ProfessionalRepository;
 import com.svalero.RosasTattoo.repository.TattooRepository;
 import org.modelmapper.ModelMapper;
-import org.modelmapper.TypeToken;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -30,17 +29,32 @@ public class TattooService {
     @Autowired
     private ModelMapper modelMapper;
 
+    private TattooDto toDto(Tattoo tattoo) {
+        TattooDto dto = modelMapper.map(tattoo, TattooDto.class);
+
+        if (tattoo.getClient() != null) {
+            dto.setClientId(tattoo.getClient().getId());
+        }
+        if (tattoo.getProfessional() != null) {
+            dto.setProfessionalId(tattoo.getProfessional().getId());
+            dto.setProfessionalName(tattoo.getProfessional().getProfessionalName());
+        } else {
+            dto.setProfessionalName(null);
+        }
+
+        return dto;
+    }
+
     public List<TattooDto> findAll(String style, Boolean coverUp, Boolean color) {
         List<Tattoo> tattoos = tattooRepository.findByFilters(style, coverUp, color);
-
-        return modelMapper.map(tattoos, new TypeToken<List<TattooDto>>() {}.getType());
+        return tattoos.stream().map(this::toDto).toList();
     }
 
     public TattooDto findById(long id) throws TattooNotFoundException {
         Tattoo tattoo = tattooRepository.findById(id)
                 .orElseThrow(TattooNotFoundException::new);
 
-        return modelMapper.map(tattoo, TattooDto.class);
+        return toDto(tattoo);
     }
 
     public TattooDto add(TattooInDto tattooInDto) throws ClientNotFoundException, ProfessionalNotFoundException {
@@ -54,11 +68,17 @@ public class TattooService {
         tattoo.setClient(client);
         tattoo.setProfessional(professional);
 
+        if (tattoo.getSessions() <= 0) {
+            tattoo.setSessions(1);
+        }
+
         Tattoo saved = tattooRepository.save(tattoo);
-        return modelMapper.map(saved, TattooDto.class);
+        return toDto(saved);
     }
 
-    public TattooDto modify(long id, TattooInDto tattooInDto) throws TattooNotFoundException, ClientNotFoundException, ProfessionalNotFoundException {
+    public TattooDto modify(long id, TattooInDto tattooInDto)
+            throws TattooNotFoundException, ClientNotFoundException, ProfessionalNotFoundException {
+
         Tattoo existing = tattooRepository.findById(id)
                 .orElseThrow(TattooNotFoundException::new);
 
@@ -66,15 +86,19 @@ public class TattooService {
                 .orElseThrow(ClientNotFoundException::new);
 
         Professional professional = professionalRepository.findById(tattooInDto.getProfessionalId())
-                        .orElseThrow(ProfessionalNotFoundException::new);
+                .orElseThrow(ProfessionalNotFoundException::new);
 
         modelMapper.map(tattooInDto, existing);
         existing.setId(id);
         existing.setClient(client);
         existing.setProfessional(professional);
 
+        if (existing.getSessions() <= 0) {
+            existing.setSessions(1);
+        }
+
         Tattoo saved = tattooRepository.save(existing);
-        return modelMapper.map(saved, TattooDto.class);
+        return toDto(saved);
     }
 
     public void delete(long id) throws TattooNotFoundException {

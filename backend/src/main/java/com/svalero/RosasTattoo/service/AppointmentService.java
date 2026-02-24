@@ -8,16 +8,13 @@ import com.svalero.RosasTattoo.domain.enums.AppointmentState;
 import com.svalero.RosasTattoo.domain.enums.TattooSize;
 import com.svalero.RosasTattoo.dto.AppointmentDto;
 import com.svalero.RosasTattoo.dto.AppointmentInDto;
+import com.svalero.RosasTattoo.dto.AvailabilityResponseDto;
 import com.svalero.RosasTattoo.dto.AvailabilitySlotDto;
 import com.svalero.RosasTattoo.exception.AppointmentConflictException;
 import com.svalero.RosasTattoo.exception.AppointmentNotFoundException;
 import com.svalero.RosasTattoo.exception.ClientNotFoundException;
 import com.svalero.RosasTattoo.exception.ProfessionalNotFoundException;
-import com.svalero.RosasTattoo.repository.AppointmentRepository;
-import com.svalero.RosasTattoo.repository.ClientRepository;
-import com.svalero.RosasTattoo.repository.ProfessionalRepository;
-import com.svalero.RosasTattoo.repository.ReviewRepository;
-import com.svalero.RosasTattoo.repository.UserAccountRepository;
+import com.svalero.RosasTattoo.repository.*;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
@@ -25,6 +22,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import java.time.DayOfWeek;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -44,6 +42,10 @@ public class AppointmentService {
     private UserAccountRepository userAccountRepository;
     @Autowired
     private ReviewRepository reviewRepository;
+    @Autowired
+    private AvailabilityWindowRepository availabilityWindowRepository;
+    @Autowired
+    private UnavailabilityBlockRepository unavailabilityBlockRepository;
     @Autowired
     private ModelMapper modelMapper;
 
@@ -357,11 +359,11 @@ public class AppointmentService {
         return enrichHasReview(saved);
     }
 
-    public List<AvailabilitySlotDto> getAvailability(long professionalId,
-                                                     LocalDateTime dateFrom,
-                                                     LocalDateTime dateTo,
-                                                     Integer durationMinutes,
-                                                     Integer stepMinutes) {
+    public AvailabilityResponseDto getAvailability(long professionalId,
+                                                   LocalDateTime dateFrom,
+                                                   LocalDateTime dateTo,
+                                                   Integer durationMinutes,
+                                                   Integer stepMinutes) {
 
         int duration = (durationMinutes == null || durationMinutes <= 0) ? 60 : durationMinutes;
         int step = (stepMinutes == null || stepMinutes <= 0) ? 30 : stepMinutes;
@@ -372,41 +374,103 @@ public class AppointmentService {
         List<AvailabilitySlotDto> slots = new ArrayList<>();
 
         if (dateFrom == null || dateTo == null || !dateFrom.isBefore(dateTo)) {
-            return slots;
+            return new AvailabilityResponseDto(slots, false, false, List.of());
+        }
+
+        // BLOQUEOS primero
+        var blocks = unavailabilityBlockRepository.findActiveIntersecting(professionalId, dateFrom, dateTo);
+
+        boolean hasBlocksInRange = blocks.stream().anyMatch(b -> b.isEnabled());
+
+        List<String> blockReasons = blocks.stream()
+                .filter(b -> b.isEnabled())
+                .map(b -> b.getReason() == null ? "" : b.getReason().trim())
+                .filter(s -> !s.isBlank())
+                .distinct()
+                .toList();
+
+        var windows = availabilityWindowRepository.findActiveIntersecting(professionalId, dateFrom, dateTo);
+        boolean hasPublishedWindows = !windows.isEmpty();
+
+        // Si no hay ventanas publicadas, devuelvo igualmente info de bloqueos
+        if (!hasPublishedWindows) {
+            return new AvailabilityResponseDto(slots, false, hasBlocksInRange, blockReasons);
         }
 
         LocalDateTime currentDay = dateFrom.toLocalDate().atStartOfDay();
         LocalDateTime lastDay = dateTo.toLocalDate().atStartOfDay();
 
         while (!currentDay.isAfter(lastDay)) {
+            DayOfWeek dow = currentDay.getDayOfWeek();
+            if (dow == DayOfWeek.SATURDAY || dow == DayOfWeek.SUNDAY) {
+                currentDay = currentDay.plusDays(1);
+                continue;
+            }
+
             LocalDateTime dayStart = currentDay.toLocalDate().atTime(workStart);
             LocalDateTime dayEnd = currentDay.toLocalDate().atTime(workEnd);
 
-            LocalDateTime rangeStart = dayStart.isAfter(dateFrom) ? dayStart : dateFrom;
-            LocalDateTime rangeEnd = dayEnd.isBefore(dateTo) ? dayEnd : dateTo;
+            LocalDateTime baseStart = dayStart.isAfter(dateFrom) ? dayStart : dateFrom;
+            LocalDateTime baseEnd = dayEnd.isBefore(dateTo) ? dayEnd : dateTo;
 
-            LocalDateTime slotStart = rangeStart;
+            if (baseStart.isBefore(baseEnd)) {
 
-            while (slotStart.plusMinutes(duration).isBefore(rangeEnd) || slotStart.plusMinutes(duration).isEqual(rangeEnd)) {
-                LocalDateTime slotEnd = slotStart.plusMinutes(duration);
+                for (var w : windows) {
+                    LocalDateTime wStart = w.getStartDateTime();
+                    LocalDateTime wEnd = w.getEndDateTime();
 
-                boolean overlaps = appointmentRepository.countOverlapping(
-                        professionalId,
-                        slotStart,
-                        slotEnd,
-                        null
-                ) > 0;
+                    LocalDateTime segStart = max(baseStart, wStart);
+                    LocalDateTime segEnd = min(baseEnd, wEnd);
 
-                if (!overlaps) {
-                    slots.add(new AvailabilitySlotDto(slotStart, slotEnd));
+                    if (!segStart.isBefore(segEnd)) {
+                        continue;
+                    }
+
+                    LocalDateTime slotStart = segStart;
+
+                    while (slotStart.plusMinutes(duration).isBefore(segEnd)
+                            || slotStart.plusMinutes(duration).isEqual(segEnd)) {
+
+                        LocalDateTime slotEnd = slotStart.plusMinutes(duration);
+
+                        final LocalDateTime currentStart = slotStart;
+                        final LocalDateTime currentEnd = slotEnd;
+
+                        boolean blocked = blocks.stream().anyMatch(b ->
+                                b.isEnabled() &&
+                                        b.getEndDateTime().isAfter(currentStart) &&
+                                        b.getStartDateTime().isBefore(currentEnd)
+                        );
+
+                        if (!blocked) {
+                            boolean overlaps = appointmentRepository.countOverlapping(
+                                    professionalId,
+                                    currentStart,
+                                    currentEnd,
+                                    null
+                            ) > 0;
+
+                            if (!overlaps) {
+                                slots.add(new AvailabilitySlotDto(currentStart, currentEnd));
+                            }
+                        }
+
+                        slotStart = slotStart.plusMinutes(step);
+                    }
                 }
-
-                slotStart = slotStart.plusMinutes(step);
             }
 
             currentDay = currentDay.plusDays(1);
         }
 
-        return slots;
+        return new AvailabilityResponseDto(slots, hasPublishedWindows, hasBlocksInRange, blockReasons);
+    }
+
+    private LocalDateTime max(LocalDateTime a, LocalDateTime b) {
+        return a.isAfter(b) ? a : b;
+    }
+
+    private LocalDateTime min(LocalDateTime a, LocalDateTime b) {
+        return a.isBefore(b) ? a : b;
     }
 }

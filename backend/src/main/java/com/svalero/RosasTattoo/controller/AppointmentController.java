@@ -3,6 +3,7 @@ package com.svalero.RosasTattoo.controller;
 import com.svalero.RosasTattoo.domain.enums.AppointmentState;
 import com.svalero.RosasTattoo.dto.AppointmentInDto;
 import com.svalero.RosasTattoo.dto.AppointmentDto;
+import com.svalero.RosasTattoo.dto.AvailabilityResponseDto;
 import com.svalero.RosasTattoo.exception.AppointmentNotFoundException;
 import com.svalero.RosasTattoo.exception.ClientNotFoundException;
 import com.svalero.RosasTattoo.exception.ErrorResponse;
@@ -122,14 +123,16 @@ public class AppointmentController {
 
     @PreAuthorize("hasAnyRole('ADMIN','CLIENT')")
     @GetMapping("/availability")
-    public ResponseEntity<List<AvailabilitySlotDto>> getAvailability(
+    public ResponseEntity<AvailabilityResponseDto> getAvailability(
             @RequestParam(value = "professionalId") long professionalId,
             @RequestParam(value = "dateFrom") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime dateFrom,
             @RequestParam(value = "dateTo") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime dateTo,
             @RequestParam(value = "durationMinutes", required = false) Integer durationMinutes,
             @RequestParam(value = "stepMinutes", required = false) Integer stepMinutes
     ) {
-        return ResponseEntity.ok(appointmentService.getAvailability(professionalId, dateFrom, dateTo, durationMinutes, stepMinutes));
+        return ResponseEntity.ok(
+                appointmentService.getAvailability(professionalId, dateFrom, dateTo, durationMinutes, stepMinutes)
+        );
     }
 
     @PreAuthorize("hasRole('ADMIN')")

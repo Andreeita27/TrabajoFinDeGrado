@@ -23,12 +23,24 @@ export function confirmDeposit(token: string, id: number) {
 
 export function getAllAppointments(
   token: string,
-  params?: { state?: string; clientId?: number; professionalId?: number }
+  params?: {
+    state?: string;
+    depositPaid?: boolean;
+    dateFrom?: string;
+    dateTo?: string;
+    professionalName?: string;
+    clientName?: string;
+  }
 ) {
   const qs = new URLSearchParams();
+
   if (params?.state) qs.set("state", params.state);
-  if (typeof params?.clientId === "number") qs.set("clientId", String(params.clientId));
-  if (typeof params?.professionalId === "number") qs.set("professionalId", String(params.professionalId));
+  if (typeof params?.depositPaid === "boolean") qs.set("depositPaid", String(params.depositPaid));
+  if (params?.dateFrom) qs.set("dateFrom", params.dateFrom);
+  if (params?.dateTo) qs.set("dateTo", params.dateTo);
+
+  if (params?.professionalName) qs.set("professionalName", params.professionalName);
+  if (params?.clientName) qs.set("clientName", params.clientName);
 
   const suffix = qs.toString() ? `?${qs.toString()}` : "";
   return apiFetch<AppointmentDto[]>(`/appointments${suffix}`, { method: "GET", token });

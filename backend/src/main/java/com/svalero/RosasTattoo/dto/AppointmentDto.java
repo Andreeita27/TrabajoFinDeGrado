@@ -17,6 +17,9 @@ public class AppointmentDto {
     private String professionalName;
     private long professionalId;
     private long clientId;
+    private String clientName;
+    private String clientSurname;
+    private String clientFullName;
     private String bodyPlacement;
     private String ideaDescription;
     private boolean firstTime;
@@ -27,4 +30,10 @@ public class AppointmentDto {
     private AppointmentState state;
     private boolean depositPaid;
     private boolean hasReview;
+
+    public String getClientFullName() {
+        String name = clientName == null ? "" : clientName;
+        String surname = clientSurname == null ? "" : clientSurname;
+        return (name + " " + surname).trim();
+    }
 }

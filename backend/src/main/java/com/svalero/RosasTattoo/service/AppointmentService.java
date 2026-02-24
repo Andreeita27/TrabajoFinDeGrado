@@ -19,7 +19,6 @@ import com.svalero.RosasTattoo.repository.ProfessionalRepository;
 import com.svalero.RosasTattoo.repository.ReviewRepository;
 import com.svalero.RosasTattoo.repository.UserAccountRepository;
 import org.modelmapper.ModelMapper;
-import org.modelmapper.TypeToken;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.GrantedAuthority;
@@ -97,25 +96,37 @@ public class AppointmentService {
         }
     }
 
+    private AppointmentDto toDto(Appointment appointment) {
+        AppointmentDto dto = modelMapper.map(appointment, AppointmentDto.class);
+
+        dto.setHasReview(reviewRepository.existsByAppointment_Id(appointment.getId()));
+
+        Client c = appointment.getClient();
+        if (c != null) {
+            dto.setClientName(c.getClientName());
+            dto.setClientSurname(c.getClientSurname());
+            dto.setClientFullName((c.getClientName() + " " + c.getClientSurname()).trim());
+        }
+
+        return dto;
+    }
+
     private AppointmentDto enrichHasReview(Appointment appointment) {
-        AppointmentDto appointmentDto = modelMapper.map(appointment, AppointmentDto.class);
-        appointmentDto.setHasReview(reviewRepository.existsByAppointment_Id(appointment.getId()));
-        return appointmentDto;
+        return toDto(appointment);
     }
 
     private List<AppointmentDto> enrichHasReview(List<Appointment> appointments) {
-        List<AppointmentDto> appointmentDtos = modelMapper.map(appointments, new TypeToken<List<AppointmentDto>>() {}.getType());
-        for (int i = 0; i < appointments.size(); i++) {
-            Appointment a = appointments.get(i);
-            AppointmentDto dto = appointmentDtos.get(i);
-            dto.setHasReview(reviewRepository.existsByAppointment_Id(a.getId()));
+        List<AppointmentDto> result = new ArrayList<>(appointments.size());
+        for (Appointment a : appointments) {
+            result.add(toDto(a));
         }
-        return appointmentDtos;
+        return result;
     }
 
     public List<AppointmentDto> findAll(AppointmentState state, Long clientId, Long professionalId,
                                         Boolean depositPaid, LocalDateTime dateFrom, LocalDateTime dateTo,
                                         String professionalName, String clientName) {
+
         List<Appointment> appointments = appointmentRepository.findByFilters(
                 state,
                 clientId,
@@ -126,20 +137,24 @@ public class AppointmentService {
                 (professionalName == null || professionalName.isBlank()) ? null : professionalName.trim(),
                 (clientName == null || clientName.isBlank()) ? null : clientName.trim()
         );
+
         return enrichHasReview(appointments);
     }
 
     public List<AppointmentDto> findMyAppointments(String email) throws ClientNotFoundException {
         Client me = getClientFromEmail(email);
 
-        List<Appointment> appointments = appointmentRepository.findByFilters(null,
+        List<Appointment> appointments = appointmentRepository.findByFilters(
+                null,
                 me.getId(),
                 null,
                 null,
                 null,
                 null,
                 null,
-                null);
+                null
+        );
+
         return enrichHasReview(appointments);
     }
 

@@ -28,7 +28,8 @@ public class Professional {
     @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate birthDate;
 
-    @Column
+    @Lob
+    @Column(columnDefinition = "TEXT")
     @NotBlank(message = "A description must be provided")
     private String description;
 

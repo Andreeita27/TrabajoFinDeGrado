@@ -26,4 +26,5 @@ public class AppointmentDto {
     private float price;
     private AppointmentState state;
     private boolean depositPaid;
+    private boolean hasReview;
 }

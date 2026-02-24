@@ -8,12 +8,15 @@ import com.svalero.RosasTattoo.domain.enums.AppointmentState;
 import com.svalero.RosasTattoo.domain.enums.TattooSize;
 import com.svalero.RosasTattoo.dto.AppointmentDto;
 import com.svalero.RosasTattoo.dto.AppointmentInDto;
+import com.svalero.RosasTattoo.dto.AvailabilitySlotDto;
+import com.svalero.RosasTattoo.exception.AppointmentConflictException;
 import com.svalero.RosasTattoo.exception.AppointmentNotFoundException;
 import com.svalero.RosasTattoo.exception.ClientNotFoundException;
 import com.svalero.RosasTattoo.exception.ProfessionalNotFoundException;
 import com.svalero.RosasTattoo.repository.AppointmentRepository;
 import com.svalero.RosasTattoo.repository.ClientRepository;
 import com.svalero.RosasTattoo.repository.ProfessionalRepository;
+import com.svalero.RosasTattoo.repository.ReviewRepository;
 import com.svalero.RosasTattoo.repository.UserAccountRepository;
 import org.modelmapper.ModelMapper;
 import org.modelmapper.TypeToken;
@@ -22,13 +25,12 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
-import com.svalero.RosasTattoo.exception.AppointmentConflictException;
+
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.util.List;
-import com.svalero.RosasTattoo.dto.AvailabilitySlotDto;
 import java.util.ArrayList;
+import java.util.List;
 
 @Service
 public class AppointmentService {
@@ -41,6 +43,8 @@ public class AppointmentService {
     private ProfessionalRepository professionalRepository;
     @Autowired
     private UserAccountRepository userAccountRepository;
+    @Autowired
+    private ReviewRepository reviewRepository;
     @Autowired
     private ModelMapper modelMapper;
 
@@ -91,18 +95,33 @@ public class AppointmentService {
         if (overlapsCount > 0) {
             throw new AppointmentConflictException("The selected time slot is not available");
         }
+    }
 
+    private AppointmentDto enrichHasReview(Appointment appointment) {
+        AppointmentDto appointmentDto = modelMapper.map(appointment, AppointmentDto.class);
+        appointmentDto.setHasReview(reviewRepository.existsByAppointment_Id(appointment.getId()));
+        return appointmentDto;
+    }
+
+    private List<AppointmentDto> enrichHasReview(List<Appointment> appointments) {
+        List<AppointmentDto> appointmentDtos = modelMapper.map(appointments, new TypeToken<List<AppointmentDto>>() {}.getType());
+        for (int i = 0; i < appointments.size(); i++) {
+            Appointment a = appointments.get(i);
+            AppointmentDto dto = appointmentDtos.get(i);
+            dto.setHasReview(reviewRepository.existsByAppointment_Id(a.getId()));
+        }
+        return appointmentDtos;
     }
 
     public List<AppointmentDto> findAll(AppointmentState state, Long clientId, Long professionalId) {
         List<Appointment> appointments = appointmentRepository.findByFilters(state, clientId, professionalId);
-        return modelMapper.map(appointments, new TypeToken<List<AppointmentDto>>() {}.getType());
+        return enrichHasReview(appointments);
     }
 
     public List<AppointmentDto> findMyAppointments(String email) throws ClientNotFoundException {
         Client me = getClientFromEmail(email);
         List<Appointment> appointments = appointmentRepository.findByFilters(null, me.getId(), null);
-        return modelMapper.map(appointments, new TypeToken<List<AppointmentDto>>() {}.getType());
+        return enrichHasReview(appointments);
     }
 
     public AppointmentDto findByIdSecured(long id, String email) throws AppointmentNotFoundException, ClientNotFoundException {
@@ -110,7 +129,7 @@ public class AppointmentService {
                 .orElseThrow(AppointmentNotFoundException::new);
 
         assertOwnership(appointment, email);
-        return modelMapper.map(appointment, AppointmentDto.class);
+        return enrichHasReview(appointment);
     }
 
     public AppointmentDto addSecured(AppointmentInDto appointmentInDto, String email)
@@ -142,7 +161,7 @@ public class AppointmentService {
         validateNoOverlap(professional.getId(), appointment.getStartDateTime(), durationMinutes, null);
 
         Appointment saved = appointmentRepository.save(appointment);
-        return modelMapper.map(saved, AppointmentDto.class);
+        return enrichHasReview(saved);
     }
 
     public AppointmentDto modifySecured(long id, AppointmentInDto appointmentInDto, String email)
@@ -175,7 +194,7 @@ public class AppointmentService {
         validateNoOverlap(professional.getId(), existing.getStartDateTime(), durationMinutes, existing.getId());
 
         Appointment saved = appointmentRepository.save(existing);
-        return modelMapper.map(saved, AppointmentDto.class);
+        return enrichHasReview(saved);
     }
 
     public AppointmentDto confirmDeposit(long id, String email)
@@ -200,7 +219,7 @@ public class AppointmentService {
         appointment.setState(AppointmentState.CONFIRMED);
 
         Appointment saved = appointmentRepository.save(appointment);
-        return modelMapper.map(saved, AppointmentDto.class);
+        return enrichHasReview(saved);
     }
 
     public AppointmentDto cancel(long id, String email)
@@ -221,7 +240,7 @@ public class AppointmentService {
         appointment.setState(AppointmentState.CANCELLED);
 
         Appointment saved = appointmentRepository.save(appointment);
-        return modelMapper.map(saved, AppointmentDto.class);
+        return enrichHasReview(saved);
     }
 
     public AppointmentDto markNoShow(long id) throws AppointmentNotFoundException {
@@ -235,7 +254,7 @@ public class AppointmentService {
         appointment.setState(AppointmentState.NO_SHOW);
 
         Appointment saved = appointmentRepository.save(appointment);
-        return modelMapper.map(saved, AppointmentDto.class);
+        return enrichHasReview(saved);
     }
 
     public AppointmentDto markCompleted(long id) throws AppointmentNotFoundException {
@@ -249,7 +268,7 @@ public class AppointmentService {
         appointment.setState(AppointmentState.COMPLETED);
 
         Appointment saved = appointmentRepository.save(appointment);
-        return modelMapper.map(saved, AppointmentDto.class);
+        return enrichHasReview(saved);
     }
 
     public void delete(long id) throws AppointmentNotFoundException {
@@ -263,7 +282,7 @@ public class AppointmentService {
         Appointment appointment = appointmentRepository.findById(id)
                 .orElseThrow(AppointmentNotFoundException::new);
 
-        return modelMapper.map(appointment, AppointmentDto.class);
+        return enrichHasReview(appointment);
     }
 
     public AppointmentDto add(AppointmentInDto appointmentInDto) throws ClientNotFoundException, ProfessionalNotFoundException {
@@ -280,7 +299,7 @@ public class AppointmentService {
         appointment.setProfessional(professional);
 
         Appointment saved = appointmentRepository.save(appointment);
-        return modelMapper.map(saved, AppointmentDto.class);
+        return enrichHasReview(saved);
     }
 
     public AppointmentDto modify(long id, AppointmentInDto appointmentInDto)
@@ -301,7 +320,7 @@ public class AppointmentService {
         existing.setProfessional(professional);
 
         Appointment saved = appointmentRepository.save(existing);
-        return modelMapper.map(saved, AppointmentDto.class);
+        return enrichHasReview(saved);
     }
 
     public List<AvailabilitySlotDto> getAvailability(long professionalId,

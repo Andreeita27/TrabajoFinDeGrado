@@ -29,6 +29,10 @@ export default function AdminTattooCreatePage() {
   const [tattooDate, setTattooDate] = useState("");
   const [imageUrl, setImageUrl] = useState("");
 
+  const [sessions, setSessions] = useState<number>(1);
+  const [coverUp, setCoverUp] = useState(false);
+  const [color, setColor] = useState(false);
+
   const [error, setError] = useState("");
   const [ok, setOk] = useState("");
   const [loading, setLoading] = useState(false);
@@ -43,7 +47,7 @@ export default function AdminTattooCreatePage() {
       setTattooDate(toDateOnly((a as any).startDateTime ?? (a as any).startDate ?? ""));
       setTattooDescription((a as any).ideaDescription ?? "");
     } catch (e: any) {
-      setError(e instanceof ApiError ? e.message : (e?.message || "Error cargando la cita"));
+      setError(e instanceof ApiError ? e.message : e?.message || "Error cargando la cita");
     }
   };
 
@@ -83,6 +87,16 @@ export default function AdminTattooCreatePage() {
       return;
     }
 
+    if (!imageUrl.trim()) {
+      setError("La URL de la imagen es obligatoria.");
+      return;
+    }
+
+    if (!Number.isFinite(sessions) || sessions < 1) {
+      setError("Las sesiones deben ser 1 o más.");
+      return;
+    }
+
     const clientId = (appointment as any).clientId;
     const professionalId = (appointment as any).professionalId;
 
@@ -97,7 +111,10 @@ export default function AdminTattooCreatePage() {
       style: style.trim(),
       tattooDescription: tattooDescription.trim(),
       tattooDate,
-      imageUrl: imageUrl.trim() ? imageUrl.trim() : null,
+      imageUrl: imageUrl.trim(),
+      sessions,
+      coverUp,
+      color,
     };
 
     try {
@@ -108,10 +125,11 @@ export default function AdminTattooCreatePage() {
     } catch (e: any) {
       if (e instanceof ApiError) {
         const body: any = e.body;
-        const validationMsg =
-          body?.errors
-            ? Object.entries(body.errors).map(([k, v]) => `${k}: ${v}`).join(" | ")
-            : "";
+        const validationMsg = body?.errors
+          ? Object.entries(body.errors)
+              .map(([k, v]) => `${k}: ${v}`)
+              .join(" | ")
+          : "";
         setError(validationMsg || e.message || "Error registrando tattoo");
       } else {
         setError(e?.message || "Error registrando tattoo");
@@ -187,12 +205,45 @@ export default function AdminTattooCreatePage() {
           </label>
 
           <label>
-            Tengo que subir archivos
+            Sesiones
+            <input
+              type="number"
+              min={1}
+              value={sessions}
+              onChange={(e) => setSessions(Number(e.target.value))}
+              style={{ display: "block", width: "100%", padding: 8, marginTop: 6 }}
+              disabled={loading}
+            />
+          </label>
+
+          <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
+            <input
+              type="checkbox"
+              checked={coverUp}
+              onChange={(e) => setCoverUp(e.target.checked)}
+              disabled={loading}
+            />
+            ¿Cover up?
+          </label>
+
+          <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
+            <input
+              type="checkbox"
+              checked={color}
+              onChange={(e) => setColor(e.target.checked)}
+              disabled={loading}
+            />
+            ¿A color?
+          </label>
+
+          <label>
+            URL de imagen
             <input
               value={imageUrl}
               onChange={(e) => setImageUrl(e.target.value)}
               style={{ display: "block", width: "100%", padding: 8, marginTop: 6 }}
               disabled={loading}
+              placeholder="https://..."
             />
           </label>
 

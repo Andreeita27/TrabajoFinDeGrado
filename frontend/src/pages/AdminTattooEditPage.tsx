@@ -22,6 +22,10 @@ export default function AdminTattooEditPage() {
   const [tattooDate, setTattooDate] = useState("");
   const [imageUrl, setImageUrl] = useState("");
 
+  const [sessions, setSessions] = useState<number>(1);
+  const [coverUp, setCoverUp] = useState(false);
+  const [color, setColor] = useState(false);
+
   const [error, setError] = useState("");
   const [ok, setOk] = useState("");
   const [loading, setLoading] = useState(false);
@@ -37,6 +41,10 @@ export default function AdminTattooEditPage() {
       setTattooDescription(t.tattooDescription ?? "");
       setTattooDate(t.tattooDate ?? "");
       setImageUrl(t.imageUrl ?? "");
+
+      setSessions(typeof t.sessions === "number" && t.sessions > 0 ? t.sessions : 1);
+      setCoverUp(!!t.coverUp);
+      setColor(!!t.color);
     } catch (e: any) {
       setError(e instanceof ApiError ? e.message : (e?.message || "Error cargando tattoo"));
     }
@@ -66,13 +74,26 @@ export default function AdminTattooEditPage() {
       return;
     }
 
+    if (!imageUrl.trim()) {
+      setError("La URL de imagen es obligatoria.");
+      return;
+    }
+
+    if (!Number.isFinite(sessions) || sessions < 1) {
+      setError("Las sesiones deben ser 1 o más.");
+      return;
+    }
+
     const payload: TattooInDto = {
       clientId: original.clientId,
       professionalId: original.professionalId,
       style: style.trim(),
       tattooDescription: tattooDescription.trim(),
       tattooDate,
-      imageUrl: imageUrl.trim() ? imageUrl.trim() : null,
+      imageUrl: imageUrl.trim(),
+      sessions,
+      coverUp,
+      color,
     };
 
     try {
@@ -154,12 +175,45 @@ export default function AdminTattooEditPage() {
             </label>
 
             <label>
-              Image URL (opcional)
+              Sesiones
+              <input
+                type="number"
+                min={1}
+                value={sessions}
+                onChange={(e) => setSessions(Number(e.target.value))}
+                style={{ display: "block", width: "100%", padding: 8, marginTop: 6 }}
+                disabled={loading}
+              />
+            </label>
+
+            <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
+              <input
+                type="checkbox"
+                checked={coverUp}
+                onChange={(e) => setCoverUp(e.target.checked)}
+                disabled={loading}
+              />
+              ¿Cover up?
+            </label>
+
+            <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
+              <input
+                type="checkbox"
+                checked={color}
+                onChange={(e) => setColor(e.target.checked)}
+                disabled={loading}
+              />
+              ¿A color?
+            </label>
+
+            <label>
+              URL de imagen
               <input
                 value={imageUrl}
                 onChange={(e) => setImageUrl(e.target.value)}
                 style={{ display: "block", width: "100%", padding: 8, marginTop: 6 }}
                 disabled={loading}
+                placeholder="https://..."
               />
             </label>
 

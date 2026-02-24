@@ -19,4 +19,7 @@ export type TattooInDto = {
   tattooDescription: string;
   tattooDate: string;
   imageUrl?: string | null;
+  sessions: number;
+  coverUp: boolean;
+  color: boolean;
 };

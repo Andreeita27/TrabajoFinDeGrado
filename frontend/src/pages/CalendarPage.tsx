@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ApiError } from "../api/apiFetch";
 import { getAvailability } from "../api/availabilityApi";
+import type { AvailabilityResponseDto } from "../api/availabilityApi";
 import { getProfessionals } from "../api/showroomApi";
 import { createAppointment } from "../api/appointmentsApi";
 import { useAuth } from "../auth/AuthContext";
@@ -27,6 +28,31 @@ function withSeconds(isoOrLocal: string) {
   return isoOrLocal.length === 16 ? `${isoOrLocal}:00` : isoOrLocal;
 }
 
+function formatSlotLabel(iso: string) {
+  try {
+    return new Date(iso).toLocaleString("es-ES");
+  } catch {
+    return iso;
+  }
+}
+
+function buildAvailabilityInfo(r: AvailabilityResponseDto) {
+  if (r.slots.length > 0) return "";
+
+  if (r.hasBlocksInRange) {
+    const reasons = (r.blockReasons || []).filter(Boolean);
+    return reasons.length
+      ? `No disponible en esa fecha: ${reasons.join(", ")}.`
+      : "No disponible en esa fecha (bloqueado).";
+  }
+
+  if (!r.hasPublishedWindows) {
+    return "Este profesional todavía no ha abierto agenda para ese día.";
+  }
+
+  return "No hay huecos disponibles para ese día.";
+}
+
 export default function CalendarPage() {
   const { token, role, clientId } = useAuth();
   const nav = useNavigate();
@@ -36,19 +62,18 @@ export default function CalendarPage() {
   const [professionals, setProfessionals] = useState<ProfessionalDto[]>([]);
   const [professionalId, setProfessionalId] = useState<number>(0);
 
-  //En vez de dateFrom/dateTo: solo día
   const [day, setDay] = useState<string>("");
 
-  //Tamaño elegido por el usuario
   const [tattooSize, setTattooSize] = useState<TattooSize>("SMALL");
 
-  //Duración calculada automáticamente
   const durationMinutes = useMemo(() => DURATION_BY_SIZE[tattooSize], [tattooSize]);
 
   const [slots, setSlots] = useState<AvailabilitySlotDto[]>([]);
   const [selectedStart, setSelectedStart] = useState<string>("");
 
   const [error, setError] = useState<string>("");
+
+  const [availabilityInfo, setAvailabilityInfo] = useState<string>("");
 
   const [bodyPlacement, setBodyPlacement] = useState("");
   const [ideaDescription, setIdeaDescription] = useState("");
@@ -69,6 +94,7 @@ export default function CalendarPage() {
     if (!day) return;
 
     setError("");
+    setAvailabilityInfo("");
     setSlots([]);
     setSelectedStart("");
 
@@ -82,7 +108,10 @@ export default function CalendarPage() {
       durationMinutes,
       stepMinutes,
     })
-      .then(setSlots)
+      .then((res) => {
+        setSlots(res.slots);
+        setAvailabilityInfo(buildAvailabilityInfo(res));
+      })
       .catch((e: any) => {
         if (e instanceof ApiError && e.status === 401) {
           nav("/login", { replace: true, state: { from: "/calendar" } });
@@ -93,57 +122,56 @@ export default function CalendarPage() {
   }, [token, professionalId, day, durationMinutes, nav]);
 
   const onCreateAppointment = async () => {
-  if (!token) return;
-  setError("");
+    if (!token) return;
+    setError("");
 
-  try {
-    if (!selectedStart) throw new Error("Selecciona un slot primero");
-    if (!bodyPlacement.trim()) throw new Error("Indica en qué parte del cuerpo quieres el tattoo.");
-    if (!ideaDescription.trim()) throw new Error("Describe tu idea.");
+    try {
+      if (!selectedStart) throw new Error("Selecciona un slot primero");
+      if (!bodyPlacement.trim()) throw new Error("Indica en qué parte del cuerpo quieres el tattoo.");
+      if (!ideaDescription.trim()) throw new Error("Describe tu idea.");
 
-    let finalClientId: number | null = null;
+      let finalClientId: number | null = null;
 
-    if (role === "CLIENT") {
-      if (!clientId) {
-        throw new Error("No se ha podido identificar tu usuario. Cierra sesión e inicia de nuevo.");
+      if (role === "CLIENT") {
+        if (!clientId) {
+          throw new Error("No se ha podido identificar tu usuario. Cierra sesión e inicia de nuevo.");
+        }
+        finalClientId = clientId;
+      } else if (role === "ADMIN") {
+        if (!selectedClient) {
+          throw new Error("Selecciona un cliente antes de crear la cita.");
+        }
+        finalClientId = selectedClient.id;
+      } else {
+        throw new Error("Rol no soportado para crear cita.");
       }
-      finalClientId = clientId;
-    } else if (role === "ADMIN") {
-      if (!selectedClient) {
-        throw new Error("Selecciona un cliente antes de crear la cita.");
+
+      await createAppointment(token, {
+        clientId: finalClientId!,
+        professionalId,
+        startDateTime: withSeconds(selectedStart),
+        bodyPlacement,
+        ideaDescription,
+        firstTime,
+        tattooSize,
+        referenceImageUrl: null,
+      });
+
+      if (role === "ADMIN") {
+        nav("/admin/appointments", { replace: true });
+      } else {
+        nav("/my-appointments", { replace: true });
       }
-      finalClientId = selectedClient.id;
-    } else {
-      throw new Error("Rol no soportado para crear cita.");
+    } catch (e: any) {
+      if (e instanceof ApiError && e.status === 401) {
+        nav("/login", { replace: true, state: { from: "/calendar" } });
+        return;
+      }
+      setError(e?.message || "Error creando cita");
     }
+  };
 
-    await createAppointment(token, {
-      clientId: finalClientId!,
-      professionalId,
-      startDateTime: withSeconds(selectedStart),
-      bodyPlacement,
-      ideaDescription,
-      firstTime,
-      tattooSize,
-      referenceImageUrl: null,
-    });
-
-    if (role === "ADMIN") {
-      nav("/admin/appointments", { replace: true });
-    } else {
-      nav("/my-appointments", { replace: true });
-    }
-  } catch (e: any) {
-    if (e instanceof ApiError && e.status === 401) {
-      nav("/login", { replace: true, state: { from: "/calendar" } });
-      return;
-    }
-    setError(e?.message || "Error creando cita");
-  }
-};
-
-  const disableCreate =
-    !selectedStart || (role === "ADMIN" && !selectedClient);
+  const disableCreate = !selectedStart || (role === "ADMIN" && !selectedClient);
 
   return (
     <div style={{ padding: 16 }}>
@@ -153,10 +181,7 @@ export default function CalendarPage() {
 
       {role === "ADMIN" && (
         <>
-          <ClientPicker
-            valueClientId={selectedClient?.id ?? null}
-            onChangeClient={(c) => setSelectedClient(c)}
-          />
+          <ClientPicker valueClientId={selectedClient?.id ?? null} onChangeClient={(c) => setSelectedClient(c)} />
 
           {selectedClient && (
             <div style={{ marginTop: 8, marginBottom: 8, opacity: 0.9 }}>
@@ -202,8 +227,17 @@ export default function CalendarPage() {
       <hr style={{ margin: "16px 0" }} />
 
       <h2>Slots disponibles</h2>
+
+      {availabilityInfo && (
+        <div style={{ marginBottom: 10, padding: 10, border: "1px solid #333", borderRadius: 8, opacity: 0.95 }}>
+          {availabilityInfo}
+        </div>
+      )}
+
       {slots.length === 0 ? (
-        <div>No hay slots cargados todavía.</div>
+        <div style={{ opacity: 0.85 }}>
+          {day ? "No hay slots disponibles para mostrar." : "Selecciona un profesional y un día para ver disponibilidad."}
+        </div>
       ) : (
         <ul>
           {slots.map((s, idx) => (
@@ -216,7 +250,7 @@ export default function CalendarPage() {
                   checked={selectedStart === s.startDateTime}
                   onChange={() => setSelectedStart(s.startDateTime)}
                 />
-                {s.startDateTime}
+                {formatSlotLabel(s.startDateTime)}
               </label>
             </li>
           ))}
@@ -227,11 +261,7 @@ export default function CalendarPage() {
 
       <h2>Datos de la cita</h2>
       <section style={{ display: "grid", gap: 10, maxWidth: 720 }}>
-        <input
-          placeholder="Zona del cuerpo"
-          value={bodyPlacement}
-          onChange={(e) => setBodyPlacement(e.target.value)}
-        />
+        <input placeholder="Zona del cuerpo" value={bodyPlacement} onChange={(e) => setBodyPlacement(e.target.value)} />
         <textarea
           placeholder="Describe la idea"
           value={ideaDescription}
@@ -249,9 +279,7 @@ export default function CalendarPage() {
         </button>
 
         {role === "ADMIN" && !selectedClient && (
-          <div style={{ opacity: 0.8 }}>
-            Selecciona un cliente para poder crear la cita.
-          </div>
+          <div style={{ opacity: 0.8 }}>Selecciona un cliente para poder crear la cita.</div>
         )}
       </section>
     </div>

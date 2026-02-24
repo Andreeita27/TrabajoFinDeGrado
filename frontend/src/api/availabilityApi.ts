@@ -1,6 +1,13 @@
 import { apiFetch } from "./apiFetch";
 import type { AvailabilitySlotDto } from "../types/availability";
 
+export type AvailabilityResponseDto = {
+  slots: AvailabilitySlotDto[];
+  hasPublishedWindows: boolean;
+  hasBlocksInRange: boolean;
+  blockReasons: string[];
+};
+
 export function getAvailability(
   token: string,
   params: {
@@ -18,7 +25,7 @@ export function getAvailability(
   if (typeof params.durationMinutes === "number") qs.set("durationMinutes", String(params.durationMinutes));
   if (typeof params.stepMinutes === "number") qs.set("stepMinutes", String(params.stepMinutes));
 
-  return apiFetch<AvailabilitySlotDto[]>(`/availability?${qs.toString()}`, {
+  return apiFetch<AvailabilityResponseDto>(`/availability?${qs.toString()}`, {
     method: "GET",
     token,
   });

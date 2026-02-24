@@ -113,14 +113,33 @@ public class AppointmentService {
         return appointmentDtos;
     }
 
-    public List<AppointmentDto> findAll(AppointmentState state, Long clientId, Long professionalId) {
-        List<Appointment> appointments = appointmentRepository.findByFilters(state, clientId, professionalId);
+    public List<AppointmentDto> findAll(AppointmentState state, Long clientId, Long professionalId,
+                                        Boolean depositPaid, LocalDateTime dateFrom, LocalDateTime dateTo,
+                                        String professionalName, String clientName) {
+        List<Appointment> appointments = appointmentRepository.findByFilters(
+                state,
+                clientId,
+                professionalId,
+                depositPaid,
+                dateFrom,
+                dateTo,
+                (professionalName == null || professionalName.isBlank()) ? null : professionalName.trim(),
+                (clientName == null || clientName.isBlank()) ? null : clientName.trim()
+        );
         return enrichHasReview(appointments);
     }
 
     public List<AppointmentDto> findMyAppointments(String email) throws ClientNotFoundException {
         Client me = getClientFromEmail(email);
-        List<Appointment> appointments = appointmentRepository.findByFilters(null, me.getId(), null);
+
+        List<Appointment> appointments = appointmentRepository.findByFilters(null,
+                me.getId(),
+                null,
+                null,
+                null,
+                null,
+                null,
+                null);
         return enrichHasReview(appointments);
     }
 

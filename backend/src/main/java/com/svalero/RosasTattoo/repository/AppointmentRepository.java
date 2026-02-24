@@ -18,11 +18,28 @@ public interface AppointmentRepository extends CrudRepository<Appointment, Long>
     @Query("SELECT a FROM appointment a WHERE " +
             "(:state IS NULL OR a.state = :state) AND " +
             "(:clientId IS NULL OR a.client.id = :clientId) AND " +
-            "(:professionalId IS NULL OR a.professional.id = :professionalId)")
+            "(:professionalId IS NULL OR a.professional.id = :professionalId) AND " +
+            "(:depositPaid IS NULL OR a.depositPaid = :depositPaid) AND " +
+            "(:dateFrom IS NULL OR a.startDateTime >= :dateFrom) AND " +
+            "(:dateTo IS NULL OR a.startDateTime <= :dateTo) AND " +
+            "(:professionalName IS NULL OR " +
+            "   LOWER(a.professional.professionalName) LIKE LOWER(CONCAT('%', :professionalName, '%'))" +
+            ") AND " +
+            "(:clientName IS NULL OR " +
+            "   LOWER(a.client.clientName) LIKE LOWER(CONCAT('%', :clientName, '%')) OR " +
+            "   LOWER(a.client.clientSurname) LIKE LOWER(CONCAT('%', :clientName, '%')) OR " +
+            "   LOWER(CONCAT(a.client.clientName, ' ', a.client.clientSurname)) LIKE LOWER(CONCAT('%', :clientName, '%'))" +
+            ") " +
+            "ORDER BY a.startDateTime DESC")
     List<Appointment> findByFilters(
             @Param("state") AppointmentState state,
             @Param("clientId") Long clientId,
-            @Param("professionalId") Long professionalId
+            @Param("professionalId") Long professionalId,
+            @Param("depositPaid") Boolean depositPaid,
+            @Param("dateFrom") LocalDateTime dateFrom,
+            @Param("dateTo") LocalDateTime dateTo,
+            @Param("professionalName") String professionalName,
+            @Param("clientName") String clientName
     );
 
     /*

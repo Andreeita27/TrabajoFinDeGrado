@@ -37,10 +37,22 @@ public class AppointmentController {
     public ResponseEntity<List<AppointmentDto>> getAll(
             @RequestParam(value = "state", required = false) AppointmentState state,
             @RequestParam(value = "clientId", required = false) Long clientId,
-            @RequestParam(value = "professionalId", required = false) Long professionalId
+            @RequestParam(value = "professionalId", required = false) Long professionalId,
+            @RequestParam(value = "depositPaid", required = false) Boolean depositPaid,
+            @RequestParam(value = "dateFrom", required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime dateFrom,
+            @RequestParam(value = "dateTo", required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime dateTo,
+            @RequestParam(value = "professionalName", required = false) String professionalName,
+            @RequestParam(value = "clientName", required = false) String clientName
     ) {
-        List<AppointmentDto> appointments = appointmentService.findAll(state, clientId, professionalId);
-        return ResponseEntity.ok(appointments);
+        return ResponseEntity.ok(
+                appointmentService.findAll(
+                        state, clientId, professionalId,
+                        depositPaid, dateFrom, dateTo,
+                        professionalName, clientName
+                )
+        );
     }
 
     @PreAuthorize("hasRole('CLIENT')")

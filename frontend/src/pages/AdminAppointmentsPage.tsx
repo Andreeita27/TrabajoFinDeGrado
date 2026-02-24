@@ -254,9 +254,10 @@ export default function AdminAppointmentsPage() {
                   </td>
 
                   <td style={{ padding: 8, borderBottom: "1px solid #eee" }}>
-                    {a.clientId}
+                    {a.clientFullName ??
+                      (`${a.clientName ?? ""} ${a.clientSurname ?? ""}`.trim() || `#${a.clientId}`)}
                   </td>
-
+                  
                   <td style={{ padding: 8, borderBottom: "1px solid #eee" }}>
                     <b>{a.state}</b>
                   </td>

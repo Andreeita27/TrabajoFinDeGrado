@@ -59,7 +59,10 @@ export default function ReviewCreatePage() {
       setLoading(true);
       await createReview(token, { appointmentId, rating, comment: comment.trim(), wouldRecommend });
       setOk("¡Reseña enviada! Gracias 🖤");
-      setTimeout(() => nav("/my-appointments"), 600);
+      setTimeout(() => {
+        nav(`/my-appointments?reviewed=${appointmentId}`, { replace: true });
+      }, 600);
+      
     } catch (e: any) {
       if (e instanceof ApiError) {
         const body: any = e.body;

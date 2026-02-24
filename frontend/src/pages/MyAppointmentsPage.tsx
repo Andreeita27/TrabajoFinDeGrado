@@ -8,8 +8,12 @@ import type { AppointmentDto } from "../types/appointment";
 export default function MyAppointmentsPage() {
   const { token, role } = useAuth();
   const nav = useNavigate();
+
   const [items, setItems] = useState<AppointmentDto[]>([]);
   const [error, setError] = useState("");
+
+  // Para no permitir doble click
+  const [reviewSubmitting, setReviewSubmitting] = useState<Record<number, boolean>>({});
 
   const load = async () => {
     if (!token) return;
@@ -56,6 +60,11 @@ export default function MyAppointmentsPage() {
     }
   };
 
+  const onGoReview = (appointmentId: number) => {
+    setReviewSubmitting((m) => ({ ...m, [appointmentId]: true }));
+    nav(`/reviews/new?appointmentId=${appointmentId}`);
+  };
+
   return (
     <div style={{ padding: 16 }}>
       <h1>Mis citas</h1>
@@ -72,13 +81,17 @@ export default function MyAppointmentsPage() {
                 <b>{a.startDateTime}</b> — {a.professionalName} — {a.state} — {a.durationMinutes} min
               </div>
 
-              <div style={{ display: "flex", gap: 8 }}>
-                {role === "CLIENT" && a.state === "COMPLETED" && (
-                  <button onClick={() => nav(`/reviews/new?appointmentId=${a.id}`)}>
-                    Dejar reseña
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                {role === "CLIENT" && a.state === "COMPLETED" && !a.hasReview && (
+                  <button onClick={() => onGoReview(a.id)} disabled={!!reviewSubmitting[a.id]}>
+                    {reviewSubmitting[a.id] ? "Abriendo..." : "Dejar reseña"}
                   </button>
                 )}
-                
+
+                {role === "CLIENT" && a.state === "COMPLETED" && a.hasReview && (
+                  <button disabled>Reseña ya enviada</button>
+                )}
+
                 {role === "ADMIN" && !a.depositPaid && a.state === "PENDING" && (
                   <button onClick={() => onPayDeposit(a.id)}>Confirmar señal</button>
                 )}

@@ -22,6 +22,7 @@ export type AppointmentDto = {
   price: number;
   state: AppointmentState;
   depositPaid: boolean;
+  hasReview: boolean;
 };
 
 export type AppointmentInDto = {

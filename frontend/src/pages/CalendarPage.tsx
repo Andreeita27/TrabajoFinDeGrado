@@ -9,8 +9,9 @@ import { useAuth } from "../auth/AuthContext";
 import type { AvailabilitySlotDto } from "../types/availability";
 import type { ProfessionalDto } from "../types/professional";
 import type { TattooSize } from "../types/appointment";
-import ClientPicker from "../components/ClientPicker";
 import type { ClientDto } from "../types/client";
+
+import ClientAutocomplete from "../components/ClientAutocomplete";
 
 const OPEN_HOUR = "12:00:00";
 const CLOSE_HOUR = "20:00:00";
@@ -181,16 +182,16 @@ export default function CalendarPage() {
 
       {role === "ADMIN" && (
         <>
-          <ClientPicker valueClientId={selectedClient?.id ?? null} onChangeClient={(c) => setSelectedClient(c)} />
-
-          {selectedClient && (
-            <div style={{ marginTop: 8, marginBottom: 8, opacity: 0.9 }}>
-              Cliente seleccionado:{" "}
-              <b>
-                {selectedClient.clientName} {selectedClient.clientSurname}
-              </b>
-            </div>
+          {token ? (
+            <ClientAutocomplete
+              token={token}
+              value={selectedClient}
+              onChange={(c) => setSelectedClient(c as any)}
+            />
+          ) : (
+            <div style={{ opacity: 0.85 }}>Inicia sesión como admin para seleccionar cliente.</div>
           )}
+
           <hr style={{ margin: "16px 0" }} />
         </>
       )}
@@ -229,7 +230,15 @@ export default function CalendarPage() {
       <h2>Slots disponibles</h2>
 
       {availabilityInfo && (
-        <div style={{ marginBottom: 10, padding: 10, border: "1px solid #333", borderRadius: 8, opacity: 0.95 }}>
+        <div
+          style={{
+            marginBottom: 10,
+            padding: 10,
+            border: "1px solid #333",
+            borderRadius: 8,
+            opacity: 0.95,
+          }}
+        >
           {availabilityInfo}
         </div>
       )}

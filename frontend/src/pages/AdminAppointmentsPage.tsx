@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ApiError } from "../api/apiFetch";
 import {
@@ -10,6 +10,8 @@ import {
 } from "../api/appointmentsApi";
 import { useAuth } from "../auth/AuthContext";
 import type { AppointmentDto, AppointmentState } from "../types/appointment";
+import type { ClientDto } from "../types/client";
+import { searchClients } from "../api/clientsApi";
 
 type DepositFilter = "ALL" | "PAID" | "UNPAID";
 
@@ -24,7 +26,12 @@ export default function AdminAppointmentsPage() {
   const [stateFilter, setStateFilter] = useState<AppointmentState | "ALL">("ALL");
   const [depositFilter, setDepositFilter] = useState<DepositFilter>("ALL");
   const [professionalName, setProfessionalName] = useState<string>("");
-  const [clientName, setClientName] = useState<string>("");
+
+  const [clientName, setClientName] = useState<string>(""); //este sigue siendo el filtro que mando al backend
+  const [clientQuery, setClientQuery] = useState<string>(""); //lo que escribe el admin
+  const [clientOptions, setClientOptions] = useState<ClientDto[]>([]);
+  const [clientOpen, setClientOpen] = useState(false);
+  const [clientLoading, setClientLoading] = useState(false);
 
   // Rango fechas
   const [dateFrom, setDateFrom] = useState<string>("");
@@ -78,6 +85,64 @@ export default function AdminAppointmentsPage() {
 
     return () => window.clearTimeout(t);
   }, [stateFilter, depositFilter, professionalName, clientName, dateFrom, dateTo]);
+
+  useEffect(() => {
+    if (!token) return;
+
+    const q = clientQuery.trim();
+    if (!q) {
+      setClientOptions([]);
+      setClientLoading(false);
+      return;
+    }
+
+    setClientLoading(true);
+    const t = window.setTimeout(async () => {
+      try {
+        const res = await searchClients(token, q);
+        setClientOptions(res);
+        setClientOpen(true);
+      } catch {
+        setClientOptions([]);
+        setClientOpen(true);
+      } finally {
+        setClientLoading(false);
+      }
+    }, 250);
+
+    return () => window.clearTimeout(t);
+  }, [clientQuery, token]);
+
+  // Cerrar desplegable al click fuera
+  const clientWrapRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    const onDown = (e: MouseEvent) => {
+      if (!clientWrapRef.current) return;
+      if (!clientWrapRef.current.contains(e.target as Node)) setClientOpen(false);
+    };
+    document.addEventListener("mousedown", onDown);
+    return () => document.removeEventListener("mousedown", onDown);
+  }, []);
+
+  const onSelectClient = (c: ClientDto) => {
+    const full = `${c.clientName ?? ""} ${c.clientSurname ?? ""}`.trim();
+    setClientQuery(full);     // deja el texto bonito en el input
+    setClientName(full);      //esto es lo que filtra realmente
+    setClientOpen(false);     //cierra desplegable al seleccionar
+    setClientOptions([]);     //limpia lista para que no se quede abierta
+  };
+
+  const onClearFilters = () => {
+    setStateFilter("ALL");
+    setDepositFilter("ALL");
+    setProfessionalName("");
+    setClientName("");
+    setClientQuery("");
+    setClientOptions([]);
+    setClientOpen(false);
+    setDateFrom("");
+    setDateTo("");
+  };
 
   const onPayDeposit = async (id: number) => {
     if (!token) return;
@@ -133,15 +198,6 @@ export default function AdminAppointmentsPage() {
     }
   };
 
-  const onClearFilters = () => {
-    setStateFilter("ALL");
-    setDepositFilter("ALL");
-    setProfessionalName("");
-    setClientName("");
-    setDateFrom("");
-    setDateTo("");
-  };
-
   return (
     <div style={{ padding: 16 }}>
       <h1>Todas las citas</h1>
@@ -188,31 +244,82 @@ export default function AdminAppointmentsPage() {
           />
         </label>
 
-        <label style={{ display: "grid", gap: 6 }}>
-          Cliente
-          <input
-            value={clientName}
-            onChange={(e) => setClientName(e.target.value)}
-            placeholder="Ej: Andrea / Fernández"
-          />
-        </label>
+        <div ref={clientWrapRef} style={{ display: "grid", gap: 6, position: "relative" }}>
+          <label style={{ display: "grid", gap: 6 }}>
+            Cliente
+            <input
+              value={clientQuery}
+              onChange={(e) => {
+                const v = e.target.value;
+                setClientQuery(v);
+                setClientName(v);
+                setClientOpen(true);
+              }}
+              onFocus={() => {
+                if (clientQuery.trim()) setClientOpen(true);
+              }}
+              placeholder="Ej: Andrea / Fernández"
+            />
+          </label>
+
+          {clientOpen && clientQuery.trim() && (
+            <div
+              style={{
+                position: "absolute",
+                top: "100%",
+                left: 0,
+                right: 0,
+                marginTop: 6,
+                border: "1px solid #333",
+                borderRadius: 8,
+                background: "#111",
+                zIndex: 20,
+                maxHeight: 220,
+                overflow: "auto",
+              }}
+            >
+              {clientLoading && <div style={{ padding: 10, opacity: 0.8 }}>Buscando…</div>}
+
+              {!clientLoading && clientOptions.length === 0 && (
+                <div style={{ padding: 10, opacity: 0.8 }}>Sin resultados</div>
+              )}
+
+              {!clientLoading &&
+                clientOptions.map((c) => {
+                  const full = `${c.clientName ?? ""} ${c.clientSurname ?? ""}`.trim();
+                  return (
+                    <button
+                      key={c.id}
+                      type="button"
+                      onClick={() => onSelectClient(c)}
+                      style={{
+                        width: "100%",
+                        textAlign: "left",
+                        padding: 10,
+                        border: "none",
+                        background: "transparent",
+                        color: "white",
+                        cursor: "pointer",
+                        borderBottom: "1px solid #222",
+                      }}
+                    >
+                      <div style={{ fontWeight: 600 }}>{full}</div>
+                      {c.email && <div style={{ opacity: 0.75, fontSize: 12 }}>{c.email}</div>}
+                    </button>
+                  );
+                })}
+            </div>
+          )}
+        </div>
 
         <label style={{ display: "grid", gap: 6 }}>
           Desde
-          <input
-            type="datetime-local"
-            value={dateFrom}
-            onChange={(e) => setDateFrom(e.target.value)}
-          />
+          <input type="datetime-local" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} />
         </label>
 
         <label style={{ display: "grid", gap: 6 }}>
           Hasta
-          <input
-            type="datetime-local"
-            value={dateTo}
-            onChange={(e) => setDateTo(e.target.value)}
-          />
+          <input type="datetime-local" value={dateTo} onChange={(e) => setDateTo(e.target.value)} />
         </label>
 
         <div style={{ display: "flex", gap: 8 }}>
@@ -228,13 +335,19 @@ export default function AdminAppointmentsPage() {
           <table style={{ width: "100%", borderCollapse: "collapse" }}>
             <thead>
               <tr>
-                <th style={{ textAlign: "left", padding: 8, borderBottom: "1px solid #ddd" }}>Número de cita</th>
+                <th style={{ textAlign: "left", padding: 8, borderBottom: "1px solid #ddd" }}>
+                  Número de cita
+                </th>
                 <th style={{ textAlign: "left", padding: 8, borderBottom: "1px solid #ddd" }}>Fecha</th>
-                <th style={{ textAlign: "left", padding: 8, borderBottom: "1px solid #ddd" }}>Profesional</th>
+                <th style={{ textAlign: "left", padding: 8, borderBottom: "1px solid #ddd" }}>
+                  Profesional
+                </th>
                 <th style={{ textAlign: "left", padding: 8, borderBottom: "1px solid #ddd" }}>Cliente</th>
                 <th style={{ textAlign: "left", padding: 8, borderBottom: "1px solid #ddd" }}>Estado</th>
                 <th style={{ textAlign: "left", padding: 8, borderBottom: "1px solid #ddd" }}>Señal</th>
-                <th style={{ textAlign: "left", padding: 8, borderBottom: "1px solid #ddd" }}>Acciones</th>
+                <th style={{ textAlign: "left", padding: 8, borderBottom: "1px solid #ddd" }}>
+                  Acciones
+                </th>
               </tr>
             </thead>
 
@@ -249,22 +362,18 @@ export default function AdminAppointmentsPage() {
                     {new Date(a.startDateTime).toLocaleString("es-ES")}
                   </td>
 
-                  <td style={{ padding: 8, borderBottom: "1px solid #eee" }}>
-                    {a.professionalName}
-                  </td>
+                  <td style={{ padding: 8, borderBottom: "1px solid #eee" }}>{a.professionalName}</td>
 
                   <td style={{ padding: 8, borderBottom: "1px solid #eee" }}>
                     {a.clientFullName ??
                       (`${a.clientName ?? ""} ${a.clientSurname ?? ""}`.trim() || `#${a.clientId}`)}
                   </td>
-                  
+
                   <td style={{ padding: 8, borderBottom: "1px solid #eee" }}>
                     <b>{a.state}</b>
                   </td>
 
-                  <td style={{ padding: 8, borderBottom: "1px solid #eee" }}>
-                    {a.depositPaid ? "Sí" : "No"}
-                  </td>
+                  <td style={{ padding: 8, borderBottom: "1px solid #eee" }}>{a.depositPaid ? "Sí" : "No"}</td>
 
                   <td style={{ padding: 8, borderBottom: "1px solid #eee" }}>
                     <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>

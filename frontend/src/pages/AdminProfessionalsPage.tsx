@@ -30,6 +30,8 @@ export default function AdminProfessionalsPage() {
   const [editingId, setEditingId] = useState<number | null>(null);
   const [form, setForm] = useState<FormState>(emptyForm);
 
+  const [showForm, setShowForm] = useState(false);
+
   const isEditing = useMemo(() => typeof editingId === "number", [editingId]);
 
   const load = async () => {
@@ -57,6 +59,7 @@ export default function AdminProfessionalsPage() {
     setForm(emptyForm);
     setOk("");
     setError("");
+    setShowForm(false);
   };
 
   const startEdit = (p: ProfessionalDto) => {
@@ -71,6 +74,7 @@ export default function AdminProfessionalsPage() {
     });
     setOk("");
     setError("");
+    setShowForm(true);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
@@ -185,106 +189,127 @@ export default function AdminProfessionalsPage() {
         >
           Limpiar
         </button>
+
+        <div style={{ flex: 1 }} />
+        {!showForm ? (
+          <button
+            onClick={() => {
+              setEditingId(null);
+              setForm(emptyForm);
+              setError("");
+              setOk("");
+              setShowForm(true);
+              window.scrollTo({ top: 0, behavior: "smooth" });
+            }}
+            disabled={loading || !token}
+          >
+            Añadir profesional
+          </button>
+        ) : (
+          <button onClick={resetForm} disabled={loading}>
+            Cerrar formulario
+          </button>
+        )}
       </div>
 
-      <div style={{ border: "1px solid #333", borderRadius: 8, padding: 12, marginBottom: 16 }}>
-        <h2 style={{ marginTop: 0 }}>{isEditing ? "Editar profesional" : "Crear profesional"}</h2>
+      {showForm && (
+        <div style={{ border: "1px solid #333", borderRadius: 8, padding: 12, marginBottom: 16 }}>
+          <h2 style={{ marginTop: 0 }}>{isEditing ? "Editar profesional" : "Crear profesional"}</h2>
 
-        <form onSubmit={onSubmit} style={{ display: "grid", gap: 12, maxWidth: 700 }}>
-          <label>
-            Nombre profesional
-            <input
-              value={form.professionalName}
-              onChange={(e) => setForm({ ...form, professionalName: e.target.value })}
-              style={{ display: "block", width: "100%", padding: 8, marginTop: 6 }}
-              disabled={loading}
-            />
-          </label>
+          <form onSubmit={onSubmit} style={{ display: "grid", gap: 12, maxWidth: 700 }}>
+            <label>
+              Nombre profesional
+              <input
+                value={form.professionalName}
+                onChange={(e) => setForm({ ...form, professionalName: e.target.value })}
+                style={{ display: "block", width: "100%", padding: 8, marginTop: 6 }}
+                disabled={loading}
+              />
+            </label>
 
-          <label>
-            Fecha de nacimiento
-            <input
-              type="date"
-              value={form.birthDate}
-              onChange={(e) => setForm({ ...form, birthDate: e.target.value })}
-              style={{ display: "block", width: "100%", padding: 8, marginTop: 6 }}
-              disabled={loading}
-            />
-          </label>
+            <label>
+              Fecha de nacimiento
+              <input
+                type="date"
+                value={form.birthDate}
+                onChange={(e) => setForm({ ...form, birthDate: e.target.value })}
+                style={{ display: "block", width: "100%", padding: 8, marginTop: 6 }}
+                disabled={loading}
+              />
+            </label>
 
-          <label>
-            Años de experiencia
-            <input
-              type="number"
-              min={0}
-              value={form.yearsExperience}
-              onChange={(e) => setForm({ ...form, yearsExperience: Number(e.target.value) })}
-              style={{ display: "block", width: "100%", padding: 8, marginTop: 6 }}
-              disabled={loading}
-            />
-          </label>
+            <label>
+              Años de experiencia
+              <input
+                type="number"
+                min={0}
+                value={form.yearsExperience}
+                onChange={(e) => setForm({ ...form, yearsExperience: Number(e.target.value) })}
+                style={{ display: "block", width: "100%", padding: 8, marginTop: 6 }}
+                disabled={loading}
+              />
+            </label>
 
-          <label style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <input
-              type="checkbox"
-              checked={form.booksOpened}
-              onChange={(e) => setForm({ ...form, booksOpened: e.target.checked })}
-              disabled={loading}
-            />
-            Agenda abierta
-          </label>
+            <label style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <input
+                type="checkbox"
+                checked={form.booksOpened}
+                onChange={(e) => setForm({ ...form, booksOpened: e.target.checked })}
+                disabled={loading}
+              />
+              Agenda abierta
+            </label>
 
-          <label>
-            Descripción
-            <textarea
-              value={form.description}
-              onChange={(e) => setForm({ ...form, description: e.target.value })}
-              rows={4}
-              style={{ display: "block", width: "100%", padding: 8, marginTop: 6 }}
-              disabled={loading}
-            />
-          </label>
+            <label>
+              Descripción
+              <textarea
+                value={form.description}
+                onChange={(e) => setForm({ ...form, description: e.target.value })}
+                rows={4}
+                style={{ display: "block", width: "100%", padding: 8, marginTop: 6 }}
+                disabled={loading}
+              />
+            </label>
 
-          <label>
-            Foto de perfil
-            <input
-              value={form.profilePhoto}
-              onChange={(e) => setForm({ ...form, profilePhoto: e.target.value })}
-              style={{ display: "block", width: "100%", padding: 8, marginTop: 6 }}
-              disabled={loading}
-            />
-          </label>
+            <label>
+              Foto de perfil
+              <input
+                value={form.profilePhoto}
+                onChange={(e) => setForm({ ...form, profilePhoto: e.target.value })}
+                style={{ display: "block", width: "100%", padding: 8, marginTop: 6 }}
+                disabled={loading}
+              />
+            </label>
 
-          {form.profilePhoto.trim() && (
-            <img
-              src={form.profilePhoto}
-              alt="preview"
-              style={{ width: 160, border: "1px solid #333", borderRadius: 8 }}
-              onError={(e) => {
-                (e.currentTarget as HTMLImageElement).style.display = "none";
-              }}
-            />
-          )}
+            {form.profilePhoto.trim() && (
+              <img
+                src={form.profilePhoto}
+                alt="preview"
+                style={{ width: 160, border: "1px solid #333", borderRadius: 8 }}
+                onError={(e) => {
+                  (e.currentTarget as HTMLImageElement).style.display = "none";
+                }}
+              />
+            )}
 
-          <div style={{ display: "flex", gap: 8 }}>
-            <button type="submit" disabled={loading || !token}>
-              {loading ? "Guardando..." : isEditing ? "Guardar cambios" : "Crear profesional"}
-            </button>
+            <div style={{ display: "flex", gap: 8 }}>
+              <button type="submit" disabled={loading || !token}>
+                {loading ? "Guardando..." : isEditing ? "Guardar cambios" : "Crear profesional"}
+              </button>
 
-            {isEditing && (
               <button type="button" onClick={resetForm} disabled={loading}>
                 Cancelar
               </button>
-            )}
-          </div>
-
-          {!token && (
-            <div style={{ color: "tomato" }}>
-              Inicia sesión como admin para crear/editar/borrar.
             </div>
-          )}
-        </form>
-      </div>
+
+            {!token && (
+              <div style={{ color: "tomato" }}>
+                Inicia sesión como admin para crear/editar/borrar.
+              </div>
+            )}
+          </form>
+        </div>
+      )}
 
       <h2>Listado</h2>
       {loading && <p>Cargando…</p>}

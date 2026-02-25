@@ -145,7 +145,7 @@ export default function AdminProfessionalsPage() {
     try {
       setLoading(true);
       await deleteProfessional(token, id);
-      setOk("Profesional eliminado ✅");
+      setOk("Profesional eliminado");
       await load();
     } catch (e: any) {
       if (e instanceof ApiError) setError(e.message || "Error eliminando profesional");
@@ -303,7 +303,7 @@ export default function AdminProfessionalsPage() {
           >
             <div style={{ display: "flex", justifyContent: "space-between", gap: 10 }}>
               <div>
-                <b>#{p.id}</b> — {p.professionalName}
+                <b>{p.professionalName}</b>
               </div>
 
               <div style={{ display: "flex", gap: 8 }}>

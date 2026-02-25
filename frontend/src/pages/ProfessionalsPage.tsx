@@ -33,7 +33,7 @@ export default function ProfessionalsPage() {
 
             <p>
               {p.yearsExperience} años de experiencia —{" "}
-              {p.booksOpened ? "Books opened" : "Books closed"}
+              {p.booksOpened ? "Agenda abierta" : "Agenda cerrada"}
             </p>
           </div>
         ))}

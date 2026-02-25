@@ -11,18 +11,15 @@ import CalendarPage from "./pages/CalendarPage";
 import MyAppointmentsPage from "./pages/MyAppointmentsPage";
 import AdminPanelPage from "./pages/AdminPanelPage";
 import TattooDetailPage from "./pages/TattooDetailPage";
-import AdminTattoosPage from "./pages/AdminTattoosPage";
 import AdminAppointmentsPage from "./pages/AdminAppointmentsPage";
 import ReviewCreatePage from "./pages/ReviewCreatePage";
-import AdminProfessionalsPage from "./pages/AdminProfessionalsPage";
 import AdminTattooCreatePage from "./pages/AdminTattooCreatePage";
 import AdminTattooEditPage from "./pages/AdminTattooEditPage";
 import MyAccountPage from "./pages/MyAccountPage";
-
+import AdminAvailabilityPage from "./pages/AdminAvailabilityPage";
 
 import ProtectedRoute from "./auth/ProtectedRoute";
 import AdminRoute from "./auth/AdminRoute";
-import AdminAvailabilityPage from "./pages/AdminAvailabilityPage";
 
 export default function App() {
   return (
@@ -35,11 +32,9 @@ export default function App() {
         <Route path="/showroom" element={<ShowroomPage />} />
         <Route path="/professionals" element={<ProfessionalsPage />} />
         <Route path="/reviews" element={<ReviewsPage />} />
-
+        <Route path="/showroom/:id" element={<TattooDetailPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
-
-        <Route path="/showroom/:id" element={<TattooDetailPage />} />
 
         {/* Privado */}
         <Route element={<ProtectedRoute />}>
@@ -52,12 +47,11 @@ export default function App() {
         {/* Admin */}
         <Route element={<AdminRoute />}>
           <Route path="/admin" element={<AdminPanelPage />} />
-          <Route path="/admin/tattoos" element={<AdminTattoosPage />} />
           <Route path="/admin/appointments" element={<AdminAppointmentsPage />} />
-          <Route path="/admin/professionals" element={<AdminProfessionalsPage />} />
+          <Route path="/admin/availability" element={<AdminAvailabilityPage />} />
+
           <Route path="/admin/appointments/:id/tattoo/new" element={<AdminTattooCreatePage />} />
           <Route path="/admin/tattoos/:id/edit" element={<AdminTattooEditPage />} />
-          <Route path="/admin/availability" element={<AdminAvailabilityPage />} />
         </Route>
 
         <Route path="*" element={<div style={{ padding: 16 }}>404</div>} />

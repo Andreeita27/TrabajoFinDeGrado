@@ -6,7 +6,7 @@ import { useAuth } from "../auth/AuthContext";
 import type { TattooInDto, TattooDto } from "../types/tattoo";
 
 export default function AdminTattooEditPage() {
-  const { token } = useAuth();
+  const { token, role } = useAuth();
   const nav = useNavigate();
   const params = useParams();
 
@@ -30,6 +30,8 @@ export default function AdminTattooEditPage() {
   const [ok, setOk] = useState("");
   const [loading, setLoading] = useState(false);
 
+  const backTo = tattooId ? `/showroom/${tattooId}` : "/showroom";
+
   const load = async () => {
     if (!token || !tattooId) return;
     setError("");
@@ -46,43 +48,38 @@ export default function AdminTattooEditPage() {
       setCoverUp(!!t.coverUp);
       setColor(!!t.color);
     } catch (e: any) {
-      setError(e instanceof ApiError ? e.message : (e?.message || "Error cargando tattoo"));
+      setError(e instanceof ApiError ? e.message : e?.message || "Error cargando tattoo");
     }
   };
 
   useEffect(() => {
+    if (!token) {
+      nav("/login", { replace: true, state: { from: backTo } });
+      return;
+    }
+    if (role !== "ADMIN") {
+      nav("/showroom", { replace: true });
+      return;
+    }
+  }, [token, role, nav, backTo]);
+
+  useEffect(() => {
+    if (!token || role !== "ADMIN") return;
     load();
-  }, [token, tattooId]);
+  }, [token, role, tattooId]);
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!token || !tattooId || !original) return;
+    if (!token || role !== "ADMIN" || !tattooId || !original) return;
 
     setError("");
     setOk("");
 
-    if (!style.trim()) {
-      setError("El estilo es obligatorio.");
-      return;
-    }
-    if (!tattooDescription.trim()) {
-      setError("La descripción es obligatoria.");
-      return;
-    }
-    if (!tattooDate) {
-      setError("La fecha es obligatoria.");
-      return;
-    }
-
-    if (!imageUrl.trim()) {
-      setError("La URL de imagen es obligatoria.");
-      return;
-    }
-
-    if (!Number.isFinite(sessions) || sessions < 1) {
-      setError("Las sesiones deben ser 1 o más.");
-      return;
-    }
+    if (!style.trim()) return setError("El estilo es obligatorio.");
+    if (!tattooDescription.trim()) return setError("La descripción es obligatoria.");
+    if (!tattooDate) return setError("La fecha es obligatoria.");
+    if (!imageUrl.trim()) return setError("La URL de imagen es obligatoria.");
+    if (!Number.isFinite(sessions) || sessions < 1) return setError("Las sesiones deben ser 1 o más.");
 
     const payload: TattooInDto = {
       clientId: original.clientId,
@@ -100,14 +97,16 @@ export default function AdminTattooEditPage() {
       setLoading(true);
       await updateTattoo(token, tattooId, payload);
       setOk("Cambios guardados");
-      setTimeout(() => nav("/admin/tattoos"), 500);
+
+      setTimeout(() => nav(backTo, { replace: true }), 300);
     } catch (e: any) {
       if (e instanceof ApiError) {
         const body: any = e.body;
-        const validationMsg =
-          body?.errors
-            ? Object.entries(body.errors).map(([k, v]) => `${k}: ${v}`).join(" | ")
-            : "";
+        const validationMsg = body?.errors
+          ? Object.entries(body.errors)
+              .map(([k, v]) => `${k}: ${v}`)
+              .join(" | ")
+          : "";
         setError(validationMsg || e.message || "Error actualizando tattoo");
       } else {
         setError(e?.message || "Error actualizando tattoo");
@@ -221,7 +220,8 @@ export default function AdminTattooEditPage() {
               <button type="submit" disabled={loading}>
                 {loading ? "Guardando..." : "Guardar cambios"}
               </button>
-              <button type="button" onClick={() => nav("/admin/tattoos")} disabled={loading}>
+
+              <button type="button" onClick={() => nav(backTo)} disabled={loading}>
                 Cancelar
               </button>
             </div>

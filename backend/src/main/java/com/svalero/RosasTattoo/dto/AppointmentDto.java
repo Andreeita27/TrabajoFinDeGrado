@@ -26,7 +26,6 @@ public class AppointmentDto {
     private TattooSize tattooSize;
     private String referenceImageUrl;
     private int durationMinutes;
-    private float price;
     private AppointmentState state;
     private boolean depositPaid;
     private boolean hasReview;

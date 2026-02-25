@@ -47,9 +47,6 @@ public class Appointment {
     @Column(name = "duration_minutes")
     private int durationMinutes;
 
-    @Column
-    private float price;
-
     @Enumerated(EnumType.STRING)
     @Column (name = "appointment_state")
     private AppointmentState state = AppointmentState.PENDING;

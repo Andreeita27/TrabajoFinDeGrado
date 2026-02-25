@@ -57,3 +57,11 @@ export function markCompleted(token: string, id: number) {
 export function getAppointment(token: string, id: number) {
   return apiFetch<AppointmentDto>(`/appointments/${id}`, { method: "GET", token });
 }
+
+export function rescheduleAppointment(token: string, id: number, startDateTime: string) {
+  return apiFetch<AppointmentDto>(`/appointments/${id}/reschedule`, {
+    method: "PUT",
+    token,
+    body: JSON.stringify({ startDateTime }),
+  });
+}

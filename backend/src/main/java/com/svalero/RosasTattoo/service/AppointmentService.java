@@ -279,6 +279,98 @@ public class AppointmentService {
         return enrichHasReview(saved);
     }
 
+    private void validateSlotInBusinessRules(long professionalId, LocalDateTime start, int durationMinutes) {
+
+        // No permitir pasado
+        if (start.isBefore(LocalDateTime.now())) {
+            throw new IllegalStateException("You cannot move an appointment to the past");
+        }
+
+        // No fines de semana
+        DayOfWeek dow = start.getDayOfWeek();
+        if (dow == DayOfWeek.SATURDAY || dow == DayOfWeek.SUNDAY) {
+            throw new IllegalStateException("Appointments are not available on weekends");
+        }
+
+        // Horario fijo
+        LocalTime workStart = LocalTime.of(12, 0);
+        LocalTime workEnd = LocalTime.of(20, 0);
+
+        LocalTime s = start.toLocalTime();
+        LocalTime e = start.plusMinutes(durationMinutes).toLocalTime();
+
+        // Debe estar dentro del horario de apertura
+        if (s.isBefore(workStart) || e.isAfter(workEnd) || e.equals(LocalTime.MIDNIGHT)) {
+            throw new IllegalStateException("The selected time is outside working hours");
+        }
+
+        LocalDateTime end = start.plusMinutes(durationMinutes);
+
+        // Debe estar cubierto por alguna ventana publicada
+        var windows = availabilityWindowRepository.findActiveIntersecting(professionalId, start, end);
+        boolean covered = windows.stream().anyMatch(w ->
+                !w.getStartDateTime().isAfter(start) && !w.getEndDateTime().isBefore(end)
+        );
+
+        if (!covered) {
+            throw new IllegalStateException("This professional has not opened availability for that time");
+        }
+
+        // No debe caer en un bloqueo
+        var blocks = unavailabilityBlockRepository.findActiveIntersecting(professionalId, start, end);
+        boolean blocked = blocks.stream().anyMatch(b ->
+                b.isEnabled()
+                        && b.getEndDateTime().isAfter(start)
+                        && b.getStartDateTime().isBefore(end)
+        );
+
+        if (blocked) {
+            throw new IllegalStateException("The selected time is blocked");
+        }
+    }
+
+    public AppointmentDto reschedule(long id, LocalDateTime newStart, String email)
+            throws AppointmentNotFoundException, ClientNotFoundException {
+
+        Appointment appointment = appointmentRepository.findById(id)
+                .orElseThrow(AppointmentNotFoundException::new);
+
+        assertOwnership(appointment, email);
+
+        // Solo PENDING o CONFIRMED
+        if (appointment.getState() != AppointmentState.PENDING
+                && appointment.getState() != AppointmentState.CONFIRMED) {
+            throw new IllegalStateException("Only PENDING or CONFIRMED appointments can be rescheduled");
+        }
+
+        // Regla similar a cancelar: clientes solo con 24h de margen (admin puede siempre)
+        if (!isAdmin()) {
+            long hours = Duration.between(LocalDateTime.now(), appointment.getStartDateTime()).toHours();
+            if (hours < 24) {
+                throw new IllegalStateException("You can only reschedule an appointment at least 24 hours in advance");
+            }
+        }
+
+        int durationMinutes = appointment.getDurationMinutes();
+        if (durationMinutes <= 0) {
+            durationMinutes = calculateDurationMinutes(appointment.getTattooSize());
+            appointment.setDurationMinutes(durationMinutes);
+        }
+
+        // Reglas de agenda/bloqueos/horario
+        validateSlotInBusinessRules(appointment.getProfessional().getId(), newStart, durationMinutes);
+
+        // Solapes (excluyendo la cita actual)
+        validateNoOverlap(appointment.getProfessional().getId(), newStart, durationMinutes, appointment.getId());
+
+        // Actualizo SOLO la fecha
+        appointment.setStartDateTime(newStart);
+
+        // no toco state
+        Appointment saved = appointmentRepository.save(appointment);
+        return enrichHasReview(saved);
+    }
+
     public AppointmentDto markNoShow(long id) throws AppointmentNotFoundException {
         Appointment appointment = appointmentRepository.findById(id)
                 .orElseThrow(AppointmentNotFoundException::new);

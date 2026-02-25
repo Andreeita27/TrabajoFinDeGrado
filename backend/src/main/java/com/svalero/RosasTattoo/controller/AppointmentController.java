@@ -1,9 +1,7 @@
 package com.svalero.RosasTattoo.controller;
 
 import com.svalero.RosasTattoo.domain.enums.AppointmentState;
-import com.svalero.RosasTattoo.dto.AppointmentInDto;
-import com.svalero.RosasTattoo.dto.AppointmentDto;
-import com.svalero.RosasTattoo.dto.AvailabilityResponseDto;
+import com.svalero.RosasTattoo.dto.*;
 import com.svalero.RosasTattoo.exception.AppointmentNotFoundException;
 import com.svalero.RosasTattoo.exception.ClientNotFoundException;
 import com.svalero.RosasTattoo.exception.ErrorResponse;
@@ -23,7 +21,7 @@ import com.svalero.RosasTattoo.exception.AppointmentConflictException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import com.svalero.RosasTattoo.dto.AvailabilitySlotDto;
+
 import org.springframework.format.annotation.DateTimeFormat;
 import java.time.LocalDateTime;
 
@@ -113,6 +111,17 @@ public class AppointmentController {
             throws AppointmentNotFoundException, ClientNotFoundException{
         String email = (String) authentication.getPrincipal();
         return ResponseEntity.ok(appointmentService.cancel(id, email));
+    }
+
+    @PreAuthorize("hasAnyRole('ADMIN','CLIENT')")
+    @PutMapping("/appointments/{id}/reschedule")
+    public ResponseEntity<AppointmentDto> reschedule(
+            @PathVariable long id,
+            @Valid @RequestBody RescheduleAppointmentDto body,
+            Authentication authentication
+    ) throws AppointmentNotFoundException, ClientNotFoundException {
+        String email = (String) authentication.getPrincipal();
+        return ResponseEntity.ok(appointmentService.reschedule(id, body.getStartDateTime(), email));
     }
 
     @PreAuthorize("hasRole('ADMIN')")

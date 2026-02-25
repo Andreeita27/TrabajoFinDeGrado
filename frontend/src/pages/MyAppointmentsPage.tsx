@@ -5,14 +5,17 @@ import { cancelAppointment, confirmDeposit, getMyAppointments } from "../api/app
 import { useAuth } from "../auth/AuthContext";
 import type { AppointmentDto } from "../types/appointment";
 
-export default function MyAppointmentsPage() {
+type Props = {
+  embedded?: boolean;
+};
+
+export default function MyAppointmentsPage({ embedded = false }: Props) {
   const { token, role } = useAuth();
   const nav = useNavigate();
 
   const [items, setItems] = useState<AppointmentDto[]>([]);
   const [error, setError] = useState("");
 
-  // Para no permitir doble click
   const [reviewSubmitting, setReviewSubmitting] = useState<Record<number, boolean>>({});
 
   const load = async () => {
@@ -23,7 +26,7 @@ export default function MyAppointmentsPage() {
       setItems(data);
     } catch (e: any) {
       if (e instanceof ApiError && e.status === 401) {
-        nav("/login", { replace: true, state: { from: "/my-appointments" } });
+        nav("/login", { replace: true, state: { from: "/my-account" } });
         return;
       }
       setError(e?.message || "Error cargando citas");
@@ -66,8 +69,9 @@ export default function MyAppointmentsPage() {
   };
 
   return (
-    <div style={{ padding: 16 }}>
-      <h1>Mis citas</h1>
+    <div style={{ padding: embedded ? 0 : 16 }}>
+      {!embedded && <h1>Mis citas</h1>}
+      {embedded && <h2 style={{ marginTop: 0 }}>Gestionar mis citas</h2>}
 
       {error && <div style={{ color: "tomato" }}>{error}</div>}
 

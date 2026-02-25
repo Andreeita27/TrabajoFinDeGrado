@@ -4,7 +4,7 @@ import { useAuth } from "../auth/AuthContext";
 export default function Navbar() {
   const { isAuthenticated, role, logout } = useAuth();
 
-  const accountLink = role === "ADMIN" ? "/admin" : "/my-appointments";
+  const accountLink = role === "ADMIN" ? "/admin" : "/my-account";
   const accountText = role === "ADMIN" ? "Panel admin" : "Mi cuenta";
 
   return (

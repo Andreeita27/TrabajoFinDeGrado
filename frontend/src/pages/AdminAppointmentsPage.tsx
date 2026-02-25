@@ -7,13 +7,32 @@ import {
   getAllAppointments,
   markCompleted,
   markNoShow,
+  rescheduleAppointment,
 } from "../api/appointmentsApi";
 import { useAuth } from "../auth/AuthContext";
 import type { AppointmentDto, AppointmentState } from "../types/appointment";
 import type { ClientDto } from "../types/client";
 import { searchClients } from "../api/clientsApi";
+import { getAvailability } from "../api/availabilityApi";
+import type { AvailabilitySlotDto } from "../types/availability";
 
 type DepositFilter = "ALL" | "PAID" | "UNPAID";
+
+const OPEN_HOUR = "12:00:00";
+const CLOSE_HOUR = "20:00:00";
+const stepMinutes = 30;
+
+function withSeconds(isoOrLocal: string) {
+  return isoOrLocal.length === 16 ? `${isoOrLocal}:00` : isoOrLocal;
+}
+
+function formatSlotLabel(iso: string) {
+  try {
+    return new Date(iso).toLocaleString("es-ES");
+  } catch {
+    return iso;
+  }
+}
 
 export default function AdminAppointmentsPage() {
   const { token, role } = useAuth();
@@ -27,8 +46,8 @@ export default function AdminAppointmentsPage() {
   const [depositFilter, setDepositFilter] = useState<DepositFilter>("ALL");
   const [professionalName, setProfessionalName] = useState<string>("");
 
-  const [clientName, setClientName] = useState<string>(""); //este sigue siendo el filtro que mando al backend
-  const [clientQuery, setClientQuery] = useState<string>(""); //lo que escribe el admin
+  const [clientName, setClientName] = useState<string>(""); // este sigue siendo el filtro que mando al backend
+  const [clientQuery, setClientQuery] = useState<string>(""); // lo que escribe el admin
   const [clientOptions, setClientOptions] = useState<ClientDto[]>([]);
   const [clientOpen, setClientOpen] = useState(false);
   const [clientLoading, setClientLoading] = useState(false);
@@ -36,6 +55,13 @@ export default function AdminAppointmentsPage() {
   // Rango fechas
   const [dateFrom, setDateFrom] = useState<string>("");
   const [dateTo, setDateTo] = useState<string>("");
+
+  const [rescheduleId, setRescheduleId] = useState<number | null>(null);
+  const [rescheduleDay, setRescheduleDay] = useState<string>("");
+  const [rescheduleSlots, setRescheduleSlots] = useState<AvailabilitySlotDto[]>([]);
+  const [rescheduleStart, setRescheduleStart] = useState<string>("");
+  const [rescheduleLoading, setRescheduleLoading] = useState(false);
+  const [rescheduleSaving, setRescheduleSaving] = useState(false);
 
   const toIso = (v: string) => (v ? new Date(v).toISOString() : undefined);
 
@@ -86,6 +112,7 @@ export default function AdminAppointmentsPage() {
     return () => window.clearTimeout(t);
   }, [stateFilter, depositFilter, professionalName, clientName, dateFrom, dateTo]);
 
+  // Autocomplete clientes
   useEffect(() => {
     if (!token) return;
 
@@ -126,10 +153,10 @@ export default function AdminAppointmentsPage() {
 
   const onSelectClient = (c: ClientDto) => {
     const full = `${c.clientName ?? ""} ${c.clientSurname ?? ""}`.trim();
-    setClientQuery(full);     // deja el texto bonito en el input
-    setClientName(full);      //esto es lo que filtra realmente
-    setClientOpen(false);     //cierra desplegable al seleccionar
-    setClientOptions([]);     //limpia lista para que no se quede abierta
+    setClientQuery(full); //deja el texto bonito en el input
+    setClientName(full); //esto es lo que filtra realmente
+    setClientOpen(false); //cierra desplegable al seleccionar
+    setClientOptions([]); //limpia lista para que no se quede abierta
   };
 
   const onClearFilters = () => {
@@ -195,6 +222,80 @@ export default function AdminAppointmentsPage() {
       await load();
     } catch (e: any) {
       setError(e?.message || "Error marcando como no-show");
+    }
+  };
+
+  const closeReschedule = () => {
+    setRescheduleId(null);
+    setRescheduleDay("");
+    setRescheduleSlots([]);
+    setRescheduleStart("");
+    setRescheduleLoading(false);
+    setRescheduleSaving(false);
+  };
+
+  const openReschedule = (a: AppointmentDto) => {
+    setError("");
+    setRescheduleId(a.id);
+    setRescheduleDay("");
+    setRescheduleSlots([]);
+    setRescheduleStart("");
+    setRescheduleLoading(false);
+    setRescheduleSaving(false);
+  };
+
+  // Cargar slots cuando el admin elige día
+  useEffect(() => {
+    if (!token) return;
+    if (!rescheduleId) return;
+    if (!rescheduleDay) {
+      setRescheduleSlots([]);
+      setRescheduleStart("");
+      return;
+    }
+
+    const appointment = items.find((x) => x.id === rescheduleId);
+    if (!appointment) return;
+
+    setRescheduleLoading(true);
+    setRescheduleSlots([]);
+    setRescheduleStart("");
+    setError("");
+
+    const fromIso = `${rescheduleDay}T${OPEN_HOUR}`;
+    const toIso = `${rescheduleDay}T${CLOSE_HOUR}`;
+
+    getAvailability(token, {
+      professionalId: appointment.professionalId,
+      dateFrom: fromIso,
+      dateTo: toIso,
+      durationMinutes: appointment.durationMinutes,
+      stepMinutes,
+    })
+      .then((res) => setRescheduleSlots(res.slots))
+      .catch((e: any) => setError(e?.message || "Error cargando disponibilidad"))
+      .finally(() => setRescheduleLoading(false));
+  }, [token, rescheduleId, rescheduleDay, items]);
+
+  const onSaveReschedule = async () => {
+    if (!token) return;
+    if (!rescheduleId) return;
+
+    if (!rescheduleStart) {
+      setError("Selecciona un nuevo slot.");
+      return;
+    }
+
+    try {
+      setError("");
+      setRescheduleSaving(true);
+      await rescheduleAppointment(token, rescheduleId, withSeconds(rescheduleStart));
+      closeReschedule();
+      await load();
+    } catch (e: any) {
+      setError(e?.message || "Error reprogramando cita");
+    } finally {
+      setRescheduleSaving(false);
     }
   };
 
@@ -335,19 +436,13 @@ export default function AdminAppointmentsPage() {
           <table style={{ width: "100%", borderCollapse: "collapse" }}>
             <thead>
               <tr>
-                <th style={{ textAlign: "left", padding: 8, borderBottom: "1px solid #ddd" }}>
-                  Número de cita
-                </th>
+                <th style={{ textAlign: "left", padding: 8, borderBottom: "1px solid #ddd" }}>Número de cita</th>
                 <th style={{ textAlign: "left", padding: 8, borderBottom: "1px solid #ddd" }}>Fecha</th>
-                <th style={{ textAlign: "left", padding: 8, borderBottom: "1px solid #ddd" }}>
-                  Profesional
-                </th>
+                <th style={{ textAlign: "left", padding: 8, borderBottom: "1px solid #ddd" }}>Profesional</th>
                 <th style={{ textAlign: "left", padding: 8, borderBottom: "1px solid #ddd" }}>Cliente</th>
                 <th style={{ textAlign: "left", padding: 8, borderBottom: "1px solid #ddd" }}>Estado</th>
                 <th style={{ textAlign: "left", padding: 8, borderBottom: "1px solid #ddd" }}>Señal</th>
-                <th style={{ textAlign: "left", padding: 8, borderBottom: "1px solid #ddd" }}>
-                  Acciones
-                </th>
+                <th style={{ textAlign: "left", padding: 8, borderBottom: "1px solid #ddd" }}>Acciones</th>
               </tr>
             </thead>
 
@@ -381,9 +476,12 @@ export default function AdminAppointmentsPage() {
                         <button onClick={() => onPayDeposit(a.id)}>Confirmar señal</button>
                       )}
 
-                      {a.state === "PENDING" || a.state === "CONFIRMED" ? (
-                        <button onClick={() => onCancel(a.id)}>Cancelar</button>
-                      ) : null}
+                      {(a.state === "PENDING" || a.state === "CONFIRMED") && (
+                        <>
+                          <button onClick={() => onCancel(a.id)}>Cancelar</button>
+                          <button onClick={() => openReschedule(a)}>Reprogramar</button>
+                        </>
+                      )}
 
                       {a.state === "CONFIRMED" ? (
                         <>
@@ -398,6 +496,75 @@ export default function AdminAppointmentsPage() {
                         </button>
                       )}
                     </div>
+
+                    {rescheduleId === a.id && (
+                      <div
+                        style={{
+                          marginTop: 10,
+                          padding: 10,
+                          border: "1px solid #333",
+                          borderRadius: 8,
+                          maxWidth: 780,
+                        }}
+                      >
+                        <div style={{ fontWeight: 600, marginBottom: 8 }}>Reprogramar cita</div>
+
+                        <label style={{ display: "grid", gap: 6, maxWidth: 260 }}>
+                          Día
+                          <input
+                            type="date"
+                            value={rescheduleDay}
+                            onChange={(e) => setRescheduleDay(e.target.value)}
+                            disabled={rescheduleLoading || rescheduleSaving}
+                          />
+                        </label>
+
+                        <div style={{ marginTop: 10 }}>
+                          {rescheduleLoading ? (
+                            <div style={{ opacity: 0.8 }}>Cargando slots…</div>
+                          ) : rescheduleSlots.length === 0 ? (
+                            <div style={{ opacity: 0.8 }}>
+                              {rescheduleDay ? "No hay slots disponibles ese día." : "Selecciona un día para ver slots."}
+                            </div>
+                          ) : (
+                            <div style={{ display: "grid", gap: 6 }}>
+                              {rescheduleSlots.map((s, idx) => {
+                                const start = String((s as any).startDateTime);
+                                return (
+                                  <label key={idx} style={{ display: "flex", gap: 10, alignItems: "center" }}>
+                                    <input
+                                      type="radio"
+                                      name={`slot-${a.id}`}
+                                      value={start}
+                                      checked={rescheduleStart === start}
+                                      onChange={() => setRescheduleStart(start)}
+                                      disabled={rescheduleSaving}
+                                    />
+                                    {formatSlotLabel(start)}
+                                  </label>
+                                );
+                              })}
+                            </div>
+                          )}
+                        </div>
+
+                        <div style={{ display: "flex", gap: 8, marginTop: 10, flexWrap: "wrap" }}>
+                          <button
+                            onClick={onSaveReschedule}
+                            disabled={!rescheduleStart || rescheduleLoading || rescheduleSaving}
+                          >
+                            {rescheduleSaving ? "Guardando..." : "Guardar cambio"}
+                          </button>
+
+                          <button onClick={closeReschedule} disabled={rescheduleLoading || rescheduleSaving}>
+                            Cancelar
+                          </button>
+                        </div>
+
+                        <div style={{ marginTop: 8, opacity: 0.8, fontSize: 12 }}>
+                        </div>
+                      </div>
+                    )}
                   </td>
                 </tr>
               ))}

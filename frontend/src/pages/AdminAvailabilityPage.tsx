@@ -18,6 +18,9 @@ import type {
   UnavailabilityBlockDto,
 } from "../api/availabilityAdminApi";
 
+import { getProfessionals } from "../api/showroomApi";
+import type { ProfessionalDto } from "../types/professional";
+
 const toIso = (v: string) => (v ? new Date(v).toISOString() : "");
 const fmt = (iso: string) => new Date(iso).toLocaleString("es-ES");
 
@@ -34,6 +37,10 @@ export default function AdminAvailabilityPage() {
     return Number.isFinite(n) && n > 0 ? n : null;
   }, [professionalId]);
 
+  // lista de profesionales para el desplegable
+  const [professionals, setProfessionals] = useState<ProfessionalDto[]>([]);
+  const [proLoading, setProLoading] = useState(false);
+
   // data
   const [windows, setWindows] = useState<AvailabilityWindowDto[]>([]);
   const [blocks, setBlocks] = useState<UnavailabilityBlockDto[]>([]);
@@ -46,6 +53,25 @@ export default function AdminAvailabilityPage() {
   const [bFrom, setBFrom] = useState("");
   const [bTo, setBTo] = useState("");
   const [bReason, setBReason] = useState("");
+
+  const loadProfessionals = async () => {
+    if (!token) return;
+
+    setProLoading(true);
+    try {
+      const list = await getProfessionals();
+      setProfessionals(list);
+
+      // Si aún no hay seleccionado y hay lista selecciona el primero
+      if (!professionalId && list.length > 0) {
+        setProfessionalId(String(list[0].id));
+      }
+    } catch (e: any) {
+      setError(e?.message || "Error cargando profesionales");
+    } finally {
+      setProLoading(false);
+    }
+  };
 
   const load = async () => {
     if (!token || !professionalIdNum) return;
@@ -76,6 +102,9 @@ export default function AdminAvailabilityPage() {
       nav("/", { replace: true });
       return;
     }
+
+    // ✅ Al entrar, traemos lista de profesionales
+    loadProfessionals();
   }, [token, role]);
 
   useEffect(() => {
@@ -201,13 +230,22 @@ export default function AdminAvailabilityPage() {
       >
         <label style={{ display: "grid", gap: 6 }}>
           Profesional
-          <input
-            type="number"
+          <select
             value={professionalId}
             onChange={(e) => setProfessionalId(e.target.value)}
-            placeholder="Ej: 1"
-            min={1}
-          />
+            disabled={proLoading}
+            style={{ minWidth: 260 }}
+          >
+            <option value="">
+              {proLoading ? "Cargando..." : "— Selecciona —"}
+            </option>
+
+            {professionals.map((p) => (
+              <option key={p.id} value={String(p.id)}>
+                {p.professionalName}
+              </option>
+            ))}
+          </select>
         </label>
 
         <button onClick={load} disabled={!professionalIdNum}>
@@ -216,27 +254,47 @@ export default function AdminAvailabilityPage() {
       </div>
 
       {!professionalIdNum ? (
-        <p>Introduce el ID del profesional para gestionar sus ventanas publicadas y bloqueos.</p>
+        <p>Selecciona un profesional para gestionar sus ventanas publicadas y bloqueos.</p>
       ) : (
         <>
           {/* Ventanas publicadas */}
           <section style={{ marginBottom: 26 }}>
             <h2>Fechas publicadas (reservables online)</h2>
 
-            <div style={{ display: "flex", gap: 12, flexWrap: "wrap", alignItems: "end", margin: "10px 0 14px" }}>
+            <div
+              style={{
+                display: "flex",
+                gap: 12,
+                flexWrap: "wrap",
+                alignItems: "end",
+                margin: "10px 0 14px",
+              }}
+            >
               <label style={{ display: "grid", gap: 6 }}>
                 Desde
-                <input type="datetime-local" value={wFrom} onChange={(e) => setWFrom(e.target.value)} />
+                <input
+                  type="datetime-local"
+                  value={wFrom}
+                  onChange={(e) => setWFrom(e.target.value)}
+                />
               </label>
 
               <label style={{ display: "grid", gap: 6 }}>
                 Hasta
-                <input type="datetime-local" value={wTo} onChange={(e) => setWTo(e.target.value)} />
+                <input
+                  type="datetime-local"
+                  value={wTo}
+                  onChange={(e) => setWTo(e.target.value)}
+                />
               </label>
 
               <label style={{ display: "grid", gap: 6, minWidth: 260 }}>
                 Nota (opcional)
-                <input value={wNote} onChange={(e) => setWNote(e.target.value)} placeholder="Ej: Guest Marta" />
+                <input
+                  value={wNote}
+                  onChange={(e) => setWNote(e.target.value)}
+                  placeholder="Ej: Guest Marta"
+                />
               </label>
 
               <button onClick={onCreateWindow}>Publicar</button>
@@ -249,10 +307,18 @@ export default function AdminAvailabilityPage() {
                 <table style={{ width: "100%", borderCollapse: "collapse" }}>
                   <thead>
                     <tr>
-                      <th style={{ textAlign: "left", padding: 8, borderBottom: "1px solid #ddd" }}>Rango</th>
-                      <th style={{ textAlign: "left", padding: 8, borderBottom: "1px solid #ddd" }}>Nota</th>
-                      <th style={{ textAlign: "left", padding: 8, borderBottom: "1px solid #ddd" }}>Estado</th>
-                      <th style={{ textAlign: "left", padding: 8, borderBottom: "1px solid #ddd" }}>Acciones</th>
+                      <th style={{ textAlign: "left", padding: 8, borderBottom: "1px solid #ddd" }}>
+                        Rango
+                      </th>
+                      <th style={{ textAlign: "left", padding: 8, borderBottom: "1px solid #ddd" }}>
+                        Nota
+                      </th>
+                      <th style={{ textAlign: "left", padding: 8, borderBottom: "1px solid #ddd" }}>
+                        Estado
+                      </th>
+                      <th style={{ textAlign: "left", padding: 8, borderBottom: "1px solid #ddd" }}>
+                        Acciones
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
@@ -285,20 +351,40 @@ export default function AdminAvailabilityPage() {
           <section>
             <h2>Bloqueos (vacaciones / convenciones / no disponible)</h2>
 
-            <div style={{ display: "flex", gap: 12, flexWrap: "wrap", alignItems: "end", margin: "10px 0 14px" }}>
+            <div
+              style={{
+                display: "flex",
+                gap: 12,
+                flexWrap: "wrap",
+                alignItems: "end",
+                margin: "10px 0 14px",
+              }}
+            >
               <label style={{ display: "grid", gap: 6 }}>
                 Desde
-                <input type="datetime-local" value={bFrom} onChange={(e) => setBFrom(e.target.value)} />
+                <input
+                  type="datetime-local"
+                  value={bFrom}
+                  onChange={(e) => setBFrom(e.target.value)}
+                />
               </label>
 
               <label style={{ display: "grid", gap: 6 }}>
                 Hasta
-                <input type="datetime-local" value={bTo} onChange={(e) => setBTo(e.target.value)} />
+                <input
+                  type="datetime-local"
+                  value={bTo}
+                  onChange={(e) => setBTo(e.target.value)}
+                />
               </label>
 
               <label style={{ display: "grid", gap: 6, minWidth: 260 }}>
                 Motivo (opcional)
-                <input value={bReason} onChange={(e) => setBReason(e.target.value)} placeholder="Ej: Convención" />
+                <input
+                  value={bReason}
+                  onChange={(e) => setBReason(e.target.value)}
+                  placeholder="Ej: Convención"
+                />
               </label>
 
               <button onClick={onCreateBlock}>Crear bloqueo</button>
@@ -311,10 +397,18 @@ export default function AdminAvailabilityPage() {
                 <table style={{ width: "100%", borderCollapse: "collapse" }}>
                   <thead>
                     <tr>
-                      <th style={{ textAlign: "left", padding: 8, borderBottom: "1px solid #ddd" }}>Rango</th>
-                      <th style={{ textAlign: "left", padding: 8, borderBottom: "1px solid #ddd" }}>Motivo</th>
-                      <th style={{ textAlign: "left", padding: 8, borderBottom: "1px solid #ddd" }}>Estado</th>
-                      <th style={{ textAlign: "left", padding: 8, borderBottom: "1px solid #ddd" }}>Acciones</th>
+                      <th style={{ textAlign: "left", padding: 8, borderBottom: "1px solid #ddd" }}>
+                        Rango
+                      </th>
+                      <th style={{ textAlign: "left", padding: 8, borderBottom: "1px solid #ddd" }}>
+                        Motivo
+                      </th>
+                      <th style={{ textAlign: "left", padding: 8, borderBottom: "1px solid #ddd" }}>
+                        Estado
+                      </th>
+                      <th style={{ textAlign: "left", padding: 8, borderBottom: "1px solid #ddd" }}>
+                        Acciones
+                      </th>
                     </tr>
                   </thead>
                   <tbody>

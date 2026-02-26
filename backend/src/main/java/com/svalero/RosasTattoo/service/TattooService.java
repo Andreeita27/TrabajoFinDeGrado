@@ -45,8 +45,8 @@ public class TattooService {
         return dto;
     }
 
-    public List<TattooDto> findAll(String style, Boolean coverUp, Boolean color) {
-        List<Tattoo> tattoos = tattooRepository.findByFilters(style, coverUp, color);
+    public List<TattooDto> findAll(String style, Boolean coverUp, Boolean color, Long professionalId) {
+        List<Tattoo> tattoos = tattooRepository.findByFilters(style, coverUp, color, professionalId);
         return tattoos.stream().map(this::toDto).toList();
     }
 

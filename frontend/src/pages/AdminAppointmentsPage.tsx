@@ -478,6 +478,7 @@ export default function AdminAppointmentsPage() {
 
                       {(a.state === "PENDING" || a.state === "CONFIRMED") && (
                         <>
+                          <button onClick={() => nav(`/admin/appointments/${a.id}`)}>Ver detalle</button>
                           <button onClick={() => onCancel(a.id)}>Cancelar</button>
                           <button onClick={() => openReschedule(a)}>Reprogramar</button>
                         </>

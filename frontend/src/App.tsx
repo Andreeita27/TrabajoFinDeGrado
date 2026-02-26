@@ -17,6 +17,7 @@ import AdminTattooCreatePage from "./pages/AdminTattooCreatePage";
 import AdminTattooEditPage from "./pages/AdminTattooEditPage";
 import MyAccountPage from "./pages/MyAccountPage";
 import AdminAvailabilityPage from "./pages/AdminAvailabilityPage";
+import AppointmentDetailPage from "./pages/AppointmentDetailPage";
 
 import ProtectedRoute from "./auth/ProtectedRoute";
 import AdminRoute from "./auth/AdminRoute";
@@ -42,6 +43,7 @@ export default function App() {
           <Route path="/my-appointments" element={<MyAppointmentsPage />} />
           <Route path="/reviews/new" element={<ReviewCreatePage />} />
           <Route path="/my-account" element={<MyAccountPage />} />
+          <Route path="/my-appointments/:id" element={<AppointmentDetailPage />} />
         </Route>
 
         {/* Admin */}
@@ -49,6 +51,7 @@ export default function App() {
           <Route path="/admin" element={<AdminPanelPage />} />
           <Route path="/admin/appointments" element={<AdminAppointmentsPage />} />
           <Route path="/admin/availability" element={<AdminAvailabilityPage />} />
+          <Route path="/admin/appointments/:id" element={<AppointmentDetailPage />} />
 
           <Route path="/admin/appointments/:id/tattoo/new" element={<AdminTattooCreatePage />} />
           <Route path="/admin/tattoos/:id/edit" element={<AdminTattooEditPage />} />

@@ -217,6 +217,7 @@ export default function MyAppointmentsPage({ embedded = false }: Props) {
                     <>
                       {canModify && (
                         <>
+                          <button onClick={() => nav(`/my-appointments/${a.id}`)}>Ver detalle</button>
                           <button onClick={() => onCancel(a.id)}>Cancelar</button>
                           <button onClick={() => openReschedule(a)}>Reprogramar</button>
                         </>

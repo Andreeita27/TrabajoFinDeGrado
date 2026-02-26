@@ -3,11 +3,12 @@ import type { TattooDto } from "../types/tattoo";
 import type { ProfessionalDto } from "../types/professional";
 import type { ReviewDto } from "../types/review";
 
-export function getTattoos(params?: { style?: string; coverUp?: boolean; color?: boolean }) {
+export function getTattoos(params?: { style?: string; coverUp?: boolean; color?: boolean, professionalId?: number }) {
   const qs = new URLSearchParams();
   if (params?.style) qs.set("style", params.style);
   if (typeof params?.coverUp === "boolean") qs.set("coverUp", String(params.coverUp));
   if (typeof params?.color === "boolean") qs.set("color", String(params.color));
+  if (typeof params?.professionalId === "number") qs.set("professionalId", String(params.professionalId));
 
   const suffix = qs.toString() ? `?${qs.toString()}` : "";
   return apiFetch<TattooDto[]>(`/tattoos${suffix}`);

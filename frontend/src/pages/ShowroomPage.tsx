@@ -32,6 +32,7 @@ export default function ShowroomPage() {
   const [style, setStyle] = useState("");
   const [coverUp, setCoverUp] = useState<boolean | undefined>(undefined);
   const [color, setColor] = useState<boolean | undefined>(undefined);
+  const [tattooProfessionalId, setTattooProfessionalId] = useState<string>("");
 
   // Designs
   const [designs, setDesigns] = useState<DesignDto[]>([]);
@@ -50,6 +51,7 @@ export default function ShowroomPage() {
         style: style || undefined,
         coverUp,
         color,
+        professionalId: tattooProfessionalId ? Number(tattooProfessionalId) : undefined,
       });
       setTattoos(res);
     } catch (e: any) {
@@ -72,20 +74,9 @@ export default function ShowroomPage() {
     }
   };
 
-  const load = async () => {
-    // Tattoos siempre son públicos
-    await loadTattoos();
-
-    // Designs públicos o admin según rol
-    if (isAdmin) {
-      if (!token) return; // sin token no puede cargar admin
-    }
-    await loadDesigns();
-  };
-
   useEffect(() => {
     loadTattoos();
-  }, [style, coverUp, color]);
+  }, [style, coverUp, color, tattooProfessionalId]);
 
   useEffect(() => {
     // recarga diseños cuando cambia el rol
@@ -93,7 +84,6 @@ export default function ShowroomPage() {
   }, [isAdmin, token]);
 
   useEffect(() => {
-    if (!isAdmin) return;
     getProfessionals()
       .then(setPros)
       .catch(() => setPros([]));
@@ -359,6 +349,18 @@ export default function ShowroomPage() {
               value={style}
               onChange={(e) => setStyle(e.target.value)}
             />
+
+            <select
+              value={tattooProfessionalId}
+              onChange={(e) => setTattooProfessionalId(e.target.value)}
+            >
+              <option value="">Tatuador (todos)</option>
+              {pros.map((p) => (
+                <option key={p.id} value={String(p.id)}>
+                  {p.professionalName}
+                </option>
+              ))}
+            </select>
 
             <select
               value={typeof coverUp === "boolean" ? String(coverUp) : ""}

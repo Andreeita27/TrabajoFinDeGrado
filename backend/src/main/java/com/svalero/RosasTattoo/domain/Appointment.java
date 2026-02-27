@@ -2,6 +2,7 @@ package com.svalero.RosasTattoo.domain;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.svalero.RosasTattoo.domain.enums.AppointmentState;
+import com.svalero.RosasTattoo.domain.enums.AppointmentType;
 import com.svalero.RosasTattoo.domain.enums.TattooSize;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
@@ -21,13 +22,16 @@ public class Appointment {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "appointment_type")
+    private AppointmentType appointmentType = AppointmentType.TATTOO;
+
     @Column(name = "start_date_time")
     @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     @NotNull(message = "This field is mandatory")
     private LocalDateTime startDateTime;
 
     @Column(name = "body_placement")
-    @NotNull(message = "This field is mandatory")
     private String bodyPlacement;
 
     @Column(name = "idea_description")

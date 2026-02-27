@@ -5,6 +5,7 @@ import com.svalero.RosasTattoo.domain.Client;
 import com.svalero.RosasTattoo.domain.Professional;
 import com.svalero.RosasTattoo.domain.UserAccount;
 import com.svalero.RosasTattoo.domain.enums.AppointmentState;
+import com.svalero.RosasTattoo.domain.enums.AppointmentType;
 import com.svalero.RosasTattoo.domain.enums.TattooSize;
 import com.svalero.RosasTattoo.dto.AppointmentDto;
 import com.svalero.RosasTattoo.dto.AppointmentInDto;
@@ -76,10 +77,13 @@ public class AppointmentService {
         }
     }
 
-    private int calculateDurationMinutes(TattooSize tattooSize) {
+    private int calculateDurationMinutes(AppointmentType type, TattooSize tattooSize) {
+        if (type == AppointmentType.CONSULTATION) return 30;
+
         if (tattooSize == null) {
-            return 60;
+            throw new IllegalArgumentException("Tattoo size is mandatory for tattoo appointments.");
         }
+
         return switch (tattooSize) {
             case SMALL -> 60;
             case MEDIUM -> 120;
@@ -95,6 +99,28 @@ public class AppointmentService {
 
         if (overlapsCount > 0) {
             throw new AppointmentConflictException("The selected time slot is not available");
+        }
+    }
+
+    private void validateByType(AppointmentInDto dto) {
+        AppointmentType type = dto.getAppointmentType() == null
+                ? AppointmentType.TATTOO
+                : dto.getAppointmentType();
+
+        if (dto.getIdeaDescription() == null || dto.getIdeaDescription().isBlank()) {
+            throw new IllegalArgumentException("Describe tu idea.");
+        }
+
+        if (type == AppointmentType.TATTOO) {
+            if (dto.getTattooSize() == null) {
+                throw new IllegalArgumentException("Selecciona el tamaño del tattoo.");
+            }
+            if (dto.getBodyPlacement() == null || dto.getBodyPlacement().isBlank()) {
+                throw new IllegalArgumentException("Indica en qué parte del cuerpo quieres el tattoo.");
+            }
+        } else {
+            dto.setTattooSize(null);
+            dto.setBodyPlacement(null);
         }
     }
 
@@ -182,16 +208,28 @@ public class AppointmentService {
         Professional professional = professionalRepository.findById(appointmentInDto.getProfessionalId())
                 .orElseThrow(ProfessionalNotFoundException::new);
 
+        validateByType(appointmentInDto);
+
+        AppointmentType type = appointmentInDto.getAppointmentType() == null
+                ? AppointmentType.TATTOO
+                : appointmentInDto.getAppointmentType();
+
         Appointment appointment = new Appointment();
         modelMapper.map(appointmentInDto, appointment);
 
+        appointment.setAppointmentType(type);
         appointment.setClient(client);
         appointment.setProfessional(professional);
 
-        appointment.setState(AppointmentState.PENDING);
-        appointment.setDepositPaid(false);
+        if (type == AppointmentType.CONSULTATION) {
+            appointment.setState(AppointmentState.CONFIRMED);
+            appointment.setDepositPaid(false);
+        } else {
+            appointment.setState(AppointmentState.PENDING);
+            appointment.setDepositPaid(false);
+        }
 
-        int durationMinutes = calculateDurationMinutes(appointment.getTattooSize());
+        int durationMinutes = calculateDurationMinutes(type, appointment.getTattooSize());
         appointment.setDurationMinutes(durationMinutes);
 
         validateNoOverlap(professional.getId(), appointment.getStartDateTime(), durationMinutes, null);
@@ -224,7 +262,11 @@ public class AppointmentService {
         existing.setClient(client);
         existing.setProfessional(professional);
 
-        int durationMinutes = calculateDurationMinutes(existing.getTattooSize());
+        AppointmentType type = existing.getAppointmentType() == null
+                ? AppointmentType.TATTOO
+                : existing.getAppointmentType();
+
+        int durationMinutes = calculateDurationMinutes(type, existing.getTattooSize());
         existing.setDurationMinutes(durationMinutes);
 
         validateNoOverlap(professional.getId(), existing.getStartDateTime(), durationMinutes, existing.getId());
@@ -240,6 +282,10 @@ public class AppointmentService {
                 .orElseThrow(AppointmentNotFoundException::new);
 
         assertOwnership(appointment, email);
+
+        if (appointment.getAppointmentType() == AppointmentType.CONSULTATION) {
+            throw new IllegalStateException("Consultations do not require deposit.");
+        }
 
         if (appointment.getState() == AppointmentState.CANCELLED) {
             throw new IllegalStateException("You cannot confirm deposit for a cancelled appointment");
@@ -353,7 +399,7 @@ public class AppointmentService {
 
         int durationMinutes = appointment.getDurationMinutes();
         if (durationMinutes <= 0) {
-            durationMinutes = calculateDurationMinutes(appointment.getTattooSize());
+            durationMinutes = calculateDurationMinutes(appointment.getAppointmentType(), appointment.getTattooSize());
             appointment.setDurationMinutes(durationMinutes);
         }
 

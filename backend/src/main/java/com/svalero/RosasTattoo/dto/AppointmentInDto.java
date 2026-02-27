@@ -1,6 +1,7 @@
 package com.svalero.RosasTattoo.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.svalero.RosasTattoo.domain.enums.AppointmentType;
 import com.svalero.RosasTattoo.domain.enums.TattooSize;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -23,11 +24,12 @@ public class AppointmentInDto {
     @NotNull(message = "Professional is mandatory")
     private long professionalId;
 
+    private AppointmentType appointmentType;
+
     @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     @NotNull(message = "This field is mandatory")
     private LocalDateTime startDateTime;
 
-    @NotBlank(message = "This field is mandatory")
     private String bodyPlacement;
 
     @NotBlank(message = "An idea must be described")

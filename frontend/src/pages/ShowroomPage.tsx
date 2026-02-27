@@ -378,35 +378,51 @@ export default function ShowroomPage() {
         <section>
           <h2>Tatuajes realizados</h2>
 
-          <div style={{ marginBottom: 16, display: "flex", gap: 12, flexWrap: "wrap" }}>
-            <input placeholder="Filtrar por estilo" value={style} onChange={(e) => setStyle(e.target.value)} />
+          <div style={{ marginBottom: 16, display: "flex", gap: 12, flexWrap: "wrap", alignItems: "end" }}>
+            <label style={{ display: "grid", gap: 6 }}>
+              Estilo
+              <input
+                placeholder="Filtrar por estilo"
+                value={style}
+                onChange={(e) => setStyle(e.target.value)}
+              />
+            </label>
 
-            <select value={tattooProfessionalId} onChange={(e) => setTattooProfessionalId(e.target.value)}>
-              <option value="">Tatuador (todos)</option>
-              {pros.map((p) => (
-                <option key={p.id} value={String(p.id)}>
-                  {p.professionalName}
-                </option>
-              ))}
-            </select>
+            <label style={{ display: "grid", gap: 6 }}>
+              Tatuador
+              <select value={tattooProfessionalId} onChange={(e) => setTattooProfessionalId(e.target.value)}>
+                <option value="">Todos</option>
+                {pros.map((p) => (
+                  <option key={p.id} value={String(p.id)}>
+                    {p.professionalName}
+                  </option>
+                ))}
+              </select>
+            </label>
 
-            <select
-              value={typeof coverUp === "boolean" ? String(coverUp) : ""}
-              onChange={(e) => setCoverUp(e.target.value === "" ? undefined : e.target.value === "true")}
-            >
-              <option value="">Cover Up (todos)</option>
-              <option value="true">Sí</option>
-              <option value="false">No</option>
-            </select>
+            <label style={{ display: "grid", gap: 6 }}>
+              Cover up
+              <select
+                value={typeof coverUp === "boolean" ? String(coverUp) : ""}
+                onChange={(e) => setCoverUp(e.target.value === "" ? undefined : e.target.value === "true")}
+              >
+                <option value="">Todos</option>
+                <option value="true">Sí</option>
+                <option value="false">No</option>
+              </select>
+            </label>
 
-            <select
-              value={typeof color === "boolean" ? String(color) : ""}
-              onChange={(e) => setColor(e.target.value === "" ? undefined : e.target.value === "true")}
-            >
-              <option value="">Color (todos)</option>
-              <option value="true">Color</option>
-              <option value="false">Blanco y negro</option>
-            </select>
+            <label style={{ display: "grid", gap: 6 }}>
+              Color
+              <select
+                value={typeof color === "boolean" ? String(color) : ""}
+                onChange={(e) => setColor(e.target.value === "" ? undefined : e.target.value === "true")}
+              >
+                <option value="">Todos</option>
+                <option value="true">Color</option>
+                <option value="false">Blanco y negro</option>
+              </select>
+            </label>
           </div>
 
           {tattoosError && <div style={{ color: "tomato" }}>{tattoosError}</div>}

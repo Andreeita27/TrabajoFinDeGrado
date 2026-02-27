@@ -1,7 +1,7 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { ApiError } from "../api/apiFetch";
-import { getAppointment } from "../api/appointmentsApi";
+import { getAppointment, uploadAppointmentReferenceImage, fetchAppointmentReferenceImageBlob } from "../api/appointmentsApi";
 import { useAuth } from "../auth/AuthContext";
 import type { AppointmentDto } from "../types/appointment";
 
@@ -25,15 +25,23 @@ export default function AppointmentDetailPage() {
   }, [params.id]);
 
   const isAdminPath = loc.pathname.startsWith("/admin");
+  const backTo = isAdminPath ? "/admin/appointments" : "/my-appointments";
 
   const [item, setItem] = useState<AppointmentDto | null>(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const backTo = isAdminPath ? "/admin/appointments" : "/my-appointments";
+  const [refUrl, setRefUrl] = useState<string>(""); // objectURL
+  const [refLoading, setRefLoading] = useState(false);
+  const [refError, setRefError] = useState("");
+  const [uploading, setUploading] = useState(false);
+  const fileRef = useRef<HTMLInputElement | null>(null);
+
+  const canSeeClientInfo = role === "ADMIN" || isAdminPath;
 
   const load = async () => {
     if (!token) return;
+
     if (!appointmentId) {
       setError("ID de cita inválido.");
       return;
@@ -41,6 +49,7 @@ export default function AppointmentDetailPage() {
 
     setError("");
     setLoading(true);
+
     try {
       const data = await getAppointment(token, appointmentId);
       setItem(data);
@@ -55,25 +64,77 @@ export default function AppointmentDetailPage() {
     }
   };
 
+  // Carga principal
   useEffect(() => {
     load();
   }, [token, appointmentId]);
 
-  // Soporta el campo actual (referenceImageUrl) y uno futuro tipo array (que no se si lo hare peeeeeero)
-  const images: string[] = useMemo(() => {
-    const out: string[] = [];
-    if (item?.referenceImageUrl) out.push(item.referenceImageUrl);
+  // Cargar la imagen privada como blob cuando haya cita
+  useEffect(() => {
+    // Limpieza del objectURL anterior
+    if (refUrl) URL.revokeObjectURL(refUrl);
+    setRefUrl("");
+    setRefError("");
 
-    const maybeArray = (item as any)?.referenceImageUrls;
-    if (Array.isArray(maybeArray)) {
-      for (const u of maybeArray) {
-        if (typeof u === "string" && u.trim()) out.push(u);
-      }
+    if (!token) return;
+    if (!appointmentId) return;
+
+    setRefLoading(true);
+
+    fetchAppointmentReferenceImageBlob(token, appointmentId)
+      .then((blob) => {
+        if (!blob || blob.size === 0) return;
+        const url = URL.createObjectURL(blob);
+        setRefUrl(url);
+      })
+      .catch((e: any) => {
+        // Si no hay imagen aún
+        if (e instanceof ApiError && e.status === 404) return;
+        setRefError(e?.message || "No se pudo cargar la imagen de referencia");
+      })
+      .finally(() => setRefLoading(false));
+
+  }, [token, appointmentId]);
+
+  const onUploadReference = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!token || !appointmentId) return;
+
+    const file = fileRef.current?.files?.[0];
+    if (!file) {
+      setRefError("Selecciona una imagen.");
+      return;
     }
 
-    // unique
-    return Array.from(new Set(out));
-  }, [item]);
+    setRefError("");
+    try {
+      setUploading(true);
+      await uploadAppointmentReferenceImage(token, appointmentId, file);
+
+      // refrescamos: recargar cita + recargar blob
+      await load();
+
+      // Fuerza recarga del blob: reseteo state y vuelvo a pedirlo
+      if (refUrl) URL.revokeObjectURL(refUrl);
+      setRefUrl("");
+
+      setRefLoading(true);
+      const blob = await fetchAppointmentReferenceImageBlob(token, appointmentId);
+      if (blob && blob.size > 0) setRefUrl(URL.createObjectURL(blob));
+    } catch (e: any) {
+      if (e instanceof ApiError && (e.status === 401 || e.status === 403)) {
+        nav("/login", { replace: true, state: { from: loc.pathname } });
+        return;
+      }
+      setRefError(e?.message || "Error subiendo imagen de referencia");
+    } finally {
+      setUploading(false);
+      setRefLoading(false);
+
+      // Limpia el input para poder re-subir la misma imagen si quieres
+      if (fileRef.current) fileRef.current.value = "";
+    }
+  };
 
   return (
     <div style={{ padding: 16, maxWidth: 980, margin: "0 auto" }}>
@@ -89,33 +150,23 @@ export default function AppointmentDetailPage() {
 
       {item && (
         <div style={{ marginTop: 16, display: "grid", gap: 14 }}>
-          <div
-            style={{
-              border: "1px solid #333",
-              borderRadius: 10,
-              padding: 14,
-              display: "grid",
-              gap: 8,
-            }}
-          >
+          <div style={{ border: "1px solid #333", borderRadius: 10, padding: 14, display: "grid", gap: 8 }}>
             <div>
               <b>Fecha:</b> {formatDate(String(item.startDateTime))}
             </div>
 
             <div>
-              <b>Tipo:</b>{" "}
-              {item.appointmentType === "CONSULTATION" ? "Consulta" : "Sesión de tatuaje"}
+              <b>Tipo:</b> {item.appointmentType === "CONSULTATION" ? "Consulta" : "Sesión de tatuaje"}
             </div>
 
             <div>
               <b>Profesional:</b> {item.professionalName}
             </div>
 
-            {(role === "ADMIN" || isAdminPath) && (
+            {canSeeClientInfo && (
               <div>
                 <b>Cliente:</b>{" "}
-                {item.clientFullName ??
-                  (`${item.clientName ?? ""} ${item.clientSurname ?? ""}`.trim() || `#${item.clientId}`)}
+                {item.clientFullName ?? (`${item.clientName ?? ""} ${item.clientSurname ?? ""}`.trim() || `#${item.clientId}`)}
               </div>
             )}
 
@@ -155,56 +206,43 @@ export default function AppointmentDetailPage() {
             </div>
           </div>
 
-          <div
-            style={{
-              border: "1px solid #333",
-              borderRadius: 10,
-              padding: 14,
-            }}
-          >
+          <div style={{ border: "1px solid #333", borderRadius: 10, padding: 14 }}>
             <h2 style={{ marginTop: 0 }}>Imágenes de inspiración</h2>
 
-            {images.length === 0 ? (
-              <div style={{ opacity: 0.85 }}>El cliente no ha subido imágenes.</div>
-            ) : (
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-                  gap: 12,
-                }}
-              >
-                {images.map((url, idx) => (
-                  <a
-                    key={`${url}-${idx}`}
-                    href={url}
-                    target="_blank"
-                    rel="noreferrer"
-                    style={{ textDecoration: "none" }}
-                  >
-                    <img
-                      src={url}
-                      alt={`Inspiración ${idx + 1}`}
-                      style={{
-                        width: "100%",
-                        height: 220,
-                        objectFit: "cover",
-                        borderRadius: 10,
-                        border: "1px solid #444",
-                        display: "block",
-                      }}
-                      onError={(e) => {
-                        // fallback visual si alguna URL está mal
-                        (e.currentTarget as HTMLImageElement).style.display = "none";
-                      }}
-                    />
-                    <div style={{ marginTop: 6, fontSize: 12, opacity: 0.8, wordBreak: "break-all" }}>
-                      Abrir imagen #{idx + 1}
-                    </div>
-                  </a>
-                ))}
+            {refError && <div style={{ color: "tomato", marginBottom: 10 }}>{refError}</div>}
+
+            <div style={{ display: "grid", gap: 12 }}>
+              {/* Preview */}
+              {refLoading ? (
+                <div style={{ opacity: 0.85 }}>Cargando imagen…</div>
+              ) : refUrl ? (
+                <img
+                  src={refUrl}
+                  alt="Imagen de referencia"
+                  style={{
+                    width: "100%",
+                    maxWidth: 520,
+                    height: 320,
+                    objectFit: "cover",
+                    borderRadius: 10,
+                    border: "1px solid #444",
+                  }}
+                />
+              ) : (
+                <div style={{ opacity: 0.85 }}>El cliente no ha subido imágenes.</div>
+              )}
+
+              {/* Subida */}
+              <form onSubmit={onUploadReference} style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
+                <input ref={fileRef} type="file" accept="image/*" disabled={uploading || !token} />
+                <button type="submit" disabled={uploading || !token}>
+                  {uploading ? "Subiendo..." : "Subir imagen"}
+                </button>
+              </form>
+
+              <div style={{ fontSize: 12, opacity: 0.75 }}>
               </div>
-            )}
+            </div>
           </div>
         </div>
       )}

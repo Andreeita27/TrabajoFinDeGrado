@@ -65,3 +65,35 @@ export function rescheduleAppointment(token: string, id: number, startDateTime: 
     body: JSON.stringify({ startDateTime }),
   });
 }
+
+export async function uploadAppointmentReferenceImage(token: string, appointmentId: number, file: File) {
+  const BASE_URL = import.meta.env.VITE_API_BASE_URL as string;
+
+  const form = new FormData();
+  form.append("file", file);
+
+  const res = await fetch(`${BASE_URL}/appointments/${appointmentId}/reference-image`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    body: form,
+  });
+
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    throw new Error(text || "Error subiendo imagen");
+  }
+  return (await res.json()) as { referenceImagePath: string };
+}
+
+export async function fetchAppointmentReferenceImageBlob(token: string, appointmentId: number) {
+  const BASE_URL = import.meta.env.VITE_API_BASE_URL as string;
+
+  const res = await fetch(`${BASE_URL}/appointments/${appointmentId}/reference-image`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  if (!res.ok) throw new Error("No se pudo cargar la imagen");
+  return await res.blob();
+}

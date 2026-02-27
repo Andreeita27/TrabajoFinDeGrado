@@ -7,13 +7,7 @@ import { getTattoos, getProfessionals } from "../api/showroomApi";
 import type { TattooDto } from "../types/tattoo";
 import type { ProfessionalDto } from "../types/professional";
 
-import {
-  getDesigns,
-  getAdminDesigns,
-  createDesign,
-  toggleDesign,
-  deleteDesign,
-} from "../api/designsApi";
+import { getDesigns, getAdminDesigns, createDesign, toggleDesign, deleteDesign } from "../api/designsApi";
 import type { DesignDto } from "../types/design";
 
 type TabKey = "DESIGNS" | "TATTOOS";
@@ -23,7 +17,7 @@ export default function ShowroomPage() {
   const { role, token } = useAuth();
   const isAdmin = role === "ADMIN";
 
-  const [tab, setTab] = useState<TabKey>("DESIGNS");
+  const [tab, setTab] = useState<TabKey>("TATTOOS");
 
   // Tattoos
   const [tattoos, setTattoos] = useState<TattooDto[]>([]);
@@ -43,6 +37,15 @@ export default function ShowroomPage() {
   const [designProfessionalId, setDesignProfessionalId] = useState<string>("");
   const [designTitle, setDesignTitle] = useState("");
   const [designImageUrl, setDesignImageUrl] = useState("");
+
+  //mostrar/ocultar formulario de añadir diseño
+  const [showAddDesign, setShowAddDesign] = useState(false);
+
+  const resetAddDesignForm = () => {
+    setDesignProfessionalId("");
+    setDesignTitle("");
+    setDesignImageUrl("");
+  };
 
   const loadTattoos = async () => {
     setTattoosError("");
@@ -65,7 +68,6 @@ export default function ShowroomPage() {
       const res = isAdmin ? await getAdminDesigns(token!) : await getDesigns();
       setDesigns(res);
     } catch (e: any) {
-      // Si eres admin y falla por auth, redirige
       if (e instanceof ApiError && (e.status === 401 || e.status === 403)) {
         if (isAdmin) nav("/login", { replace: true });
         return;
@@ -79,7 +81,6 @@ export default function ShowroomPage() {
   }, [style, coverUp, color, tattooProfessionalId]);
 
   useEffect(() => {
-    // recarga diseños cuando cambia el rol
     loadDesigns();
   }, [isAdmin, token]);
 
@@ -87,6 +88,14 @@ export default function ShowroomPage() {
     getProfessionals()
       .then(setPros)
       .catch(() => setPros([]));
+  }, [isAdmin]);
+
+  // Si deja de ser admin, oculto formulario por si acaso
+  useEffect(() => {
+    if (!isAdmin) {
+      setShowAddDesign(false);
+      resetAddDesignForm();
+    }
   }, [isAdmin]);
 
   const activeDesigns = useMemo(() => designs.filter((d) => d.active), [designs]);
@@ -116,9 +125,9 @@ export default function ShowroomPage() {
         active: true,
       });
 
-      setDesignTitle("");
-      setDesignImageUrl("");
-      setDesignProfessionalId("");
+      //cerrar y resetear formulario al crear
+      resetAddDesignForm();
+      setShowAddDesign(false);
 
       await loadDesigns();
     } catch (e: any) {
@@ -205,24 +214,42 @@ export default function ShowroomPage() {
 
       {tab === "DESIGNS" && (
         <section>
-          <h2>Diseños disponibles</h2>
-          <p style={{ opacity: 0.85 }}>
-            Ideas que el estudio tiene preparadas para tatuar. Si te interesa uno, dínoslo y lo adaptamos a ti.
-          </p>
+          <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "center" }}>
+            <div>
+              <h2 style={{ margin: 0 }}>Diseños disponibles</h2>
+              <p style={{ opacity: 0.85, marginTop: 6 }}>
+                Ideas que el estudio tiene preparadas para tatuar. Si te interesa uno, dínoslo y lo adaptamos a ti.
+              </p>
+            </div>
+
+            {isAdmin && (
+              <button
+                type="button"
+                onClick={() => {
+                  setDesignError("");
+                  // toggle
+                  setShowAddDesign((v) => {
+                    const next = !v;
+                    if (!next) resetAddDesignForm();
+                    return next;
+                  });
+                }}
+              >
+                {showAddDesign ? "Cerrar" : "Añadir diseño"}
+              </button>
+            )}
+          </div>
 
           {designError && <div style={{ color: "tomato", marginBottom: 10 }}>{designError}</div>}
 
-          {isAdmin && (
+          {isAdmin && showAddDesign && (
             <div style={{ border: "1px solid #333", borderRadius: 10, padding: 12, margin: "12px 0 16px" }}>
-              <div style={{ fontWeight: 700, marginBottom: 10 }}>Añadir diseño</div>
+              <div style={{ fontWeight: 700, marginBottom: 10 }}>Nuevo diseño</div>
 
-              <div style={{ display: "grid", gridTemplateColumns: "240px 1fr 1fr auto", gap: 10, alignItems: "end" }}>
+              <div style={{ display: "grid", gridTemplateColumns: "240px 1fr 1fr auto auto", gap: 10, alignItems: "end" }}>
                 <label style={{ display: "grid", gap: 6 }}>
                   Tatuador
-                  <select
-                    value={designProfessionalId}
-                    onChange={(e) => setDesignProfessionalId(e.target.value)}
-                  >
+                  <select value={designProfessionalId} onChange={(e) => setDesignProfessionalId(e.target.value)}>
                     <option value="">Selecciona…</option>
                     {pros.map((p) => (
                       <option key={p.id} value={String(p.id)}>
@@ -243,15 +270,23 @@ export default function ShowroomPage() {
 
                 <label style={{ display: "grid", gap: 6 }}>
                   URL imagen
-                  <input
-                    value={designImageUrl}
-                    onChange={(e) => setDesignImageUrl(e.target.value)}
-                    placeholder="https://..."
-                  />
+                  <input value={designImageUrl} onChange={(e) => setDesignImageUrl(e.target.value)} placeholder="https://..." />
                 </label>
 
                 <button onClick={onCreateDesign} disabled={designSaving}>
-                  {designSaving ? "Añadiendo..." : "Añadir"}
+                  {designSaving ? "Añadiendo..." : "Guardar"}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setDesignError("");
+                    setShowAddDesign(false);
+                    resetAddDesignForm();
+                  }}
+                  disabled={designSaving}
+                >
+                  Cancelar
                 </button>
               </div>
             </div>
@@ -344,16 +379,9 @@ export default function ShowroomPage() {
           <h2>Tatuajes realizados</h2>
 
           <div style={{ marginBottom: 16, display: "flex", gap: 12, flexWrap: "wrap" }}>
-            <input
-              placeholder="Filtrar por estilo"
-              value={style}
-              onChange={(e) => setStyle(e.target.value)}
-            />
+            <input placeholder="Filtrar por estilo" value={style} onChange={(e) => setStyle(e.target.value)} />
 
-            <select
-              value={tattooProfessionalId}
-              onChange={(e) => setTattooProfessionalId(e.target.value)}
-            >
+            <select value={tattooProfessionalId} onChange={(e) => setTattooProfessionalId(e.target.value)}>
               <option value="">Tatuador (todos)</option>
               {pros.map((p) => (
                 <option key={p.id} value={String(p.id)}>
@@ -409,16 +437,12 @@ export default function ShowroomPage() {
 
                 <div style={{ marginTop: 10 }}>
                   <h3 style={{ margin: 0 }}>{t.style}</h3>
-                  <p style={{ color: "#888", marginTop: 6 }}>
-                    {t.professionalName ?? "Estudio 62 Rosas"}
-                  </p>
+                  <p style={{ color: "#888", marginTop: 6 }}>{t.professionalName ?? "Estudio 62 Rosas"}</p>
                 </div>
               </div>
             ))}
 
-            {!tattoosError && tattoos.length === 0 && (
-              <p style={{ opacity: 0.8 }}>No hay tatuajes con esos filtros.</p>
-            )}
+            {!tattoosError && tattoos.length === 0 && <p style={{ opacity: 0.8 }}>No hay tatuajes con esos filtros.</p>}
           </div>
         </section>
       )}

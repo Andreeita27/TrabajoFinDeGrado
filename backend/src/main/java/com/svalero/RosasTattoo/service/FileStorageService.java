@@ -1,9 +1,11 @@
 package com.svalero.RosasTattoo.service;
 
+import lombok.Getter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.nio.file.*;
 import java.util.Set;
 import java.util.UUID;
@@ -13,6 +15,7 @@ public class FileStorageService {
 
     private static final Set<String> ALLOWED = Set.of("image/jpeg", "image/png", "image/webp");
 
+    @Getter
     @Value("${app.upload.dir}")
     private String uploadDir;
 
@@ -61,5 +64,32 @@ public class FileStorageService {
         } catch (Exception e) {
             throw new RuntimeException("Error guardando archivo", e);
         }
+    }
+
+    public String savePrivateAppointmentImage(long appointmentId, MultipartFile file) throws IOException {
+        if (file == null || file.isEmpty()) throw new IllegalArgumentException("File is empty");
+
+        String ct = file.getContentType();
+        if (ct == null || !ALLOWED.contains(ct)) {
+            throw new IllegalArgumentException("Invalid content type: " + ct);
+        }
+
+        String ext = switch (ct) {
+            case "image/jpeg" -> ".jpg";
+            case "image/png" -> ".png";
+            case "image/webp" -> ".webp";
+            default -> "";
+        };
+
+        Path base = Paths.get(uploadDir, "private", "appointments", String.valueOf(appointmentId));
+        Files.createDirectories(base);
+
+        String filename = UUID.randomUUID() + ext;
+        Path target = base.resolve(filename);
+
+        Files.copy(file.getInputStream(), target, StandardCopyOption.REPLACE_EXISTING);
+
+        // OJO: esto NO es una URL pública. Es una “ruta lógica” privada para el endpoint protegido.
+        return "/private/appointments/" + appointmentId + "/" + filename;
     }
 }

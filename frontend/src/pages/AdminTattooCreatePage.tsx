@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { ApiError } from "../api/apiFetch";
 import { getAppointment } from "../api/appointmentsApi";
 import { createTattoo } from "../api/tattoosApi";
+import { uploadPublicImage } from "../api/filesApi";
 import { useAuth } from "../auth/AuthContext";
 import type { TattooInDto } from "../types/tattoo";
 import type { AppointmentDto } from "../types/appointment";
@@ -36,6 +37,7 @@ export default function AdminTattooCreatePage() {
   const [error, setError] = useState("");
   const [ok, setOk] = useState("");
   const [loading, setLoading] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
 
   const load = async () => {
     if (!token || !appointmentId) return;
@@ -54,6 +56,23 @@ export default function AdminTattooCreatePage() {
   useEffect(() => {
     load();
   }, [token, appointmentId]);
+
+  const onPickImage = async (file: File) => {
+    if (!token) return;
+    setError("");
+    setOk("");
+
+    try {
+      setUploadingImage(true);
+      const url = await uploadPublicImage("tattoos", file, token);
+      setImageUrl(url);
+      setOk("Imagen subida");
+    } catch (e: any) {
+      setError(e instanceof ApiError ? e.message : e?.message || "Error subiendo imagen");
+    } finally {
+      setUploadingImage(false);
+    }
+  };
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -88,7 +107,7 @@ export default function AdminTattooCreatePage() {
     }
 
     if (!imageUrl.trim()) {
-      setError("La URL de la imagen es obligatoria.");
+      setError("Debes subir una imagen.");
       return;
     }
 
@@ -148,6 +167,8 @@ export default function AdminTattooCreatePage() {
     );
   }
 
+  const previewUrl = imageUrl ? `${import.meta.env.VITE_API_BASE_URL}${imageUrl}` : "";
+
   return (
     <div style={{ padding: 16, maxWidth: 560 }}>
       <h1>Registrar tattoo</h1>
@@ -178,7 +199,7 @@ export default function AdminTattooCreatePage() {
               value={style}
               onChange={(e) => setStyle(e.target.value)}
               style={{ display: "block", width: "100%", padding: 8, marginTop: 6 }}
-              disabled={loading}
+              disabled={loading || uploadingImage}
             />
           </label>
 
@@ -189,7 +210,7 @@ export default function AdminTattooCreatePage() {
               onChange={(e) => setTattooDescription(e.target.value)}
               rows={4}
               style={{ display: "block", width: "100%", padding: 8, marginTop: 6 }}
-              disabled={loading}
+              disabled={loading || uploadingImage}
             />
           </label>
 
@@ -200,7 +221,7 @@ export default function AdminTattooCreatePage() {
               value={tattooDate}
               onChange={(e) => setTattooDate(e.target.value)}
               style={{ display: "block", width: "100%", padding: 8, marginTop: 6 }}
-              disabled={loading}
+              disabled={loading || uploadingImage}
             />
           </label>
 
@@ -212,7 +233,7 @@ export default function AdminTattooCreatePage() {
               value={sessions}
               onChange={(e) => setSessions(Number(e.target.value))}
               style={{ display: "block", width: "100%", padding: 8, marginTop: 6 }}
-              disabled={loading}
+              disabled={loading || uploadingImage}
             />
           </label>
 
@@ -221,7 +242,7 @@ export default function AdminTattooCreatePage() {
               type="checkbox"
               checked={coverUp}
               onChange={(e) => setCoverUp(e.target.checked)}
-              disabled={loading}
+              disabled={loading || uploadingImage}
             />
             ¿Cover up?
           </label>
@@ -231,27 +252,44 @@ export default function AdminTattooCreatePage() {
               type="checkbox"
               checked={color}
               onChange={(e) => setColor(e.target.checked)}
-              disabled={loading}
+              disabled={loading || uploadingImage}
             />
             ¿A color?
           </label>
 
           <label>
-            URL de imagen
+            Imagen del tattoo
             <input
-              value={imageUrl}
-              onChange={(e) => setImageUrl(e.target.value)}
+              type="file"
+              accept="image/*"
+              disabled={loading || uploadingImage}
+              onChange={async (e) => {
+                const f = e.target.files?.[0];
+                if (!f) return;
+                await onPickImage(f);
+                // permite volver a seleccionar el mismo archivo
+                e.currentTarget.value = "";
+              }}
               style={{ display: "block", width: "100%", padding: 8, marginTop: 6 }}
-              disabled={loading}
-              placeholder="https://..."
             />
           </label>
 
+          {imageUrl && (
+            <div style={{ display: "grid", gap: 8 }}>
+              <div style={{ fontSize: 12, opacity: 0.8 }}>{imageUrl}</div>
+              <img
+                src={previewUrl}
+                alt="Preview tattoo"
+                style={{ maxWidth: 320, borderRadius: 8, border: "1px solid #444" }}
+              />
+            </div>
+          )}
+
           <div style={{ display: "flex", gap: 8 }}>
-            <button type="submit" disabled={loading}>
+            <button type="submit" disabled={loading || uploadingImage}>
               {loading ? "Guardando..." : "Registrar tattoo"}
             </button>
-            <button type="button" onClick={() => nav("/admin/appointments")} disabled={loading}>
+            <button type="button" onClick={() => nav("/admin/appointments")} disabled={loading || uploadingImage}>
               Cancelar
             </button>
           </div>

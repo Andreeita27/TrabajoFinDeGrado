@@ -3,6 +3,14 @@ import { useNavigate } from "react-router-dom";
 import { getProfessionals } from "../api/showroomApi";
 import type { ProfessionalDto } from "../types/professional";
 
+const BASE_URL = import.meta.env.VITE_API_BASE_URL as string;
+
+function withBase(url?: string | null) {
+  if (!url) return "";
+  if (/^https?:\/\//i.test(url)) return url;
+  return `${BASE_URL}${url}`;
+}
+
 export default function ProfessionalsPage() {
   const nav = useNavigate();
 
@@ -49,7 +57,7 @@ export default function ProfessionalsPage() {
           >
             <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
               <img
-                src={p.profilePhoto}
+                src={withBase(p.profilePhoto)}
                 alt={p.professionalName}
                 style={{
                   width: 100,

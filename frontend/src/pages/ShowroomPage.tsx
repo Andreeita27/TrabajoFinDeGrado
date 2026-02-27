@@ -9,8 +9,17 @@ import type { ProfessionalDto } from "../types/professional";
 
 import { getDesigns, getAdminDesigns, createDesign, toggleDesign, deleteDesign } from "../api/designsApi";
 import type { DesignDto } from "../types/design";
+import { uploadPublicImage } from "../api/filesApi";
 
 type TabKey = "DESIGNS" | "TATTOOS";
+
+const BASE_URL = import.meta.env.VITE_API_BASE_URL as string;
+
+function withBase(url?: string | null) {
+  if (!url) return "";
+  if (/^https?:\/\//i.test(url)) return url;
+  return `${BASE_URL}${url}`;
+}
 
 export default function ShowroomPage() {
   const nav = useNavigate();
@@ -32,6 +41,7 @@ export default function ShowroomPage() {
   const [designs, setDesigns] = useState<DesignDto[]>([]);
   const [designError, setDesignError] = useState("");
   const [designSaving, setDesignSaving] = useState(false);
+  const [uploadingDesignImage, setUploadingDesignImage] = useState(false);
 
   const [pros, setPros] = useState<ProfessionalDto[]>([]);
   const [designProfessionalId, setDesignProfessionalId] = useState<string>("");
@@ -110,7 +120,6 @@ export default function ShowroomPage() {
     return designs.filter((d: any) => {
       if (typeof d.professionalId === "number") return d.professionalId === pid;
 
-      // Fallback: intentar matchear por nombre (menos perfecto pero no rompe)
       const pro = pros.find((p) => p.id === pid);
       const name = pro?.professionalName?.trim().toLowerCase();
       return name ? String(d.professionalName ?? "").trim().toLowerCase() === name : true;
@@ -119,6 +128,24 @@ export default function ShowroomPage() {
 
   const activeDesigns = useMemo(() => filteredDesigns.filter((d) => d.active), [filteredDesigns]);
   const inactiveDesigns = useMemo(() => filteredDesigns.filter((d) => !d.active), [filteredDesigns]);
+
+  const onPickDesignImage = async (file: File) => {
+    if (!isAdmin || !token) {
+      setDesignError("Inicia sesión como admin.");
+      return;
+    }
+
+    setDesignError("");
+    try {
+      setUploadingDesignImage(true);
+      const url = await uploadPublicImage("designs", file, token);
+      setDesignImageUrl(url);
+    } catch (e: any) {
+      setDesignError(e instanceof ApiError ? e.message : e?.message || "Error subiendo imagen");
+    } finally {
+      setUploadingDesignImage(false);
+    }
+  };
 
   const onCreateDesign = async () => {
     if (!isAdmin || !token) {
@@ -130,7 +157,7 @@ export default function ShowroomPage() {
       return;
     }
     if (!designImageUrl.trim()) {
-      setDesignError("La URL de imagen es obligatoria.");
+      setDesignError("Debes subir una imagen.");
       return;
     }
 
@@ -144,7 +171,6 @@ export default function ShowroomPage() {
         active: true,
       });
 
-      //cerrar y resetear formulario al crear
       resetAddDesignForm();
       setShowAddDesign(false);
 
@@ -269,7 +295,6 @@ export default function ShowroomPage() {
                 type="button"
                 onClick={() => {
                   setDesignError("");
-                  // toggle
                   setShowAddDesign((v) => {
                     const next = !v;
                     if (!next) resetAddDesignForm();
@@ -307,15 +332,26 @@ export default function ShowroomPage() {
                     value={designTitle}
                     onChange={(e) => setDesignTitle(e.target.value)}
                     placeholder="Ej: Flash neo-trad rose"
+                    disabled={designSaving || uploadingDesignImage}
                   />
                 </label>
 
                 <label style={{ display: "grid", gap: 6 }}>
-                  URL imagen
-                  <input value={designImageUrl} onChange={(e) => setDesignImageUrl(e.target.value)} placeholder="https://..." />
+                  Imagen
+                  <input
+                    type="file"
+                    accept="image/*"
+                    disabled={designSaving || uploadingDesignImage}
+                    onChange={async (e) => {
+                      const f = e.target.files?.[0];
+                      if (!f) return;
+                      await onPickDesignImage(f);
+                      e.currentTarget.value = "";
+                    }}
+                  />
                 </label>
 
-                <button onClick={onCreateDesign} disabled={designSaving}>
+                <button onClick={onCreateDesign} disabled={designSaving || uploadingDesignImage}>
                   {designSaving ? "Añadiendo..." : "Guardar"}
                 </button>
 
@@ -326,11 +362,22 @@ export default function ShowroomPage() {
                     setShowAddDesign(false);
                     resetAddDesignForm();
                   }}
-                  disabled={designSaving}
+                  disabled={designSaving || uploadingDesignImage}
                 >
                   Cancelar
                 </button>
               </div>
+
+              {designImageUrl.trim() && (
+                <div style={{ marginTop: 12, display: "grid", gap: 8 }}>
+                  <div style={{ fontSize: 12, opacity: 0.8 }}>{designImageUrl}</div>
+                  <img
+                    src={withBase(designImageUrl)}
+                    alt="Preview diseño"
+                    style={{ width: "100%", maxWidth: 520, height: 220, objectFit: "cover", borderRadius: 8, border: "1px solid #333" }}
+                  />
+                </div>
+              )}
             </div>
           )}
 
@@ -368,7 +415,7 @@ export default function ShowroomPage() {
                   </div>
 
                   <img
-                    src={d.imageUrl}
+                    src={withBase(d.imageUrl)}
                     alt={d.title ?? "Diseño disponible"}
                     style={{ width: "100%", height: 260, objectFit: "cover", borderRadius: 8 }}
                   />
@@ -423,11 +470,7 @@ export default function ShowroomPage() {
           <div style={{ marginBottom: 16, display: "flex", gap: 12, flexWrap: "wrap", alignItems: "end" }}>
             <label style={{ display: "grid", gap: 6 }}>
               Estilo
-              <input
-                placeholder="Filtrar por estilo"
-                value={style}
-                onChange={(e) => setStyle(e.target.value)}
-              />
+              <input placeholder="Filtrar por estilo" value={style} onChange={(e) => setStyle(e.target.value)} />
             </label>
 
             <label style={{ display: "grid", gap: 6 }}>
@@ -483,7 +526,7 @@ export default function ShowroomPage() {
                 }}
               >
                 <img
-                  src={t.imageUrl}
+                  src={withBase(t.imageUrl)}
                   alt={t.tattooDescription}
                   style={{
                     width: "100%",

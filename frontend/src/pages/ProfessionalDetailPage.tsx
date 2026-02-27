@@ -3,11 +3,22 @@ import { useNavigate, useParams } from "react-router-dom";
 import { ApiError } from "../api/apiFetch";
 import { getTattoos } from "../api/showroomApi";
 import { deleteProfessional, getProfessional, updateProfessional } from "../api/professionalsApi";
+import { uploadPublicImage } from "../api/filesApi";
 import { useAuth } from "../auth/AuthContext";
 import type { ProfessionalDto } from "../types/professional";
 import type { TattooDto } from "../types/tattoo";
 
 type FormState = Omit<ProfessionalDto, "id">;
+
+const BASE_URL = import.meta.env.VITE_API_BASE_URL as string;
+
+function withBase(url?: string | null) {
+  if (!url) return "";
+  // Si ya es absoluta (http...) la dejo tal cual
+  if (/^https?:\/\//i.test(url)) return url;
+  // Si es relativa (/uploads/...), la convierto a absoluta
+  return `${BASE_URL}${url}`;
+}
 
 export default function ProfessionalDetailPage() {
   const nav = useNavigate();
@@ -29,8 +40,6 @@ export default function ProfessionalDetailPage() {
   const formatBirthDate = (iso?: string | null) => {
     if (!iso) return "—";
     try {
-      // El backend devuelve yyyy-mm-dd. Lo formateamos en es-ES.
-      // Uso "T00:00:00" para evitar problemas de timezone.
       const d = new Date(`${iso}T00:00:00`);
       if (Number.isNaN(d.getTime())) return iso;
       const dd = String(d.getDate()).padStart(2, "0");
@@ -45,6 +54,8 @@ export default function ProfessionalDetailPage() {
   // Edición
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+
   const [form, setForm] = useState<FormState>({
     professionalName: "",
     style: "",
@@ -60,7 +71,7 @@ export default function ProfessionalDetailPage() {
     if (!form.style.trim()) return "El estilo es obligatorio.";
     if (!form.birthDate) return "La fecha de nacimiento es obligatoria.";
     if (!form.description.trim()) return "La descripción es obligatoria.";
-    if (!form.profilePhoto.trim()) return "La URL de la foto de perfil es obligatoria.";
+    if (!form.profilePhoto.trim()) return "Debes subir una foto de perfil.";
     if (!Number.isFinite(form.yearsExperience) || form.yearsExperience < 0)
       return "Los años de experiencia deben ser 0 o más.";
     return null;
@@ -143,6 +154,24 @@ export default function ProfessionalDetailPage() {
       booksOpened: !!pro.booksOpened,
       yearsExperience: Number.isFinite(pro.yearsExperience) ? pro.yearsExperience : 0,
     });
+  };
+
+  const onPickProfilePhoto = async (file: File) => {
+    if (!isAdmin || !token) return;
+
+    setError("");
+    setOk("");
+
+    try {
+      setUploadingPhoto(true);
+      const url = await uploadPublicImage("professionals", file, token);
+      setForm({ ...form, profilePhoto: url });
+      setOk("Foto subida");
+    } catch (e: any) {
+      setError(e instanceof ApiError ? e.message : e?.message || "Error subiendo foto");
+    } finally {
+      setUploadingPhoto(false);
+    }
   };
 
   const onSave = async (e: React.FormEvent) => {
@@ -248,7 +277,7 @@ export default function ProfessionalDetailPage() {
                     value={form.professionalName}
                     onChange={(e) => setForm({ ...form, professionalName: e.target.value })}
                     style={{ width: "100%", padding: 8 }}
-                    disabled={saving}
+                    disabled={saving || uploadingPhoto}
                   />
                 </label>
 
@@ -258,7 +287,7 @@ export default function ProfessionalDetailPage() {
                     value={form.style}
                     onChange={(e) => setForm({ ...form, style: e.target.value })}
                     style={{ width: "100%", padding: 8 }}
-                    disabled={saving}
+                    disabled={saving || uploadingPhoto}
                   />
                 </label>
 
@@ -269,7 +298,7 @@ export default function ProfessionalDetailPage() {
                     value={form.birthDate}
                     onChange={(e) => setForm({ ...form, birthDate: e.target.value })}
                     style={{ width: "100%", padding: 8 }}
-                    disabled={saving}
+                    disabled={saving || uploadingPhoto}
                   />
                 </label>
 
@@ -281,7 +310,7 @@ export default function ProfessionalDetailPage() {
                     value={form.yearsExperience}
                     onChange={(e) => setForm({ ...form, yearsExperience: Number(e.target.value) })}
                     style={{ width: "100%", padding: 8 }}
-                    disabled={saving}
+                    disabled={saving || uploadingPhoto}
                   />
                 </label>
 
@@ -290,7 +319,7 @@ export default function ProfessionalDetailPage() {
                     type="checkbox"
                     checked={form.booksOpened}
                     onChange={(e) => setForm({ ...form, booksOpened: e.target.checked })}
-                    disabled={saving}
+                    disabled={saving || uploadingPhoto}
                   />
                   Agenda abierta
                 </label>
@@ -302,25 +331,37 @@ export default function ProfessionalDetailPage() {
                     onChange={(e) => setForm({ ...form, description: e.target.value })}
                     rows={4}
                     style={{ width: "100%", padding: 8 }}
-                    disabled={saving}
+                    disabled={saving || uploadingPhoto}
                   />
                 </label>
 
                 <label style={{ display: "grid", gap: 6 }}>
-                  Foto de perfil (URL)
+                  Foto de perfil
                   <input
-                    value={form.profilePhoto}
-                    onChange={(e) => setForm({ ...form, profilePhoto: e.target.value })}
+                    type="file"
+                    accept="image/*"
+                    disabled={saving || uploadingPhoto}
+                    onChange={async (e) => {
+                      const f = e.target.files?.[0];
+                      if (!f) return;
+                      await onPickProfilePhoto(f);
+                      e.currentTarget.value = "";
+                    }}
                     style={{ width: "100%", padding: 8 }}
-                    disabled={saving}
                   />
                 </label>
 
                 {form.profilePhoto.trim() && (
                   <img
-                    src={form.profilePhoto}
+                    src={withBase(form.profilePhoto)}
                     alt="preview"
-                    style={{ width: 180, height: 180, objectFit: "cover", border: "1px solid #333", borderRadius: 12 }}
+                    style={{
+                      width: 180,
+                      height: 180,
+                      objectFit: "cover",
+                      border: "1px solid #333",
+                      borderRadius: 12,
+                    }}
                     onError={(e) => {
                       (e.currentTarget as HTMLImageElement).style.display = "none";
                     }}
@@ -328,10 +369,10 @@ export default function ProfessionalDetailPage() {
                 )}
 
                 <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                  <button type="submit" disabled={saving || !token}>
+                  <button type="submit" disabled={saving || uploadingPhoto || !token}>
                     {saving ? "Guardando..." : "Guardar cambios"}
                   </button>
-                  <button type="button" onClick={onCancelEdit} disabled={saving}>
+                  <button type="button" onClick={onCancelEdit} disabled={saving || uploadingPhoto}>
                     Cancelar
                   </button>
                 </div>
@@ -342,7 +383,7 @@ export default function ProfessionalDetailPage() {
               <div style={{ display: "flex", gap: 14, alignItems: "flex-start", flexWrap: "wrap" }}>
                 {pro.profilePhoto?.trim() && (
                   <img
-                    src={pro.profilePhoto}
+                    src={withBase(pro.profilePhoto)}
                     alt={pro.professionalName}
                     style={{
                       width: 240,
@@ -399,7 +440,7 @@ export default function ProfessionalDetailPage() {
                     }}
                   >
                     <img
-                      src={t.imageUrl}
+                      src={withBase(t.imageUrl)}
                       alt={t.tattooDescription}
                       style={{ width: "100%", height: 160, objectFit: "cover", borderRadius: 10 }}
                     />

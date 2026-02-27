@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { ApiError } from "../api/apiFetch";
 import { getTattoo, updateTattoo } from "../api/tattoosApi";
+import { uploadPublicImage } from "../api/filesApi";
 import { useAuth } from "../auth/AuthContext";
 import type { TattooInDto, TattooDto } from "../types/tattoo";
 
@@ -29,6 +30,7 @@ export default function AdminTattooEditPage() {
   const [error, setError] = useState("");
   const [ok, setOk] = useState("");
   const [loading, setLoading] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
 
   const backTo = tattooId ? `/showroom/${tattooId}` : "/showroom";
 
@@ -68,6 +70,24 @@ export default function AdminTattooEditPage() {
     load();
   }, [token, role, tattooId]);
 
+  const onPickImage = async (file: File) => {
+    if (!token) return;
+
+    setError("");
+    setOk("");
+
+    try {
+      setUploadingImage(true);
+      const url = await uploadPublicImage("tattoos", file, token);
+      setImageUrl(url);
+      setOk("Imagen subida");
+    } catch (e: any) {
+      setError(e instanceof ApiError ? e.message : e?.message || "Error subiendo imagen");
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!token || role !== "ADMIN" || !tattooId || !original) return;
@@ -78,7 +98,7 @@ export default function AdminTattooEditPage() {
     if (!style.trim()) return setError("El estilo es obligatorio.");
     if (!tattooDescription.trim()) return setError("La descripción es obligatoria.");
     if (!tattooDate) return setError("La fecha es obligatoria.");
-    if (!imageUrl.trim()) return setError("La URL de imagen es obligatoria.");
+    if (!imageUrl.trim()) return setError("Debes subir una imagen.");
     if (!Number.isFinite(sessions) || sessions < 1) return setError("Las sesiones deben ser 1 o más.");
 
     const payload: TattooInDto = {
@@ -125,6 +145,8 @@ export default function AdminTattooEditPage() {
     );
   }
 
+  const previewUrl = imageUrl ? `${import.meta.env.VITE_API_BASE_URL}${imageUrl}` : "";
+
   return (
     <div style={{ padding: 16, maxWidth: 560 }}>
       <h1>Editar tattoo</h1>
@@ -147,7 +169,7 @@ export default function AdminTattooEditPage() {
                 value={style}
                 onChange={(e) => setStyle(e.target.value)}
                 style={{ display: "block", width: "100%", padding: 8, marginTop: 6 }}
-                disabled={loading}
+                disabled={loading || uploadingImage}
               />
             </label>
 
@@ -158,7 +180,7 @@ export default function AdminTattooEditPage() {
                 onChange={(e) => setTattooDescription(e.target.value)}
                 rows={4}
                 style={{ display: "block", width: "100%", padding: 8, marginTop: 6 }}
-                disabled={loading}
+                disabled={loading || uploadingImage}
               />
             </label>
 
@@ -169,7 +191,7 @@ export default function AdminTattooEditPage() {
                 value={tattooDate}
                 onChange={(e) => setTattooDate(e.target.value)}
                 style={{ display: "block", width: "100%", padding: 8, marginTop: 6 }}
-                disabled={loading}
+                disabled={loading || uploadingImage}
               />
             </label>
 
@@ -181,7 +203,7 @@ export default function AdminTattooEditPage() {
                 value={sessions}
                 onChange={(e) => setSessions(Number(e.target.value))}
                 style={{ display: "block", width: "100%", padding: 8, marginTop: 6 }}
-                disabled={loading}
+                disabled={loading || uploadingImage}
               />
             </label>
 
@@ -190,7 +212,7 @@ export default function AdminTattooEditPage() {
                 type="checkbox"
                 checked={coverUp}
                 onChange={(e) => setCoverUp(e.target.checked)}
-                disabled={loading}
+                disabled={loading || uploadingImage}
               />
               ¿Cover up?
             </label>
@@ -200,28 +222,44 @@ export default function AdminTattooEditPage() {
                 type="checkbox"
                 checked={color}
                 onChange={(e) => setColor(e.target.checked)}
-                disabled={loading}
+                disabled={loading || uploadingImage}
               />
               ¿A color?
             </label>
 
             <label>
-              URL de imagen
+              Imagen del tattoo
               <input
-                value={imageUrl}
-                onChange={(e) => setImageUrl(e.target.value)}
+                type="file"
+                accept="image/*"
+                disabled={loading || uploadingImage}
+                onChange={async (e) => {
+                  const f = e.target.files?.[0];
+                  if (!f) return;
+                  await onPickImage(f);
+                  e.currentTarget.value = "";
+                }}
                 style={{ display: "block", width: "100%", padding: 8, marginTop: 6 }}
-                disabled={loading}
-                placeholder="https://..."
               />
             </label>
 
+            {imageUrl && (
+              <div style={{ display: "grid", gap: 8 }}>
+                <div style={{ fontSize: 12, opacity: 0.8 }}>{imageUrl}</div>
+                <img
+                  src={previewUrl}
+                  alt="Preview tattoo"
+                  style={{ maxWidth: 320, borderRadius: 8, border: "1px solid #444" }}
+                />
+              </div>
+            )}
+
             <div style={{ display: "flex", gap: 8 }}>
-              <button type="submit" disabled={loading}>
+              <button type="submit" disabled={loading || uploadingImage}>
                 {loading ? "Guardando..." : "Guardar cambios"}
               </button>
 
-              <button type="button" onClick={() => nav(backTo)} disabled={loading}>
+              <button type="button" onClick={() => nav(backTo)} disabled={loading || uploadingImage}>
                 Cancelar
               </button>
             </div>

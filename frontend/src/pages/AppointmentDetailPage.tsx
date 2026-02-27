@@ -207,7 +207,7 @@ export default function AppointmentDetailPage() {
           </div>
 
           <div style={{ border: "1px solid #333", borderRadius: 10, padding: 14 }}>
-            <h2 style={{ marginTop: 0 }}>Imágenes de inspiración</h2>
+            <h2 style={{ marginTop: 0 }}>Imagen de inspiración</h2>
 
             {refError && <div style={{ color: "tomato", marginBottom: 10 }}>{refError}</div>}
 
@@ -229,7 +229,7 @@ export default function AppointmentDetailPage() {
                   }}
                 />
               ) : (
-                <div style={{ opacity: 0.85 }}>El cliente no ha subido imágenes.</div>
+                <div style={{ opacity: 0.85 }}>El cliente no ha subido imagen de referencia.</div>
               )}
 
               {/* Subida */}

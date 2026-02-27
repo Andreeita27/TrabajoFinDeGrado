@@ -24,6 +24,10 @@ public class Professional {
     @NotBlank(message = "Name is mandatory")
     private String professionalName;
 
+    @Column(name = "style")
+    @NotBlank(message = "Style is mandatory")
+    private String style;
+
     @Column(name = "birth_date")
     @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate birthDate;

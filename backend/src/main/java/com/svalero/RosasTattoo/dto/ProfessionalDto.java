@@ -12,6 +12,7 @@ import java.time.LocalDate;
 public class ProfessionalDto {
     private long id;
     private String professionalName;
+    private String style;
     private LocalDate birthDate;
     private String description;
     private String profilePhoto;

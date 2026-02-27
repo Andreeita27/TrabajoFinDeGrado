@@ -18,9 +18,11 @@ import AdminTattooEditPage from "./pages/AdminTattooEditPage";
 import MyAccountPage from "./pages/MyAccountPage";
 import AdminAvailabilityPage from "./pages/AdminAvailabilityPage";
 import AppointmentDetailPage from "./pages/AppointmentDetailPage";
+import ProfessionalDetailPage from "./pages/ProfessionalDetailPage";
 
 import ProtectedRoute from "./auth/ProtectedRoute";
 import AdminRoute from "./auth/AdminRoute";
+
 
 export default function App() {
   return (
@@ -36,6 +38,7 @@ export default function App() {
         <Route path="/showroom/:id" element={<TattooDetailPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
+        <Route path="/professionals/:id" element={<ProfessionalDetailPage />} />
 
         {/* Privado */}
         <Route element={<ProtectedRoute />}>

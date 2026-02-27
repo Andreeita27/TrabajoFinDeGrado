@@ -1,4 +1,5 @@
 export type TattooSize = "SMALL" | "MEDIUM" | "LARGE" | "XL";
+export type AppointmentType = "TATTOO" | "CONSULTATION";
 
 export type AppointmentState =
   | "PENDING"
@@ -9,6 +10,7 @@ export type AppointmentState =
 
 export type AppointmentDto = {
   id: number;
+  appointmentType?: AppointmentType;
   startDateTime: string;
   professionalName: string;
   professionalId: number;
@@ -31,10 +33,11 @@ export type AppointmentDto = {
 export type AppointmentInDto = {
   clientId: number;
   professionalId: number;
+  appointmentType: AppointmentType;
   startDateTime: string;
-  bodyPlacement: string;
+  bodyPlacement?: string;
   ideaDescription: string;
   firstTime: boolean;
-  tattooSize: TattooSize;
+  tattooSize?: TattooSize | null;
   referenceImageUrl?: string | null;
 };

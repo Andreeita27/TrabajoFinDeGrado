@@ -8,7 +8,7 @@ import { createAppointment } from "../api/appointmentsApi";
 import { useAuth } from "../auth/AuthContext";
 import type { AvailabilitySlotDto } from "../types/availability";
 import type { ProfessionalDto } from "../types/professional";
-import type { TattooSize } from "../types/appointment";
+import type { AppointmentType, TattooSize } from "../types/appointment";
 import type { ClientDto } from "../types/client";
 
 import ClientAutocomplete from "../components/ClientAutocomplete";
@@ -60,6 +60,8 @@ export default function CalendarPage() {
 
   const [selectedClient, setSelectedClient] = useState<ClientDto | null>(null);
 
+  const [appointmentType, setAppointmentType] = useState<AppointmentType>("TATTOO");
+
   const [professionals, setProfessionals] = useState<ProfessionalDto[]>([]);
   const [professionalId, setProfessionalId] = useState<number>(0);
 
@@ -67,7 +69,10 @@ export default function CalendarPage() {
 
   const [tattooSize, setTattooSize] = useState<TattooSize>("SMALL");
 
-  const durationMinutes = useMemo(() => DURATION_BY_SIZE[tattooSize], [tattooSize]);
+  const durationMinutes = useMemo(() => {
+    if (appointmentType === "CONSULTATION") return 30;
+    return DURATION_BY_SIZE[tattooSize];
+  }, [appointmentType, tattooSize]);
 
   const [slots, setSlots] = useState<AvailabilitySlotDto[]>([]);
   const [selectedStart, setSelectedStart] = useState<string>("");
@@ -150,11 +155,12 @@ export default function CalendarPage() {
       await createAppointment(token, {
         clientId: finalClientId!,
         professionalId,
+        appointmentType,
         startDateTime: withSeconds(selectedStart),
-        bodyPlacement,
+        bodyPlacement: appointmentType === "CONSULTATION" ? "" : bodyPlacement,
         ideaDescription,
         firstTime,
-        tattooSize,
+        tattooSize: appointmentType === "CONSULTATION" ? null : tattooSize,
         referenceImageUrl: null,
       });
 
@@ -198,6 +204,16 @@ export default function CalendarPage() {
 
       <section style={{ display: "grid", gap: 10, maxWidth: 720 }}>
         <label>
+          Tipo de cita:
+          <select
+            value={appointmentType}
+            onChange={(e) => setAppointmentType(e.target.value as "TATTOO" | "CONSULTATION")}
+          >
+            <option value="TATTOO">Sesión de tatuaje</option>
+            <option value="CONSULTATION">Consulta</option>
+          </select>
+        </label>
+        <label>
           Profesional:
           <select value={professionalId} onChange={(e) => setProfessionalId(Number(e.target.value))}>
             {professionals.map((p) => (
@@ -212,17 +228,18 @@ export default function CalendarPage() {
           Día:
           <input type="date" value={day} onChange={(e) => setDay(e.target.value)} />
         </label>
-
-        <label>
-          Tamaño:
-          <select value={tattooSize} onChange={(e) => setTattooSize(e.target.value as TattooSize)}>
-            <option value="SMALL">Pequeño (5-10 cm)</option>
-            <option value="MEDIUM">Mediano (10-20 cm)</option>
-            <option value="LARGE">Grande (20-50 cm)</option>
-            <option value="XL">XL (+50 cm o piezas enteras)</option>
-          </select>
-          <span style={{ marginLeft: 10 }}>(Duración: {durationMinutes} min)</span>
-        </label>
+      
+        {appointmentType === "TATTOO" && (
+          <label>
+            Tamaño:
+            <select value={tattooSize} onChange={(e) => setTattooSize(e.target.value as TattooSize)}>
+              <option value="SMALL">Pequeño</option>
+              <option value="MEDIUM">Mediano</option>
+              <option value="LARGE">Grande</option>
+              <option value="XL">XL</option>
+            </select>
+          </label>
+)}
       </section>
 
       <hr style={{ margin: "16px 0" }} />

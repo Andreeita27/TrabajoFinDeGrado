@@ -103,6 +103,11 @@ export default function AppointmentDetailPage() {
             </div>
 
             <div>
+              <b>Tipo:</b>{" "}
+              {item.appointmentType === "CONSULTATION" ? "Consulta" : "Sesión de tatuaje"}
+            </div>
+
+            <div>
               <b>Profesional:</b> {item.professionalName}
             </div>
 
@@ -118,13 +123,17 @@ export default function AppointmentDetailPage() {
               <b>Estado:</b> {item.state}
             </div>
 
-            <div>
-              <b>Zona:</b> {item.bodyPlacement}
-            </div>
+            {item.appointmentType === "TATTOO" && (
+              <div>
+                <b>Zona:</b> {item.bodyPlacement}
+              </div>
+            )}
 
-            <div>
-              <b>Tamaño:</b> {item.tattooSize}
-            </div>
+            {item.appointmentType === "TATTOO" && (
+              <div>
+                <b>Tamaño:</b> {item.tattooSize}
+              </div>
+            )}
 
             <div>
               <b>Primera vez:</b> {item.firstTime ? "Sí" : "No"}
@@ -134,9 +143,11 @@ export default function AppointmentDetailPage() {
               <b>Duración:</b> {item.durationMinutes} min
             </div>
 
-            <div>
-              <b>Señal pagada:</b> {item.depositPaid ? "Sí" : "No"}
-            </div>
+            {item.appointmentType === "TATTOO" && (
+              <div>
+                <b>Señal pagada:</b> {item.depositPaid ? "Sí" : "No"}
+              </div>
+            )}
 
             <div>
               <b>Descripción idea:</b>

@@ -37,6 +37,7 @@ export default function ShowroomPage() {
   const [designProfessionalId, setDesignProfessionalId] = useState<string>("");
   const [designTitle, setDesignTitle] = useState("");
   const [designImageUrl, setDesignImageUrl] = useState("");
+  const [designFilterProfessionalId, setDesignFilterProfessionalId] = useState<string>("");
 
   //mostrar/ocultar formulario de añadir diseño
   const [showAddDesign, setShowAddDesign] = useState(false);
@@ -98,8 +99,26 @@ export default function ShowroomPage() {
     }
   }, [isAdmin]);
 
-  const activeDesigns = useMemo(() => designs.filter((d) => d.active), [designs]);
-  const inactiveDesigns = useMemo(() => designs.filter((d) => !d.active), [designs]);
+  useEffect(() => {
+    if (tab !== "DESIGNS") setDesignFilterProfessionalId("");
+  }, [tab]);
+
+  const filteredDesigns = useMemo(() => {
+    if (!designFilterProfessionalId) return designs;
+
+    const pid = Number(designFilterProfessionalId);
+    return designs.filter((d: any) => {
+      if (typeof d.professionalId === "number") return d.professionalId === pid;
+
+      // Fallback: intentar matchear por nombre (menos perfecto pero no rompe)
+      const pro = pros.find((p) => p.id === pid);
+      const name = pro?.professionalName?.trim().toLowerCase();
+      return name ? String(d.professionalName ?? "").trim().toLowerCase() === name : true;
+    });
+  }, [designs, designFilterProfessionalId, pros]);
+
+  const activeDesigns = useMemo(() => filteredDesigns.filter((d) => d.active), [filteredDesigns]);
+  const inactiveDesigns = useMemo(() => filteredDesigns.filter((d) => !d.active), [filteredDesigns]);
 
   const onCreateDesign = async () => {
     if (!isAdmin || !token) {
@@ -220,6 +239,29 @@ export default function ShowroomPage() {
               <p style={{ opacity: 0.85, marginTop: 6 }}>
                 Ideas que el estudio tiene preparadas para tatuar. Si te interesa uno, dínoslo y lo adaptamos a ti.
               </p>
+            </div>
+
+            <div style={{ margin: "10px 0 16px", display: "flex", gap: 12, flexWrap: "wrap", alignItems: "end" }}>
+              <label style={{ display: "grid", gap: 6 }}>
+                Tatuador
+                <select
+                  value={designFilterProfessionalId}
+                  onChange={(e) => setDesignFilterProfessionalId(e.target.value)}
+                >
+                  <option value="">Todos</option>
+                  {pros.map((p) => (
+                    <option key={p.id} value={String(p.id)}>
+                      {p.professionalName}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              {designFilterProfessionalId && (
+                <button type="button" onClick={() => setDesignFilterProfessionalId("")}>
+                  Quitar filtro
+                </button>
+              )}
             </div>
 
             {isAdmin && (

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ApiError } from "../api/apiFetch";
 import {
@@ -43,6 +43,7 @@ export default function AdminAppointmentsPage() {
 
   // Filtros
   const [stateFilter, setStateFilter] = useState<AppointmentState | "ALL">("ALL");
+  const [typeFilter, setTypeFilter] = useState<"ALL" | "TATTOO" | "CONSULTATION">("ALL");
   const [depositFilter, setDepositFilter] = useState<DepositFilter>("ALL");
   const [professionalName, setProfessionalName] = useState<string>("");
 
@@ -161,6 +162,7 @@ export default function AdminAppointmentsPage() {
 
   const onClearFilters = () => {
     setStateFilter("ALL");
+    setTypeFilter("ALL");
     setDepositFilter("ALL");
     setProfessionalName("");
     setClientName("");
@@ -299,6 +301,23 @@ export default function AdminAppointmentsPage() {
     }
   };
 
+  const filteredItems = useMemo(() => {
+    let out = items;
+
+    if (typeFilter !== "ALL") {
+      out = out.filter((a) => a.appointmentType === typeFilter);
+    }
+
+    if (depositFilter !== "ALL") {
+      out = out.filter((a) => {
+        if (a.appointmentType === "CONSULTATION") return true;
+        return depositFilter === "PAID" ? a.depositPaid : !a.depositPaid;
+      });
+    }
+
+    return out;
+  }, [items, typeFilter, depositFilter]);
+
   return (
     <div style={{ padding: 16 }}>
       <h1>Todas las citas</h1>
@@ -310,11 +329,20 @@ export default function AdminAppointmentsPage() {
         style={{
           margin: "10px 0 16px",
           display: "flex",
-          flexWrap: "wrap",
           gap: 12,
           alignItems: "end",
         }}
       >
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 12, alignItems: "end" }}>
+          <label style={{ display: "grid", gap: 6, minWidth: 220 }}>
+            Tipo:
+            <select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value as any)}>
+              <option value="ALL">Todas</option>
+              <option value="TATTOO">Sesión</option>
+              <option value="CONSULTATION">Consulta</option>
+            </select>
+          </label>
+        </div>
         <label style={{ display: "grid", gap: 6 }}>
           Estado
           <select value={stateFilter} onChange={(e) => setStateFilter(e.target.value as any)}>
@@ -338,11 +366,7 @@ export default function AdminAppointmentsPage() {
 
         <label style={{ display: "grid", gap: 6 }}>
           Profesional
-          <input
-            value={professionalName}
-            onChange={(e) => setProfessionalName(e.target.value)}
-            placeholder="Ej: Titi"
-          />
+          <input value={professionalName} onChange={(e) => setProfessionalName(e.target.value)} placeholder="Ej: Titi" />
         </label>
 
         <div ref={clientWrapRef} style={{ display: "grid", gap: 6, position: "relative" }}>
@@ -429,7 +453,7 @@ export default function AdminAppointmentsPage() {
       </div>
 
       {/* Tabla */}
-      {items.length === 0 ? (
+      {filteredItems.length === 0 ? (
         <p>No hay citas.</p>
       ) : (
         <div style={{ overflowX: "auto" }}>
@@ -447,7 +471,7 @@ export default function AdminAppointmentsPage() {
             </thead>
 
             <tbody>
-              {items.map((a) => (
+              {filteredItems.map((a) => (
                 <tr key={a.id}>
                   <td style={{ padding: 8, borderBottom: "1px solid #eee" }}>
                     <b>#{a.id}</b>
@@ -468,11 +492,13 @@ export default function AdminAppointmentsPage() {
                     <b>{a.state}</b>
                   </td>
 
-                  <td style={{ padding: 8, borderBottom: "1px solid #eee" }}>{a.depositPaid ? "Sí" : "No"}</td>
+                  <td style={{ padding: 8, borderBottom: "1px solid #eee" }}>
+                    {a.appointmentType === "TATTOO" ? (a.depositPaid ? "Sí" : "No") : ""}
+                  </td>
 
                   <td style={{ padding: 8, borderBottom: "1px solid #eee" }}>
                     <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                      {!a.depositPaid && a.state === "PENDING" && (
+                      {a.appointmentType === "TATTOO" && !a.depositPaid && a.state === "PENDING" && (
                         <button onClick={() => onPayDeposit(a.id)}>Confirmar señal</button>
                       )}
 
@@ -562,8 +588,7 @@ export default function AdminAppointmentsPage() {
                           </button>
                         </div>
 
-                        <div style={{ marginTop: 8, opacity: 0.8, fontSize: 12 }}>
-                        </div>
+                        <div style={{ marginTop: 8, opacity: 0.8, fontSize: 12 }}></div>
                       </div>
                     )}
                   </td>

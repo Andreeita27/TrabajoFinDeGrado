@@ -31,7 +31,10 @@ function withSeconds(isoOrLocal: string) {
 
 function formatSlotLabel(iso: string) {
   try {
-    return new Date(iso).toLocaleString("es-ES");
+    return new Date(iso).toLocaleTimeString("es-ES", {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
   } catch {
     return iso;
   }
@@ -189,11 +192,7 @@ export default function CalendarPage() {
       {role === "ADMIN" && (
         <>
           {token ? (
-            <ClientAutocomplete
-              token={token}
-              value={selectedClient}
-              onChange={(c) => setSelectedClient(c as any)}
-            />
+            <ClientAutocomplete token={token} value={selectedClient} onChange={(c) => setSelectedClient(c as any)} />
           ) : (
             <div style={{ opacity: 0.85 }}>Inicia sesión como admin para seleccionar cliente.</div>
           )}
@@ -228,7 +227,7 @@ export default function CalendarPage() {
           Día:
           <input type="date" value={day} onChange={(e) => setDay(e.target.value)} />
         </label>
-      
+
         {appointmentType === "TATTOO" && (
           <label>
             Tamaño:
@@ -239,7 +238,7 @@ export default function CalendarPage() {
               <option value="XL">XL</option>
             </select>
           </label>
-)}
+        )}
       </section>
 
       <hr style={{ margin: "16px 0" }} />

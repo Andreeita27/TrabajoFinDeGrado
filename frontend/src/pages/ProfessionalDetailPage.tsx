@@ -26,6 +26,22 @@ export default function ProfessionalDetailPage() {
   const [ok, setOk] = useState("");
   const [loading, setLoading] = useState(true);
 
+  const formatBirthDate = (iso?: string | null) => {
+    if (!iso) return "—";
+    try {
+      // El backend devuelve yyyy-mm-dd. Lo formateamos en es-ES.
+      // Uso "T00:00:00" para evitar problemas de timezone.
+      const d = new Date(`${iso}T00:00:00`);
+      if (Number.isNaN(d.getTime())) return iso;
+      const dd = String(d.getDate()).padStart(2, "0");
+      const mm = String(d.getMonth() + 1).padStart(2, "0");
+      const yyyy = String(d.getFullYear());
+      return `${dd}-${mm}-${yyyy}`;
+    } catch {
+      return iso;
+    }
+  };
+
   // Edición
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -355,7 +371,7 @@ export default function ProfessionalDetailPage() {
                       <b>Agenda:</b> {pro.booksOpened ? "Abierta" : "Cerrada"}
                     </div>
                     <div>
-                      <b>Fecha de nacimiento:</b> {pro.birthDate || "—"}
+                      <b>Fecha de nacimiento:</b> {formatBirthDate(pro.birthDate)}
                     </div>
                   </div>
                 </div>

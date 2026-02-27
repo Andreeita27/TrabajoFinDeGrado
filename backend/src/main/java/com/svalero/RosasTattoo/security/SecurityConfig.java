@@ -36,6 +36,7 @@ public class SecurityConfig {
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/auth/**").permitAll()
+                        .requestMatchers(org.springframework.http.HttpMethod.GET, "/uploads/**").permitAll()
                         .requestMatchers(org.springframework.http.HttpMethod.GET, "/tattoos/**", "/professionals/**", "/reviews/**", "/designs/**").permitAll()
                         .anyRequest().authenticated()
                 )

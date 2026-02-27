@@ -48,6 +48,9 @@ public class Appointment {
     @Column(name = "reference_image_url")
     private String referenceImageUrl;
 
+    @Column(name = "reference_image_file")
+    private String referenceImageFile;
+
     @Column(name = "duration_minutes")
     private int durationMinutes;
 

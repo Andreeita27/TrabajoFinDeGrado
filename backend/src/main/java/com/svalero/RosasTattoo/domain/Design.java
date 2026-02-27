@@ -21,7 +21,7 @@ public class Design {
     private String title;
 
     @Column(name = "image_url")
-    @NotBlank(message = "Image URL is required")
+    @NotBlank(message = "An image must be uploaded")
     private String imageUrl;
 
     @Column(nullable = false)

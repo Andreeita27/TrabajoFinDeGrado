@@ -1,15 +1,21 @@
 package com.svalero.RosasTattoo.controller;
 
+import com.svalero.RosasTattoo.domain.Appointment;
 import com.svalero.RosasTattoo.domain.enums.AppointmentState;
 import com.svalero.RosasTattoo.dto.*;
 import com.svalero.RosasTattoo.exception.AppointmentNotFoundException;
 import com.svalero.RosasTattoo.exception.ClientNotFoundException;
 import com.svalero.RosasTattoo.exception.ErrorResponse;
 import com.svalero.RosasTattoo.exception.ProfessionalNotFoundException;
+import com.svalero.RosasTattoo.repository.AppointmentRepository;
 import com.svalero.RosasTattoo.service.AppointmentService;
+import com.svalero.RosasTattoo.service.FileStorageService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -18,11 +24,16 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.security.access.AccessDeniedException;
 import com.svalero.RosasTattoo.exception.AppointmentConflictException;
+
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.web.multipart.MultipartFile;
+
 import java.time.LocalDateTime;
 
 @RestController
@@ -30,6 +41,69 @@ public class AppointmentController {
 
     @Autowired
     private AppointmentService appointmentService;
+
+    @Autowired
+    private FileStorageService fileStorageService;
+
+    @Autowired
+    private AppointmentRepository appointmentRepository;
+
+    @PostMapping("/appointments/{id}/reference-image")
+    @PreAuthorize("hasAnyRole('ADMIN','CLIENT')")
+    public ResponseEntity<?> uploadReferenceImage(@PathVariable long id,
+                                                  @RequestParam("file") MultipartFile file,
+                                                  Authentication auth) {
+
+        Appointment appt = appointmentRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Appointment not found"));
+
+        if (!isAdmin(auth) && !isOwner(appt, auth)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(Map.of("message", "No autorizado"));
+        }
+
+        String filename = fileStorageService.storePrivateImage(file, "appointments");
+
+        appt.setReferenceImageFile(filename);
+        appt.setReferenceImageUrl("/files/appointments/" + id + "/reference-image");
+
+        appointmentRepository.save(appt);
+
+        return ResponseEntity.ok(Map.of("url", appt.getReferenceImageUrl()));
+    }
+
+    @GetMapping("/files/appointments/{id}/reference-image")
+    @PreAuthorize("hasAnyRole('ADMIN','CLIENT')")
+    public ResponseEntity<Resource> getReferenceImage(@PathVariable long id,
+                                                      Authentication auth) {
+
+        Appointment appt = appointmentRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Appointment not found"));
+
+        if (!isAdmin(auth) && !isOwner(appt, auth)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+
+        String filename = appt.getReferenceImageFile();
+        if (filename == null || filename.isBlank()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        Path path = fileStorageService.resolvePrivate("appointments", filename);
+        Resource resource = new FileSystemResource(path);
+
+        if (!resource.exists()) return ResponseEntity.notFound().build();
+
+        MediaType mediaType = MediaType.APPLICATION_OCTET_STREAM;
+        try {
+            String detected = Files.probeContentType(path);
+            if (detected != null) mediaType = MediaType.parseMediaType(detected);
+        } catch (Exception ignored) {}
+
+        return ResponseEntity.ok()
+                .contentType(mediaType)
+                .body(resource);
+    }
 
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/appointments")
@@ -148,6 +222,17 @@ public class AppointmentController {
     @PostMapping("/appointments/{id}/mark-completed")
     public ResponseEntity<AppointmentDto> markCompleted(@PathVariable long id) throws AppointmentNotFoundException {
         return ResponseEntity.ok(appointmentService.markCompleted(id));
+    }
+
+    private boolean isAdmin(Authentication auth) {
+        return auth.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+    }
+
+    private boolean isOwner(Appointment appt, Authentication auth) {
+        return appt.getClient() != null
+                && appt.getClient().getEmail() != null
+                && appt.getClient().getEmail().equalsIgnoreCase(auth.getName());
     }
 
     @ExceptionHandler(AppointmentNotFoundException.class)

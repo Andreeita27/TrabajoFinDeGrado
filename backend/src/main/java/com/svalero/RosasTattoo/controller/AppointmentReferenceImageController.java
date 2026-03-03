@@ -35,10 +35,26 @@ public class AppointmentReferenceImageController {
     }
 
     private Appointment mustFind(long id) {
-        return appointmentRepository.findById(id).orElseThrow(() -> new RuntimeException("Appointment not found"));
+        return appointmentRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Appointment not found"));
     }
 
-    private boolean canAccess(Authentication auth, Appointment appt) {
+    //SUBIR
+    private boolean canUpload(Authentication auth, Appointment appt) {
+        if (auth == null || auth.getName() == null) return false;
+
+        var email = auth.getName();
+        var acc = userAccountRepository.findByEmail(email).orElse(null);
+        if (acc == null || !acc.isEnabled()) return false;
+
+        return acc.getRole() == Role.CLIENT
+                && acc.getClient() != null
+                && appt.getClient() != null
+                && acc.getClient().getId() == appt.getClient().getId();
+    }
+
+    // VER/DESCARGAR
+    private boolean canRead(Authentication auth, Appointment appt) {
         if (auth == null || auth.getName() == null) return false;
 
         var email = auth.getName();
@@ -47,14 +63,13 @@ public class AppointmentReferenceImageController {
 
         if (acc.getRole() == Role.ADMIN) return true;
 
-        // CLIENT: solo si es dueño de la cita
         return acc.getRole() == Role.CLIENT
                 && acc.getClient() != null
                 && appt.getClient() != null
                 && acc.getClient().getId() == appt.getClient().getId();
     }
 
-    // SUBIR (ADMIN o dueño)
+    // SUBIR
     @PostMapping(value = "/{id}/reference-image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Map<String, String>> uploadReferenceImage(
             @PathVariable long id,
@@ -63,8 +78,9 @@ public class AppointmentReferenceImageController {
     ) throws Exception {
         Appointment appt = mustFind(id);
 
-        if (!canAccess(auth, appt)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("message", "Forbidden"));
+        if (!canUpload(auth, appt)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(Map.of("message", "Solo el cliente puede subir la imagen de referencia"));
         }
 
         String privatePath = storage.savePrivateAppointmentImage(id, file);
@@ -72,16 +88,16 @@ public class AppointmentReferenceImageController {
         appt.setReferenceImageUrl(privatePath);
         appointmentRepository.save(appt);
 
-        // devuevlo el “path lógico” para pedirlo luego
+        // devuelvo el path lógico para pedirlo luego
         return ResponseEntity.ok(Map.of("referenceImagePath", privatePath));
     }
 
-    // DESCARGAR/VER (ADMIN o dueño)
+    // DESCARGAR/VER
     @GetMapping("/{id}/reference-image")
     public ResponseEntity<Resource> getReferenceImage(@PathVariable long id, Authentication auth) throws Exception {
         Appointment appt = mustFind(id);
 
-        if (!canAccess(auth, appt)) {
+        if (!canRead(auth, appt)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
 
@@ -91,7 +107,7 @@ public class AppointmentReferenceImageController {
         }
 
         // p = "/private/appointments/{id}/{file}"
-        // lo convierot a ruta física: uploadDir + p
+        // lo convierto a ruta física: uploadDir + p
         // (sin “/” inicial para no romper Paths.get)
         String rel = p.startsWith("/") ? p.substring(1) : p;
         Path filePath = Paths.get(storage.getUploadDir()).resolve(rel).normalize();
@@ -99,7 +115,6 @@ public class AppointmentReferenceImageController {
         Resource res = new UrlResource(filePath.toUri());
         if (!res.exists()) return ResponseEntity.notFound().build();
 
-        // Content-Type “genérico” para imagen
         return ResponseEntity.ok()
                 .header(HttpHeaders.CACHE_CONTROL, "no-store")
                 .contentType(MediaType.APPLICATION_OCTET_STREAM)

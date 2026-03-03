@@ -48,63 +48,6 @@ public class AppointmentController {
     @Autowired
     private AppointmentRepository appointmentRepository;
 
-    @PostMapping("/appointments/{id}/reference-image")
-    @PreAuthorize("hasAnyRole('ADMIN','CLIENT')")
-    public ResponseEntity<?> uploadReferenceImage(@PathVariable long id,
-                                                  @RequestParam("file") MultipartFile file,
-                                                  Authentication auth) {
-
-        Appointment appt = appointmentRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Appointment not found"));
-
-        if (!isAdmin(auth) && !isOwner(appt, auth)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body(Map.of("message", "No autorizado"));
-        }
-
-        String filename = fileStorageService.storePrivateImage(file, "appointments");
-
-        appt.setReferenceImageFile(filename);
-        appt.setReferenceImageUrl("/files/appointments/" + id + "/reference-image");
-
-        appointmentRepository.save(appt);
-
-        return ResponseEntity.ok(Map.of("url", appt.getReferenceImageUrl()));
-    }
-
-    @GetMapping("/files/appointments/{id}/reference-image")
-    @PreAuthorize("hasAnyRole('ADMIN','CLIENT')")
-    public ResponseEntity<Resource> getReferenceImage(@PathVariable long id,
-                                                      Authentication auth) {
-
-        Appointment appt = appointmentRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Appointment not found"));
-
-        if (!isAdmin(auth) && !isOwner(appt, auth)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        }
-
-        String filename = appt.getReferenceImageFile();
-        if (filename == null || filename.isBlank()) {
-            return ResponseEntity.notFound().build();
-        }
-
-        Path path = fileStorageService.resolvePrivate("appointments", filename);
-        Resource resource = new FileSystemResource(path);
-
-        if (!resource.exists()) return ResponseEntity.notFound().build();
-
-        MediaType mediaType = MediaType.APPLICATION_OCTET_STREAM;
-        try {
-            String detected = Files.probeContentType(path);
-            if (detected != null) mediaType = MediaType.parseMediaType(detected);
-        } catch (Exception ignored) {}
-
-        return ResponseEntity.ok()
-                .contentType(mediaType)
-                .body(resource);
-    }
-
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/appointments")
     public ResponseEntity<List<AppointmentDto>> getAll(

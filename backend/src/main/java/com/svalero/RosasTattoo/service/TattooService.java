@@ -34,7 +34,16 @@ public class TattooService {
 
         if (tattoo.getClient() != null) {
             dto.setClientId(tattoo.getClient().getId());
+
+            String name = tattoo.getClient().getClientName();
+            String surname = tattoo.getClient().getClientSurname();
+
+            String fullName = ((name != null ? name : "") + " " +
+                    (surname != null ? surname : "")).trim();
+
+            dto.setClientName(fullName.isBlank() ? null : fullName);
         }
+
         if (tattoo.getProfessional() != null) {
             dto.setProfessionalId(tattoo.getProfessional().getId());
             dto.setProfessionalName(tattoo.getProfessional().getProfessionalName());

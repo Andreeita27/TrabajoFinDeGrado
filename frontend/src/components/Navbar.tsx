@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
+import "../styles/navbar.css";
 
 export default function Navbar() {
   const { isAuthenticated, role, logout } = useAuth();
@@ -8,25 +9,30 @@ export default function Navbar() {
   const accountText = role === "ADMIN" ? "Panel admin" : "Mi cuenta";
 
   return (
-    <nav style={{ display: "flex", gap: 14, padding: 12, borderBottom: "1px solid #333" }}>
-      <Link to="/">Inicio</Link>
-      <Link to="/showroom">Showroom</Link>
-      <Link to="/professionals">Profesionales</Link>
-      <Link to="/reviews">Reseñas</Link>
+    <header className="navbar">
+      <div className="navbar__inner">
+        <Link to="/" className="brand">62 Rosas Tattoo</Link>
 
-      <div style={{ marginLeft: "auto", display: "flex", gap: 14 }}>
-        {!isAuthenticated ? (
-          <>
-            <Link to="/login">Iniciar sesión</Link>
-            <Link to="/register">Registro</Link>
-          </>
-        ) : (
-          <>
-            <Link to={accountLink}>{accountText}</Link>
-            <button onClick={logout}>Cerrar sesión</button>
-          </>
-        )}
+        <nav className="navlinks">
+          <Link to="/showroom">Showroom</Link>
+          <Link to="/professionals">Tatuadores</Link>
+          <Link to="/reviews">Reseñas</Link>
+        </nav>
+
+        <div className="navright">
+          {!isAuthenticated ? (
+            <>
+              <Link to="/login" className="btn btn-ghost">Iniciar sesión</Link>
+              <Link to="/register" className="btn btn-primary">Registro</Link>
+            </>
+          ) : (
+            <>
+              <Link to={accountLink} className="btn btn-ghost">{accountText}</Link>
+              <button className="btn btn-primary" onClick={logout}>Cerrar sesión</button>
+            </>
+          )}
+        </div>
       </div>
-    </nav>
+    </header>
   );
 }

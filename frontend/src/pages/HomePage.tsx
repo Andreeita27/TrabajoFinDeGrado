@@ -11,13 +11,17 @@ export default function HomePage() {
   };
 
   return (
-    <div style={{ padding: 16 }}>
-      <h1>62 Rosas Tattoo</h1>
-      <p>
-        Info del estudio (ubicación, horarios, estilos, etc.) Aquí luego lo dejo guapísimo.
-      </p>
+    <div className="container">
+      <div className="card" style={{ padding: 18 }}>
+        <h1 style={{ marginTop: 0 }}>62 Rosas Tattoo</h1>
+        <p style={{ color: "var(--muted)" }}>
+          Info del estudio (ubicación, horarios, estilos, etc.). Aquí luego lo dejo guapísimo.
+        </p>
 
-      <button onClick={handleBook}>Pedir cita</button>
+        <button className="btn btn-primary" onClick={handleBook}>
+          Pedir cita
+        </button>
+      </div>
     </div>
   );
 }

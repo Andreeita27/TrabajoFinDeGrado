@@ -65,16 +65,8 @@ public class ReviewService {
             throw new IllegalStateException("This appointment already has a review");
         }
 
-        if (appointment.getStartDateTime() == null || appointment.getStartDateTime().isAfter(LocalDateTime.now())) {
-            throw new IllegalStateException("You can only review an appointment after it has taken place");
-        }
-
-        if (appointment.getState() == AppointmentState.CANCELLED || appointment.getState() == AppointmentState.NO_SHOW) {
-            throw new IllegalStateException("You cannot review a cancelled or no-show appointment");
-        }
-
-        if (appointment.getState() != AppointmentState.CONFIRMED && appointment.getState() != AppointmentState.COMPLETED) {
-            throw new IllegalStateException("Only confirmed appointments can be reviewed");
+        if (appointment.getState() != AppointmentState.COMPLETED) {
+            throw new IllegalStateException("You can only review an appointment when it is marked as COMPLETED");
         }
 
         Review review = new Review();
@@ -84,30 +76,9 @@ public class ReviewService {
         review.setCreatedAt(LocalDateTime.now());
 
         Review saved = reviewRepository.save(review);
-
-        appointment.setState(AppointmentState.COMPLETED);
-        appointmentRepository.save(appointment);
 
         me.setVisits(me.getVisits() + 1);
         clientRepository.save(me);
-
-        return modelMapper.map(saved, ReviewDto.class);
-    }
-
-    public ReviewDto add(ReviewInDto reviewInDto) throws AppointmentNotFoundException {
-        Appointment appointment = appointmentRepository.findById(reviewInDto.getAppointmentId())
-                .orElseThrow(AppointmentNotFoundException::new);
-
-        Review review = new Review();
-        modelMapper.map(reviewInDto, review);
-
-        review.setAppointment(appointment);
-        review.setCreatedAt(LocalDateTime.now());
-
-        Review saved = reviewRepository.save(review);
-
-        appointment.setState(AppointmentState.COMPLETED);
-        appointmentRepository.save(appointment);
 
         return modelMapper.map(saved, ReviewDto.class);
     }

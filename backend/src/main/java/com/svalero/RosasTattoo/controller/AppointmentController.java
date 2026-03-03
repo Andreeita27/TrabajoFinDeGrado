@@ -1,16 +1,21 @@
 package com.svalero.RosasTattoo.controller;
 
+import com.svalero.RosasTattoo.domain.Appointment;
 import com.svalero.RosasTattoo.domain.enums.AppointmentState;
-import com.svalero.RosasTattoo.dto.AppointmentInDto;
-import com.svalero.RosasTattoo.dto.AppointmentDto;
+import com.svalero.RosasTattoo.dto.*;
 import com.svalero.RosasTattoo.exception.AppointmentNotFoundException;
 import com.svalero.RosasTattoo.exception.ClientNotFoundException;
 import com.svalero.RosasTattoo.exception.ErrorResponse;
 import com.svalero.RosasTattoo.exception.ProfessionalNotFoundException;
+import com.svalero.RosasTattoo.repository.AppointmentRepository;
 import com.svalero.RosasTattoo.service.AppointmentService;
+import com.svalero.RosasTattoo.service.FileStorageService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -19,11 +24,16 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.security.access.AccessDeniedException;
 import com.svalero.RosasTattoo.exception.AppointmentConflictException;
+
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import com.svalero.RosasTattoo.dto.AvailabilitySlotDto;
+
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.web.multipart.MultipartFile;
+
 import java.time.LocalDateTime;
 
 @RestController
@@ -32,15 +42,33 @@ public class AppointmentController {
     @Autowired
     private AppointmentService appointmentService;
 
+    @Autowired
+    private FileStorageService fileStorageService;
+
+    @Autowired
+    private AppointmentRepository appointmentRepository;
+
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/appointments")
     public ResponseEntity<List<AppointmentDto>> getAll(
             @RequestParam(value = "state", required = false) AppointmentState state,
             @RequestParam(value = "clientId", required = false) Long clientId,
-            @RequestParam(value = "professionalId", required = false) Long professionalId
+            @RequestParam(value = "professionalId", required = false) Long professionalId,
+            @RequestParam(value = "depositPaid", required = false) Boolean depositPaid,
+            @RequestParam(value = "dateFrom", required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime dateFrom,
+            @RequestParam(value = "dateTo", required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime dateTo,
+            @RequestParam(value = "professionalName", required = false) String professionalName,
+            @RequestParam(value = "clientName", required = false) String clientName
     ) {
-        List<AppointmentDto> appointments = appointmentService.findAll(state, clientId, professionalId);
-        return ResponseEntity.ok(appointments);
+        return ResponseEntity.ok(
+                appointmentService.findAll(
+                        state, clientId, professionalId,
+                        depositPaid, dateFrom, dateTo,
+                        professionalName, clientName
+                )
+        );
     }
 
     @PreAuthorize("hasRole('CLIENT')")
@@ -86,7 +114,7 @@ public class AppointmentController {
         return ResponseEntity.noContent().build();
     }
 
-    @PreAuthorize("hasAnyRole('ADMIN','CLIENT')")
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/appointments/{id}/confirm-deposit")
     public ResponseEntity<AppointmentDto> confirmDeposit(@PathVariable long id, Authentication authentication)
             throws AppointmentNotFoundException, ClientNotFoundException {
@@ -102,6 +130,17 @@ public class AppointmentController {
         return ResponseEntity.ok(appointmentService.cancel(id, email));
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN','CLIENT')")
+    @PutMapping("/appointments/{id}/reschedule")
+    public ResponseEntity<AppointmentDto> reschedule(
+            @PathVariable long id,
+            @Valid @RequestBody RescheduleAppointmentDto body,
+            Authentication authentication
+    ) throws AppointmentNotFoundException, ClientNotFoundException {
+        String email = (String) authentication.getPrincipal();
+        return ResponseEntity.ok(appointmentService.reschedule(id, body.getStartDateTime(), email));
+    }
+
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/appointments/{id}/mark-no-show")
     public ResponseEntity<AppointmentDto> markNoShow(@PathVariable long id) throws AppointmentNotFoundException {
@@ -110,14 +149,33 @@ public class AppointmentController {
 
     @PreAuthorize("hasAnyRole('ADMIN','CLIENT')")
     @GetMapping("/availability")
-    public ResponseEntity<List<AvailabilitySlotDto>> getAvailability(
+    public ResponseEntity<AvailabilityResponseDto> getAvailability(
             @RequestParam(value = "professionalId") long professionalId,
             @RequestParam(value = "dateFrom") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime dateFrom,
             @RequestParam(value = "dateTo") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime dateTo,
             @RequestParam(value = "durationMinutes", required = false) Integer durationMinutes,
             @RequestParam(value = "stepMinutes", required = false) Integer stepMinutes
     ) {
-        return ResponseEntity.ok(appointmentService.getAvailability(professionalId, dateFrom, dateTo, durationMinutes, stepMinutes));
+        return ResponseEntity.ok(
+                appointmentService.getAvailability(professionalId, dateFrom, dateTo, durationMinutes, stepMinutes)
+        );
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @PostMapping("/appointments/{id}/mark-completed")
+    public ResponseEntity<AppointmentDto> markCompleted(@PathVariable long id) throws AppointmentNotFoundException {
+        return ResponseEntity.ok(appointmentService.markCompleted(id));
+    }
+
+    private boolean isAdmin(Authentication auth) {
+        return auth.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+    }
+
+    private boolean isOwner(Appointment appt, Authentication auth) {
+        return appt.getClient() != null
+                && appt.getClient().getEmail() != null
+                && appt.getClient().getEmail().equalsIgnoreCase(auth.getName());
     }
 
     @ExceptionHandler(AppointmentNotFoundException.class)

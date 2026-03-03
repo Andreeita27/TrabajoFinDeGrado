@@ -12,6 +12,7 @@ import java.time.LocalDate;
 public class TattooDto {
     private long id;
     private long clientId;
+    private String clientName;
     private long professionalId;
     private String professionalName;
     private LocalDate tattooDate;

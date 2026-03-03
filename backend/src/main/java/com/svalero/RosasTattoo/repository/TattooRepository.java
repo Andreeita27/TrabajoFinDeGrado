@@ -16,10 +16,12 @@ public interface TattooRepository extends CrudRepository<Tattoo, Long> {
     @Query("SELECT t FROM tattoo t WHERE " +
             "(:style IS NULL OR t.style LIKE %:style%) AND " +
             "(:coverUp IS NULL OR t.coverUp = :coverUp) AND " +
-            "(:color IS NULL OR t.color = :color)")
+            "(:color IS NULL OR t.color = :color) AND " +
+            "(:professionalId IS NULL OR t.professional.id = :professionalId)")
     List<Tattoo> findByFilters(
             @Param("style") String style,
             @Param("coverUp") Boolean coverUp,
-            @Param("color") Boolean color
+            @Param("color") Boolean color,
+            @Param("professionalId") Long professionalId
     );
 }

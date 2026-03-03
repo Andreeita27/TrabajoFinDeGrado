@@ -16,6 +16,8 @@ public class ProfessionalInDto {
     @NotBlank(message = "Name is mandatory")
     private String professionalName;
 
+    private String style;
+
     @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate birthDate;
 

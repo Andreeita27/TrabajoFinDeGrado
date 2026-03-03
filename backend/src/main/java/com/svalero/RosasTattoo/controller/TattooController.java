@@ -27,8 +27,9 @@ public class TattooController {
     public ResponseEntity<List<TattooDto>> getAll(
             @RequestParam(value = "style", required = false) String style,
             @RequestParam(value = "coverUp", required = false) Boolean coverUp,
-            @RequestParam(value = "color", required = false) Boolean color) {
-        return ResponseEntity.ok(tattooService.findAll(style, coverUp, color));
+            @RequestParam(value = "color", required = false) Boolean color,
+            @RequestParam(value = "professionalId", required = false) Long professionalId){
+        return ResponseEntity.ok(tattooService.findAll(style, coverUp, color, professionalId));
     }
 
     @GetMapping("/tattoos/{id}")

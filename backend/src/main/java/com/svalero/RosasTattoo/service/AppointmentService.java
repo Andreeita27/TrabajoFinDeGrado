@@ -5,30 +5,30 @@ import com.svalero.RosasTattoo.domain.Client;
 import com.svalero.RosasTattoo.domain.Professional;
 import com.svalero.RosasTattoo.domain.UserAccount;
 import com.svalero.RosasTattoo.domain.enums.AppointmentState;
+import com.svalero.RosasTattoo.domain.enums.AppointmentType;
 import com.svalero.RosasTattoo.domain.enums.TattooSize;
 import com.svalero.RosasTattoo.dto.AppointmentDto;
 import com.svalero.RosasTattoo.dto.AppointmentInDto;
+import com.svalero.RosasTattoo.dto.AvailabilityResponseDto;
+import com.svalero.RosasTattoo.dto.AvailabilitySlotDto;
+import com.svalero.RosasTattoo.exception.AppointmentConflictException;
 import com.svalero.RosasTattoo.exception.AppointmentNotFoundException;
 import com.svalero.RosasTattoo.exception.ClientNotFoundException;
 import com.svalero.RosasTattoo.exception.ProfessionalNotFoundException;
-import com.svalero.RosasTattoo.repository.AppointmentRepository;
-import com.svalero.RosasTattoo.repository.ClientRepository;
-import com.svalero.RosasTattoo.repository.ProfessionalRepository;
-import com.svalero.RosasTattoo.repository.UserAccountRepository;
+import com.svalero.RosasTattoo.repository.*;
 import org.modelmapper.ModelMapper;
-import org.modelmapper.TypeToken;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
-import com.svalero.RosasTattoo.exception.AppointmentConflictException;
+
+import java.time.DayOfWeek;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.util.List;
-import com.svalero.RosasTattoo.dto.AvailabilitySlotDto;
 import java.util.ArrayList;
+import java.util.List;
 
 @Service
 public class AppointmentService {
@@ -41,6 +41,12 @@ public class AppointmentService {
     private ProfessionalRepository professionalRepository;
     @Autowired
     private UserAccountRepository userAccountRepository;
+    @Autowired
+    private ReviewRepository reviewRepository;
+    @Autowired
+    private AvailabilityWindowRepository availabilityWindowRepository;
+    @Autowired
+    private UnavailabilityBlockRepository unavailabilityBlockRepository;
     @Autowired
     private ModelMapper modelMapper;
 
@@ -71,10 +77,13 @@ public class AppointmentService {
         }
     }
 
-    private int calculateDurationMinutes(TattooSize tattooSize) {
+    private int calculateDurationMinutes(AppointmentType type, TattooSize tattooSize) {
+        if (type == AppointmentType.CONSULTATION) return 30;
+
         if (tattooSize == null) {
-            return 60;
+            throw new IllegalArgumentException("Tattoo size is mandatory for tattoo appointments.");
         }
+
         return switch (tattooSize) {
             case SMALL -> 60;
             case MEDIUM -> 120;
@@ -86,21 +95,95 @@ public class AppointmentService {
     private void validateNoOverlap(long professionalId, LocalDateTime start, int durationMinutes, Long excludeId) {
         LocalDateTime end = start.plusMinutes(durationMinutes);
 
-        boolean overlaps = appointmentRepository.existsOverlapping(professionalId, start, end, excludeId);
-        if (overlaps) {
+        long overlapsCount = appointmentRepository.countOverlapping(professionalId, start, end, excludeId);
+
+        if (overlapsCount > 0) {
             throw new AppointmentConflictException("The selected time slot is not available");
         }
     }
 
-    public List<AppointmentDto> findAll(AppointmentState state, Long clientId, Long professionalId) {
-        List<Appointment> appointments = appointmentRepository.findByFilters(state, clientId, professionalId);
-        return modelMapper.map(appointments, new TypeToken<List<AppointmentDto>>() {}.getType());
+    private void validateByType(AppointmentInDto dto) {
+        AppointmentType type = dto.getAppointmentType() == null
+                ? AppointmentType.TATTOO
+                : dto.getAppointmentType();
+
+        if (dto.getIdeaDescription() == null || dto.getIdeaDescription().isBlank()) {
+            throw new IllegalArgumentException("Describe tu idea.");
+        }
+
+        if (type == AppointmentType.TATTOO) {
+            if (dto.getTattooSize() == null) {
+                throw new IllegalArgumentException("Selecciona el tamaño del tattoo.");
+            }
+            if (dto.getBodyPlacement() == null || dto.getBodyPlacement().isBlank()) {
+                throw new IllegalArgumentException("Indica en qué parte del cuerpo quieres el tattoo.");
+            }
+        } else {
+            dto.setTattooSize(null);
+            dto.setBodyPlacement(null);
+        }
+    }
+
+    private AppointmentDto toDto(Appointment appointment) {
+        AppointmentDto dto = modelMapper.map(appointment, AppointmentDto.class);
+
+        dto.setHasReview(reviewRepository.existsByAppointment_Id(appointment.getId()));
+
+        Client c = appointment.getClient();
+        if (c != null) {
+            dto.setClientName(c.getClientName());
+            dto.setClientSurname(c.getClientSurname());
+            dto.setClientFullName((c.getClientName() + " " + c.getClientSurname()).trim());
+        }
+
+        return dto;
+    }
+
+    private AppointmentDto enrichHasReview(Appointment appointment) {
+        return toDto(appointment);
+    }
+
+    private List<AppointmentDto> enrichHasReview(List<Appointment> appointments) {
+        List<AppointmentDto> result = new ArrayList<>(appointments.size());
+        for (Appointment a : appointments) {
+            result.add(toDto(a));
+        }
+        return result;
+    }
+
+    public List<AppointmentDto> findAll(AppointmentState state, Long clientId, Long professionalId,
+                                        Boolean depositPaid, LocalDateTime dateFrom, LocalDateTime dateTo,
+                                        String professionalName, String clientName) {
+
+        List<Appointment> appointments = appointmentRepository.findByFilters(
+                state,
+                clientId,
+                professionalId,
+                depositPaid,
+                dateFrom,
+                dateTo,
+                (professionalName == null || professionalName.isBlank()) ? null : professionalName.trim(),
+                (clientName == null || clientName.isBlank()) ? null : clientName.trim()
+        );
+
+        return enrichHasReview(appointments);
     }
 
     public List<AppointmentDto> findMyAppointments(String email) throws ClientNotFoundException {
         Client me = getClientFromEmail(email);
-        List<Appointment> appointments = appointmentRepository.findByFilters(null, me.getId(), null);
-        return modelMapper.map(appointments, new TypeToken<List<AppointmentDto>>() {}.getType());
+
+        List<Appointment> appointments = appointmentRepository.findByFilters(
+                null,
+                me.getId(),
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+        );
+
+        return enrichHasReview(appointments);
     }
 
     public AppointmentDto findByIdSecured(long id, String email) throws AppointmentNotFoundException, ClientNotFoundException {
@@ -108,7 +191,7 @@ public class AppointmentService {
                 .orElseThrow(AppointmentNotFoundException::new);
 
         assertOwnership(appointment, email);
-        return modelMapper.map(appointment, AppointmentDto.class);
+        return enrichHasReview(appointment);
     }
 
     public AppointmentDto addSecured(AppointmentInDto appointmentInDto, String email)
@@ -125,22 +208,34 @@ public class AppointmentService {
         Professional professional = professionalRepository.findById(appointmentInDto.getProfessionalId())
                 .orElseThrow(ProfessionalNotFoundException::new);
 
+        validateByType(appointmentInDto);
+
+        AppointmentType type = appointmentInDto.getAppointmentType() == null
+                ? AppointmentType.TATTOO
+                : appointmentInDto.getAppointmentType();
+
         Appointment appointment = new Appointment();
         modelMapper.map(appointmentInDto, appointment);
 
+        appointment.setAppointmentType(type);
         appointment.setClient(client);
         appointment.setProfessional(professional);
 
-        appointment.setState(AppointmentState.PENDING);
-        appointment.setDepositPaid(false);
+        if (type == AppointmentType.CONSULTATION) {
+            appointment.setState(AppointmentState.CONFIRMED);
+            appointment.setDepositPaid(false);
+        } else {
+            appointment.setState(AppointmentState.PENDING);
+            appointment.setDepositPaid(false);
+        }
 
-        int durationMinutes = calculateDurationMinutes(appointment.getTattooSize());
+        int durationMinutes = calculateDurationMinutes(type, appointment.getTattooSize());
         appointment.setDurationMinutes(durationMinutes);
 
         validateNoOverlap(professional.getId(), appointment.getStartDateTime(), durationMinutes, null);
 
         Appointment saved = appointmentRepository.save(appointment);
-        return modelMapper.map(saved, AppointmentDto.class);
+        return enrichHasReview(saved);
     }
 
     public AppointmentDto modifySecured(long id, AppointmentInDto appointmentInDto, String email)
@@ -167,13 +262,17 @@ public class AppointmentService {
         existing.setClient(client);
         existing.setProfessional(professional);
 
-        int durationMinutes = calculateDurationMinutes(existing.getTattooSize());
+        AppointmentType type = existing.getAppointmentType() == null
+                ? AppointmentType.TATTOO
+                : existing.getAppointmentType();
+
+        int durationMinutes = calculateDurationMinutes(type, existing.getTattooSize());
         existing.setDurationMinutes(durationMinutes);
 
         validateNoOverlap(professional.getId(), existing.getStartDateTime(), durationMinutes, existing.getId());
 
         Appointment saved = appointmentRepository.save(existing);
-        return modelMapper.map(saved, AppointmentDto.class);
+        return enrichHasReview(saved);
     }
 
     public AppointmentDto confirmDeposit(long id, String email)
@@ -184,11 +283,25 @@ public class AppointmentService {
 
         assertOwnership(appointment, email);
 
+        if (appointment.getAppointmentType() == AppointmentType.CONSULTATION) {
+            throw new IllegalStateException("Consultations do not require deposit.");
+        }
+
+        if (appointment.getState() == AppointmentState.CANCELLED) {
+            throw new IllegalStateException("You cannot confirm deposit for a cancelled appointment");
+        }
+        if (appointment.getState() == AppointmentState.NO_SHOW) {
+            throw new IllegalStateException("You cannot confirm deposit for a NO_SHOW appointment");
+        }
+        if (appointment.getState() == AppointmentState.COMPLETED) {
+            throw new IllegalStateException("You cannot confirm deposit for a completed appointment");
+        }
+
         appointment.setDepositPaid(true);
         appointment.setState(AppointmentState.CONFIRMED);
 
         Appointment saved = appointmentRepository.save(appointment);
-        return modelMapper.map(saved, AppointmentDto.class);
+        return enrichHasReview(saved);
     }
 
     public AppointmentDto cancel(long id, String email)
@@ -209,17 +322,127 @@ public class AppointmentService {
         appointment.setState(AppointmentState.CANCELLED);
 
         Appointment saved = appointmentRepository.save(appointment);
-        return modelMapper.map(saved, AppointmentDto.class);
+        return enrichHasReview(saved);
+    }
+
+    private void validateSlotInBusinessRules(long professionalId, LocalDateTime start, int durationMinutes) {
+
+        // No permitir pasado
+        if (start.isBefore(LocalDateTime.now())) {
+            throw new IllegalStateException("You cannot move an appointment to the past");
+        }
+
+        // No fines de semana
+        DayOfWeek dow = start.getDayOfWeek();
+        if (dow == DayOfWeek.SATURDAY || dow == DayOfWeek.SUNDAY) {
+            throw new IllegalStateException("Appointments are not available on weekends");
+        }
+
+        // Horario fijo
+        LocalTime workStart = LocalTime.of(12, 0);
+        LocalTime workEnd = LocalTime.of(20, 0);
+
+        LocalTime s = start.toLocalTime();
+        LocalTime e = start.plusMinutes(durationMinutes).toLocalTime();
+
+        // Debe estar dentro del horario de apertura
+        if (s.isBefore(workStart) || e.isAfter(workEnd) || e.equals(LocalTime.MIDNIGHT)) {
+            throw new IllegalStateException("The selected time is outside working hours");
+        }
+
+        LocalDateTime end = start.plusMinutes(durationMinutes);
+
+        // Debe estar cubierto por alguna ventana publicada
+        var windows = availabilityWindowRepository.findActiveIntersecting(professionalId, start, end);
+        boolean covered = windows.stream().anyMatch(w ->
+                !w.getStartDateTime().isAfter(start) && !w.getEndDateTime().isBefore(end)
+        );
+
+        if (!covered) {
+            throw new IllegalStateException("This professional has not opened availability for that time");
+        }
+
+        // No debe caer en un bloqueo
+        var blocks = unavailabilityBlockRepository.findActiveIntersecting(professionalId, start, end);
+        boolean blocked = blocks.stream().anyMatch(b ->
+                b.isEnabled()
+                        && b.getEndDateTime().isAfter(start)
+                        && b.getStartDateTime().isBefore(end)
+        );
+
+        if (blocked) {
+            throw new IllegalStateException("The selected time is blocked");
+        }
+    }
+
+    public AppointmentDto reschedule(long id, LocalDateTime newStart, String email)
+            throws AppointmentNotFoundException, ClientNotFoundException {
+
+        Appointment appointment = appointmentRepository.findById(id)
+                .orElseThrow(AppointmentNotFoundException::new);
+
+        assertOwnership(appointment, email);
+
+        // Solo PENDING o CONFIRMED
+        if (appointment.getState() != AppointmentState.PENDING
+                && appointment.getState() != AppointmentState.CONFIRMED) {
+            throw new IllegalStateException("Only PENDING or CONFIRMED appointments can be rescheduled");
+        }
+
+        // Regla similar a cancelar: clientes solo con 24h de margen (admin puede siempre)
+        if (!isAdmin()) {
+            long hours = Duration.between(LocalDateTime.now(), appointment.getStartDateTime()).toHours();
+            if (hours < 24) {
+                throw new IllegalStateException("You can only reschedule an appointment at least 24 hours in advance");
+            }
+        }
+
+        int durationMinutes = appointment.getDurationMinutes();
+        if (durationMinutes <= 0) {
+            durationMinutes = calculateDurationMinutes(appointment.getAppointmentType(), appointment.getTattooSize());
+            appointment.setDurationMinutes(durationMinutes);
+        }
+
+        // Reglas de agenda/bloqueos/horario
+        validateSlotInBusinessRules(appointment.getProfessional().getId(), newStart, durationMinutes);
+
+        // Solapes (excluyendo la cita actual)
+        validateNoOverlap(appointment.getProfessional().getId(), newStart, durationMinutes, appointment.getId());
+
+        // Actualizo SOLO la fecha
+        appointment.setStartDateTime(newStart);
+
+        // no toco state
+        Appointment saved = appointmentRepository.save(appointment);
+        return enrichHasReview(saved);
     }
 
     public AppointmentDto markNoShow(long id) throws AppointmentNotFoundException {
         Appointment appointment = appointmentRepository.findById(id)
                 .orElseThrow(AppointmentNotFoundException::new);
 
+        if (appointment.getState() != AppointmentState.CONFIRMED) {
+            throw new IllegalStateException("Only CONFIRMED appointments can be marked as NO_SHOW");
+        }
+
         appointment.setState(AppointmentState.NO_SHOW);
 
         Appointment saved = appointmentRepository.save(appointment);
-        return modelMapper.map(saved, AppointmentDto.class);
+        return enrichHasReview(saved);
+    }
+
+    public AppointmentDto markCompleted(long id) throws AppointmentNotFoundException {
+        Appointment appointment = appointmentRepository.findById(id)
+                .orElseThrow(AppointmentNotFoundException::new);
+
+        if (appointment.getState() != AppointmentState.CONFIRMED) {
+            throw new IllegalStateException("Only CONFIRMED appointments can be marked as COMPLETED");
+        }
+
+        appointment.setState(AppointmentState.COMPLETED);
+
+        Appointment saved = appointmentRepository.save(appointment);
+        return enrichHasReview(saved);
     }
 
     public void delete(long id) throws AppointmentNotFoundException {
@@ -233,7 +456,7 @@ public class AppointmentService {
         Appointment appointment = appointmentRepository.findById(id)
                 .orElseThrow(AppointmentNotFoundException::new);
 
-        return modelMapper.map(appointment, AppointmentDto.class);
+        return enrichHasReview(appointment);
     }
 
     public AppointmentDto add(AppointmentInDto appointmentInDto) throws ClientNotFoundException, ProfessionalNotFoundException {
@@ -250,7 +473,7 @@ public class AppointmentService {
         appointment.setProfessional(professional);
 
         Appointment saved = appointmentRepository.save(appointment);
-        return modelMapper.map(saved, AppointmentDto.class);
+        return enrichHasReview(saved);
     }
 
     public AppointmentDto modify(long id, AppointmentInDto appointmentInDto)
@@ -271,14 +494,14 @@ public class AppointmentService {
         existing.setProfessional(professional);
 
         Appointment saved = appointmentRepository.save(existing);
-        return modelMapper.map(saved, AppointmentDto.class);
+        return enrichHasReview(saved);
     }
 
-    public List<AvailabilitySlotDto> getAvailability(long professionalId,
-                                                     LocalDateTime dateFrom,
-                                                     LocalDateTime dateTo,
-                                                     Integer durationMinutes,
-                                                     Integer stepMinutes) {
+    public AvailabilityResponseDto getAvailability(long professionalId,
+                                                   LocalDateTime dateFrom,
+                                                   LocalDateTime dateTo,
+                                                   Integer durationMinutes,
+                                                   Integer stepMinutes) {
 
         int duration = (durationMinutes == null || durationMinutes <= 0) ? 60 : durationMinutes;
         int step = (stepMinutes == null || stepMinutes <= 0) ? 30 : stepMinutes;
@@ -289,40 +512,103 @@ public class AppointmentService {
         List<AvailabilitySlotDto> slots = new ArrayList<>();
 
         if (dateFrom == null || dateTo == null || !dateFrom.isBefore(dateTo)) {
-            return slots;
+            return new AvailabilityResponseDto(slots, false, false, List.of());
+        }
+
+        // BLOQUEOS primero
+        var blocks = unavailabilityBlockRepository.findActiveIntersecting(professionalId, dateFrom, dateTo);
+
+        boolean hasBlocksInRange = blocks.stream().anyMatch(b -> b.isEnabled());
+
+        List<String> blockReasons = blocks.stream()
+                .filter(b -> b.isEnabled())
+                .map(b -> b.getReason() == null ? "" : b.getReason().trim())
+                .filter(s -> !s.isBlank())
+                .distinct()
+                .toList();
+
+        var windows = availabilityWindowRepository.findActiveIntersecting(professionalId, dateFrom, dateTo);
+        boolean hasPublishedWindows = !windows.isEmpty();
+
+        // Si no hay ventanas publicadas, devuelvo igualmente info de bloqueos
+        if (!hasPublishedWindows) {
+            return new AvailabilityResponseDto(slots, false, hasBlocksInRange, blockReasons);
         }
 
         LocalDateTime currentDay = dateFrom.toLocalDate().atStartOfDay();
         LocalDateTime lastDay = dateTo.toLocalDate().atStartOfDay();
 
         while (!currentDay.isAfter(lastDay)) {
+            DayOfWeek dow = currentDay.getDayOfWeek();
+            if (dow == DayOfWeek.SATURDAY || dow == DayOfWeek.SUNDAY) {
+                currentDay = currentDay.plusDays(1);
+                continue;
+            }
+
             LocalDateTime dayStart = currentDay.toLocalDate().atTime(workStart);
             LocalDateTime dayEnd = currentDay.toLocalDate().atTime(workEnd);
 
-            LocalDateTime rangeStart = dayStart.isAfter(dateFrom) ? dayStart : dateFrom;
-            LocalDateTime rangeEnd = dayEnd.isBefore(dateTo) ? dayEnd : dateTo;
+            LocalDateTime baseStart = dayStart.isAfter(dateFrom) ? dayStart : dateFrom;
+            LocalDateTime baseEnd = dayEnd.isBefore(dateTo) ? dayEnd : dateTo;
 
-            LocalDateTime slotStart = rangeStart;
+            if (baseStart.isBefore(baseEnd)) {
 
-            while (slotStart.plusMinutes(duration).isBefore(rangeEnd) || slotStart.plusMinutes(duration).isEqual(rangeEnd)) {
-                LocalDateTime slotEnd = slotStart.plusMinutes(duration);
+                for (var w : windows) {
+                    LocalDateTime wStart = w.getStartDateTime();
+                    LocalDateTime wEnd = w.getEndDateTime();
 
-                boolean overlaps = appointmentRepository.existsOverlapping(
-                        professionalId,
-                        slotStart,
-                        slotEnd,
-                        null
-                );
+                    LocalDateTime segStart = max(baseStart, wStart);
+                    LocalDateTime segEnd = min(baseEnd, wEnd);
 
-                if (!overlaps) {
-                    slots.add(new AvailabilitySlotDto(slotStart, slotEnd));
+                    if (!segStart.isBefore(segEnd)) {
+                        continue;
+                    }
+
+                    LocalDateTime slotStart = segStart;
+
+                    while (slotStart.plusMinutes(duration).isBefore(segEnd)
+                            || slotStart.plusMinutes(duration).isEqual(segEnd)) {
+
+                        LocalDateTime slotEnd = slotStart.plusMinutes(duration);
+
+                        final LocalDateTime currentStart = slotStart;
+                        final LocalDateTime currentEnd = slotEnd;
+
+                        boolean blocked = blocks.stream().anyMatch(b ->
+                                b.isEnabled() &&
+                                        b.getEndDateTime().isAfter(currentStart) &&
+                                        b.getStartDateTime().isBefore(currentEnd)
+                        );
+
+                        if (!blocked) {
+                            boolean overlaps = appointmentRepository.countOverlapping(
+                                    professionalId,
+                                    currentStart,
+                                    currentEnd,
+                                    null
+                            ) > 0;
+
+                            if (!overlaps) {
+                                slots.add(new AvailabilitySlotDto(currentStart, currentEnd));
+                            }
+                        }
+
+                        slotStart = slotStart.plusMinutes(step);
+                    }
                 }
-
-                slotStart = slotStart.plusMinutes(step);
             }
 
             currentDay = currentDay.plusDays(1);
         }
-        return slots;
+
+        return new AvailabilityResponseDto(slots, hasPublishedWindows, hasBlocksInRange, blockReasons);
+    }
+
+    private LocalDateTime max(LocalDateTime a, LocalDateTime b) {
+        return a.isAfter(b) ? a : b;
+    }
+
+    private LocalDateTime min(LocalDateTime a, LocalDateTime b) {
+        return a.isBefore(b) ? a : b;
     }
 }

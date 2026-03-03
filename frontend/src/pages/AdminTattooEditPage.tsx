@@ -1,0 +1,272 @@
+import { useEffect, useMemo, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { ApiError } from "../api/apiFetch";
+import { getTattoo, updateTattoo } from "../api/tattoosApi";
+import { uploadPublicImage } from "../api/filesApi";
+import { useAuth } from "../auth/AuthContext";
+import type { TattooInDto, TattooDto } from "../types/tattoo";
+
+export default function AdminTattooEditPage() {
+  const { token, role } = useAuth();
+  const nav = useNavigate();
+  const params = useParams();
+
+  const tattooId = useMemo(() => {
+    const n = Number(params.id);
+    return Number.isFinite(n) ? n : null;
+  }, [params.id]);
+
+  const [original, setOriginal] = useState<TattooDto | null>(null);
+
+  const [style, setStyle] = useState("");
+  const [tattooDescription, setTattooDescription] = useState("");
+  const [tattooDate, setTattooDate] = useState("");
+  const [imageUrl, setImageUrl] = useState("");
+
+  const [sessions, setSessions] = useState<number>(1);
+  const [coverUp, setCoverUp] = useState(false);
+  const [color, setColor] = useState(false);
+
+  const [error, setError] = useState("");
+  const [ok, setOk] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
+
+  const backTo = tattooId ? `/showroom/${tattooId}` : "/showroom";
+
+  const load = async () => {
+    if (!token || !tattooId) return;
+    setError("");
+    try {
+      const t = await getTattoo(token, tattooId);
+      setOriginal(t);
+
+      setStyle(t.style ?? "");
+      setTattooDescription(t.tattooDescription ?? "");
+      setTattooDate(t.tattooDate ?? "");
+      setImageUrl(t.imageUrl ?? "");
+
+      setSessions(typeof t.sessions === "number" && t.sessions > 0 ? t.sessions : 1);
+      setCoverUp(!!t.coverUp);
+      setColor(!!t.color);
+    } catch (e: any) {
+      setError(e instanceof ApiError ? e.message : e?.message || "Error cargando tattoo");
+    }
+  };
+
+  useEffect(() => {
+    if (!token) {
+      nav("/login", { replace: true, state: { from: backTo } });
+      return;
+    }
+    if (role !== "ADMIN") {
+      nav("/showroom", { replace: true });
+      return;
+    }
+  }, [token, role, nav, backTo]);
+
+  useEffect(() => {
+    if (!token || role !== "ADMIN") return;
+    load();
+  }, [token, role, tattooId]);
+
+  const onPickImage = async (file: File) => {
+    if (!token) return;
+
+    setError("");
+    setOk("");
+
+    try {
+      setUploadingImage(true);
+      const url = await uploadPublicImage("tattoos", file, token);
+      setImageUrl(url);
+      setOk("Imagen subida");
+    } catch (e: any) {
+      setError(e instanceof ApiError ? e.message : e?.message || "Error subiendo imagen");
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
+  const onSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!token || role !== "ADMIN" || !tattooId || !original) return;
+
+    setError("");
+    setOk("");
+
+    if (!style.trim()) return setError("El estilo es obligatorio.");
+    if (!tattooDescription.trim()) return setError("La descripción es obligatoria.");
+    if (!tattooDate) return setError("La fecha es obligatoria.");
+    if (!imageUrl.trim()) return setError("Debes subir una imagen.");
+    if (!Number.isFinite(sessions) || sessions < 1) return setError("Las sesiones deben ser 1 o más.");
+
+    const payload: TattooInDto = {
+      clientId: original.clientId,
+      professionalId: original.professionalId,
+      style: style.trim(),
+      tattooDescription: tattooDescription.trim(),
+      tattooDate,
+      imageUrl: imageUrl.trim(),
+      sessions,
+      coverUp,
+      color,
+    };
+
+    try {
+      setLoading(true);
+      await updateTattoo(token, tattooId, payload);
+      setOk("Cambios guardados");
+
+      setTimeout(() => nav(backTo, { replace: true }), 300);
+    } catch (e: any) {
+      if (e instanceof ApiError) {
+        const body: any = e.body;
+        const validationMsg = body?.errors
+          ? Object.entries(body.errors)
+              .map(([k, v]) => `${k}: ${v}`)
+              .join(" | ")
+          : "";
+        setError(validationMsg || e.message || "Error actualizando tattoo");
+      } else {
+        setError(e?.message || "Error actualizando tattoo");
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (!tattooId) {
+    return (
+      <div style={{ padding: 16 }}>
+        <h1>Editar tattoo</h1>
+        <p style={{ color: "tomato" }}>ID inválido</p>
+      </div>
+    );
+  }
+
+  const previewUrl = imageUrl ? `${import.meta.env.VITE_API_BASE_URL}${imageUrl}` : "";
+
+  return (
+    <div style={{ padding: 16, maxWidth: 560 }}>
+      <h1>Editar tattoo</h1>
+
+      {error && <div style={{ color: "tomato", marginBottom: 12 }}>{error}</div>}
+      {ok && <div style={{ color: "lightgreen", marginBottom: 12 }}>{ok}</div>}
+
+      {!original && <p>Cargando…</p>}
+
+      {original && (
+        <>
+          <div style={{ marginBottom: 12, color: "#666" }}>
+            <strong>Cliente:</strong> {original?.clientName || "(sin nombre)"} &nbsp;|&nbsp;
+            <strong>Profesional:</strong> {original?.professionalName || "(sin profesional)"}
+          </div>
+
+          <form onSubmit={onSubmit} style={{ display: "grid", gap: 12 }}>
+            <label>
+              Estilo
+              <input
+                value={style}
+                onChange={(e) => setStyle(e.target.value)}
+                style={{ display: "block", width: "100%", padding: 8, marginTop: 6 }}
+                disabled={loading || uploadingImage}
+              />
+            </label>
+
+            <label>
+              Descripción
+              <textarea
+                value={tattooDescription}
+                onChange={(e) => setTattooDescription(e.target.value)}
+                rows={4}
+                style={{ display: "block", width: "100%", padding: 8, marginTop: 6 }}
+                disabled={loading || uploadingImage}
+              />
+            </label>
+
+            <label>
+              Fecha
+              <input
+                type="date"
+                value={tattooDate}
+                onChange={(e) => setTattooDate(e.target.value)}
+                style={{ display: "block", width: "100%", padding: 8, marginTop: 6 }}
+                disabled={loading || uploadingImage}
+              />
+            </label>
+
+            <label>
+              Sesiones
+              <input
+                type="number"
+                min={1}
+                value={sessions}
+                onChange={(e) => setSessions(Number(e.target.value))}
+                style={{ display: "block", width: "100%", padding: 8, marginTop: 6 }}
+                disabled={loading || uploadingImage}
+              />
+            </label>
+
+            <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
+              <input
+                type="checkbox"
+                checked={coverUp}
+                onChange={(e) => setCoverUp(e.target.checked)}
+                disabled={loading || uploadingImage}
+              />
+              ¿Cover up?
+            </label>
+
+            <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
+              <input
+                type="checkbox"
+                checked={color}
+                onChange={(e) => setColor(e.target.checked)}
+                disabled={loading || uploadingImage}
+              />
+              ¿A color?
+            </label>
+
+            <label>
+              Imagen del tattoo
+              <input
+                type="file"
+                accept="image/*"
+                disabled={loading || uploadingImage}
+                onChange={async (e) => {
+                  const f = e.target.files?.[0];
+                  if (!f) return;
+                  await onPickImage(f);
+                  e.currentTarget.value = "";
+                }}
+                style={{ display: "block", width: "100%", padding: 8, marginTop: 6 }}
+              />
+            </label>
+
+            {imageUrl && (
+              <div style={{ display: "grid", gap: 8 }}>
+                <div style={{ fontSize: 12, opacity: 0.8 }}>{imageUrl}</div>
+                <img
+                  src={previewUrl}
+                  alt="Preview tattoo"
+                  style={{ maxWidth: 320, borderRadius: 8, border: "1px solid #444" }}
+                />
+              </div>
+            )}
+
+            <div style={{ display: "flex", gap: 8 }}>
+              <button type="submit" disabled={loading || uploadingImage}>
+                {loading ? "Guardando..." : "Guardar cambios"}
+              </button>
+
+              <button type="button" onClick={() => nav(backTo)} disabled={loading || uploadingImage}>
+                Cancelar
+              </button>
+            </div>
+          </form>
+        </>
+      )}
+    </div>
+  );
+}

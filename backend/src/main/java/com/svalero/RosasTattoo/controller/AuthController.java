@@ -28,11 +28,11 @@ public class AuthController {
     private JwtService jwtService;
 
     @PostMapping("/auth/register")
-    public ResponseEntity<AuthResponseDto> register(@Valid @RequestBody RegisterRequestDto dto) {
+    public ResponseEntity<?> register(@Valid @RequestBody RegisterRequestDto dto) {
 
         if (userAccountRepository.existsByEmail(dto.getEmail())) {
             ErrorResponse error = ErrorResponse.generalError(409, "conflict", "Email already registered");
-            return new ResponseEntity<>(null, HttpStatus.CONFLICT);
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
         }
 
         Client client = new Client();
@@ -56,20 +56,27 @@ public class AuthController {
         userAccountRepository.save(account);
 
         String token = jwtService.generateToken(account.getEmail(), account.getRole());
-        return new ResponseEntity<>(new AuthResponseDto(token, account.getRole().name()), HttpStatus.CREATED);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(new AuthResponseDto(token, account.getRole().name(), savedClient.getId()));
     }
 
     @PostMapping("/auth/login")
-    public ResponseEntity<AuthResponseDto> login(@Valid @RequestBody LoginRequestDto dto) {
+    public ResponseEntity<?> login(@Valid @RequestBody LoginRequestDto dto) {
 
-        UserAccount account = userAccountRepository.findByEmail(dto.getEmail())
-                .orElse(null);
+        UserAccount account = userAccountRepository.findByEmail(dto.getEmail()).orElse(null);
 
-        if (account == null || !account.isEnabled() || !passwordEncoder.matches(dto.getPassword(), account.getPasswordHash())) {
-            return new ResponseEntity<>(null, HttpStatus.UNAUTHORIZED);
+        if (account == null || !account.isEnabled()
+                || !passwordEncoder.matches(dto.getPassword(), account.getPasswordHash())) {
+            ErrorResponse error = ErrorResponse.generalError(401, "unauthorized", "Invalid credentials");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
         }
 
         String token = jwtService.generateToken(account.getEmail(), account.getRole());
-        return ResponseEntity.ok(new AuthResponseDto(token, account.getRole().name()));
+        Long clientId = null;
+        if (account.getRole() == Role.CLIENT && account.getClient() != null) {
+            clientId = account.getClient().getId();
+        }
+
+        return ResponseEntity.ok(new AuthResponseDto(token, account.getRole().name(), clientId));
     }
 }

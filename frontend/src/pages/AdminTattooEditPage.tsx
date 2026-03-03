@@ -158,9 +158,10 @@ export default function AdminTattooEditPage() {
 
       {original && (
         <>
-          <p style={{ opacity: 0.8 }}>
-            #{original.id} | clientId: {original.clientId} | professionalId: {original.professionalId}
-          </p>
+          <div style={{ marginBottom: 12, color: "#666" }}>
+            <strong>Cliente:</strong> {original?.clientName || "(sin nombre)"} &nbsp;|&nbsp;
+            <strong>Profesional:</strong> {original?.professionalName || "(sin profesional)"}
+          </div>
 
           <form onSubmit={onSubmit} style={{ display: "grid", gap: 12 }}>
             <label>

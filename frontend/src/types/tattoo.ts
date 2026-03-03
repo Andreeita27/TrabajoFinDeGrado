@@ -1,6 +1,7 @@
 export type TattooDto = {
   id: number;
   clientId: number;
+  clientName: string;
   professionalId: number;
   professionalName: string;
   tattooDate: string;

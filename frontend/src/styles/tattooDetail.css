@@ -1,0 +1,76 @@
+/* ===== Tattoo Detail ===== */
+
+.tdetail {
+  padding: 18px 0 28px;
+}
+
+.backLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: rgba(255,255,255,.85);
+}
+
+.backLink:hover {
+  color: var(--gold);
+}
+
+.tdetailTop {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+
+.tdetailTitle {
+  margin: 0;
+  line-height: 1.2;
+}
+
+.tdetailActions {
+  display: flex;
+  gap: 8px;
+  margin-top: 2px;
+}
+
+.tdetailCard {
+  margin-top: 12px;
+  padding: 14px;
+  display: grid;
+  gap: 14px;
+}
+
+.tdetailImg {
+  width: 100%;
+  max-width: 560px;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  object-fit: cover;
+}
+
+.kvGrid {
+  display: grid;
+  gap: 8px;
+}
+
+.kvRow {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.kvKey {
+  color: rgba(255,255,255,.78);
+  font-weight: 700;
+}
+
+.kvVal {
+  color: rgba(255,255,255,.92);
+}
+
+.loading {
+  padding: 16px 0;
+  color: var(--muted);
+}

@@ -1,0 +1,532 @@
+/* ===== Home One-Page Fullscreen + Snap + Reveal ===== */
+
+:root{
+  --hp-black: #0b0b0b;
+  --hp-gold: #b5a16c;
+  --hp-white: #f3f1ed;
+}
+
+/* contenedor general */
+.hpPage {
+  /* si el navbar es sticky, esto ayuda a que el snap no lo tape */
+  scroll-snap-type: y mandatory;
+  height: auto;
+  overflow: visible;
+}
+
+/* cada sección ocupa pantalla completa */
+.hpSection {
+  min-height: 100vh;
+  scroll-margin-top: 76px;
+  scroll-snap-align: start;
+  position: relative;
+  display: grid;
+  align-items: center;
+  padding: 80px 0;
+}
+
+/* alterna fondos */
+.hpBgBlack {
+  background: radial-gradient(900px 420px at 15% 15%, rgba(181,161,108,.10), transparent 60%),
+              radial-gradient(700px 380px at 90% 10%, rgba(181,161,108,.08), transparent 55%),
+              var(--hp-black);
+  color: rgba(255,255,255,.92);
+}
+
+.hpBgGold {
+  background: radial-gradient(900px 420px at 15% 15%, rgba(0,0,0,.16), transparent 60%),
+              radial-gradient(700px 380px at 90% 10%, rgba(0,0,0,.12), transparent 55%),
+              var(--hp-gold);
+  color: rgba(0,0,0,.92);
+}
+
+.hpBgWhite {
+  background: radial-gradient(900px 420px at 15% 15%, rgba(181,161,108,.14), transparent 60%),
+              radial-gradient(700px 380px at 90% 10%, rgba(181,161,108,.10), transparent 55%),
+              var(--hp-white);
+  color: rgba(0,0,0,.92);
+}
+
+/* layout interno */
+.hpInner {
+  width: min(1500px, 94%);
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1.1fr 1.1fr;
+  gap: 90px;
+  align-items: center;
+}
+
+@media (max-width: 980px) {
+  .hpInner {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+}
+
+/* alternar lado */
+.hpReverse .hpInner {
+  grid-template-columns: 1.05fr 1fr;
+}
+.hpReverse .hpText {
+  order: 2;
+}
+.hpReverse .hpMedia {
+  order: 1;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+@media (max-width: 980px) {
+  .hpReverse .hpText,
+  .hpReverse .hpMedia {
+    order: initial;
+  }
+}
+
+/* “Flotar hacia arriba” al entrar */
+.hpReveal {
+  opacity: 0;
+  transform: translateY(28px);
+  transition: opacity .7s ease, transform .7s cubic-bezier(.2,.9,.2,1);
+}
+.hpOn .hpReveal {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* caja de texto tipo elegante */
+.hpTextCard {
+  padding: 48px 52px;
+  border-radius: 26px;
+  border: 1px solid rgba(181,161,108,.35);
+  background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.015));
+  box-shadow: 0 30px 70px rgba(0,0,0,.55);
+  backdrop-filter: blur(6px);
+}
+
+.hpBgGold .hpTextCard,
+.hpBgWhite .hpTextCard{
+  border: 1px solid rgba(0,0,0,.12);
+  background: rgba(255,255,255,.42);
+}
+
+.hpKicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  font-size: 20px;
+  opacity: .85;
+}
+
+.hpLine {
+  width: 56px;
+  height: 1px;
+  background: rgba(181,161,108,.75);
+}
+
+.hpTitle {
+  font-size: clamp(44px, 5vw, 68px);
+  font-weight: 900;
+  margin: 0 0 18px;
+  letter-spacing: -0.5px;
+}
+
+.hpBgGold .hpTitle,
+.hpBgWhite .hpTitle{
+  color: rgba(0,0,0,.92);
+}
+
+.hpP {
+  margin: 0;
+  line-height: 1.75;
+  opacity: .9;
+  max-width: 62ch;
+}
+
+.hpBullets {
+  margin: 12px 0 0;
+  padding-left: 18px;
+  display: grid;
+  gap: 6px;
+  opacity: .9;
+}
+
+.hpActions {
+  margin-top: 14px;
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+/* Carrusel */
+.hpCarousel{
+  height: 560px;
+  border-radius: 28px;
+  box-shadow: 0 40px 90px rgba(0,0,0,.65);
+}
+
+.hpBgGold .hpCarousel,
+.hpBgWhite .hpCarousel{
+  border: 1px solid rgba(0,0,0,.12);
+  background: rgba(255,255,255,.35);
+}
+
+.hpCarousel__img{
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: saturate(.98) contrast(1.05);
+  animation: hpFadeIn .55s ease;
+}
+
+.hpCarousel__img--next{
+  opacity: 0;
+}
+
+@keyframes hpFadeIn {
+  from { opacity: 0; transform: scale(1.02); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+.hpCarousel__dots{
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: 12px;
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+}
+
+.hpDot{
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: rgba(255,255,255,.45);
+}
+.hpBgGold .hpDot,
+.hpBgWhite .hpDot{
+  background: rgba(0,0,0,.35);
+}
+.hpDot--on{
+  background: rgba(181,161,108,.95);
+}
+
+/* Placeholder si no hay imágenes */
+.hpCarousel--placeholder{
+  display: grid;
+  place-items: center;
+}
+.hpCarousel__phText{
+  font-weight: 900;
+  letter-spacing: .10em;
+  text-transform: uppercase;
+  opacity: .8;
+}
+
+/* ===== Embedded Map ===== */
+
+.hpMap {
+  position: relative;
+  border-radius: 18px;
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,.12);
+  background: rgba(0,0,0,.25);
+  min-height: 340px;
+}
+
+.hpBgGold .hpMap,
+.hpBgWhite .hpMap{
+  border: 1px solid rgba(0,0,0,.12);
+  background: rgba(255,255,255,.35);
+}
+
+.hpMap iframe{
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  filter: saturate(.95) contrast(1.05);
+}
+
+/* capa de brillo sutil como el resto */
+.hpMap::after{
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(700px 450px at 70% 25%, rgba(181,161,108, 0.12), transparent 55%),
+              linear-gradient(180deg, rgba(0,0,0,.12), rgba(0,0,0,.25));
+  mix-blend-mode: normal;
+  opacity: .55;
+}
+
+/* 1) Entrada más “desde abajo” y con un pelín de blur (da sensación de venir volando) */
+.hpReveal{
+  opacity: 0;
+  transform: translateY(95px);
+  filter: blur(10px);
+  transition:
+    opacity .75s ease,
+    transform 1s cubic-bezier(.16, 1, .3, 1),
+    filter .85s cubic-bezier(.16, 1, .3, 1);
+  will-change: transform, opacity, filter;
+}
+
+/* Cuando entra: sube, se enfoca y queda en su sitio */
+.hpOn .hpReveal{
+  opacity: 1;
+  transform: translateY(0);
+  filter: blur(0);
+}
+
+/* 2) Flotación suave SOLO cuando ya está visible */
+.hpOn .hpTextCard,
+.hpOn .hpCarousel,
+.hpOn .hpMap{
+  animation: hpFloat 6s ease-in-out infinite;
+}
+
+@keyframes hpFloat{
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-10px); }
+}
+
+/* 3) Línea dorada animada bajo el título (sin cambiar colores) */
+.hpTitle{
+  position: relative;
+  padding-bottom: 14px;
+}
+
+.hpTitle::after{
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: 2px;
+  width: 120px;
+  height: 2px;
+  border-radius: 999px;
+  background: linear-gradient(
+    90deg,
+    rgba(181,161,108,0),
+    rgba(181,161,108,.95),
+    rgba(181,161,108,0)
+  );
+  animation: hpLineMove 2.2s ease-in-out infinite;
+  opacity: .9;
+}
+
+/* “se mueve” sin ser cantoso */
+@keyframes hpLineMove{
+  0%   { transform: translateX(0) scaleX(.75); opacity: .55; }
+  50%  { transform: translateX(18px) scaleX(1); opacity: .95; }
+  100% { transform: translateX(0) scaleX(.75); opacity: .55; }
+}
+
+/* 4) Bonus: escalonado para que texto y media no entren EXACTAMENTE a la vez (más “cine”) */
+.hpText.hpReveal{
+  transition-delay: .06s;
+}
+.hpMedia.hpReveal{
+  transition-delay: .14s;
+}
+
+/* 5) Para que la flotación no rompa el translate del carrusel/mapa si lo tuvieras en alguna versión */
+.hpCarousel,
+.hpMap{
+  transform: translateY(0);
+}
+
+/* ============ HERO ============ */
+
+.hpPosterHero{
+  position: relative;
+  min-height: 100vh;
+  overflow: hidden;
+  background: #000;
+}
+
+/* Foto de fondo como textura (MUY sutil) */
+.hpPosterHero::before{
+  content:"";
+  position:absolute;
+  inset:0;
+
+  background: 
+    linear-gradient(rgba(0, 0, 0, 0), rgba(0, 0, 0, 0)),
+    url("/images/EstudioMejorada.webp") center/cover no-repeat;
+
+  opacity: .9;        /* antes .18 */
+  filter: blur(1px) saturate(1) contrast(1.05);
+  transform: scale(1.04);
+}
+
+/* Oscurecido elegante */
+.hpPosterHero::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:
+    radial-gradient(900px 520px at 50% 40%, rgba(0,0,0,.35), rgba(0,0,0,.88)),
+    linear-gradient(180deg, rgba(0,0,0,.55), rgba(0,0,0,.90));
+}
+
+/* Marco */
+.hpPosterFrame{
+  position:absolute;
+  inset: 86px 18px 18px; /*marco casi a borde */
+  border: 2px solid rgba(181,161,108,.85);
+  border-radius: 18px;
+  z-index: 2;
+  pointer-events: none;
+}
+
+/* Esquinas (solo 2, elegante) */
+.hpPosterFrame::before,
+.hpPosterFrame::after{
+  content:"";
+  position:absolute;
+  width: 28px;
+  height: 28px;
+  border: 2px solid rgba(181,161,108,.85);
+}
+.hpPosterFrame::before{
+  top:-2px; left:-2px;
+  border-right: none; border-bottom: none;
+  border-top-left-radius: 14px;
+}
+.hpPosterFrame::after{
+  bottom:-2px; right:-2px;
+  border-left: none; border-top: none;
+  border-bottom-right-radius: 14px;
+}
+
+/* Contenido centrado */
+.hpPosterInner{
+  position: relative;
+  z-index: 3;
+  min-height: 100vh;
+  display: grid;
+  grid-template-rows: auto 1fr auto; /* top / center / bottom */
+  padding: 110px 22px 46px; /* espacio navbar + respiración */
+  text-align: center;
+  align-items: center;
+}
+
+.hpPosterCenter{
+  display: grid;
+  place-items: center;
+  gap: 16px;
+
+  transform: translateY(-18px); /*lo subo un poco */
+}
+
+.hpPosterBottom{
+  padding-bottom: 20px;
+}
+
+/* Logo */
+.hpPosterLogoWrap{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+}
+
+.hpPosterLogo{
+  max-width: 160px;
+  width: 18vw;
+  min-width: 120px;
+  height: auto;
+
+  display: block;
+  margin: 0 auto 20px;
+
+  filter:
+    drop-shadow(0 18px 55px rgba(0,0,0,.6))
+    brightness(0) saturate(100%)
+    invert(72%) sepia(25%)
+    saturate(406%)
+    hue-rotate(8deg)
+    brightness(92%)
+    contrast(92%);
+}
+
+/* Centro */
+.hpPosterCenter{
+  display: grid;
+  place-items: center;
+  gap: 14px;
+}
+
+.hpPosterKicker{
+  letter-spacing: .35em;
+  font-size: 3rem;
+  opacity: .85;
+  margin-bottom: 18px;
+  
+}
+
+/* Línea finita dorada */
+.hpPosterDivider{
+  width: min(680px, 78%);
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(181,161,108,.9), transparent);
+  opacity: .9;
+}
+
+/* Título */
+.hpPosterTitle{
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(56px, 7vw, 132px);
+  line-height: .92;
+  letter-spacing: .08em;
+  font-weight: 900;
+  color: rgba(181,161,108,.95);
+  text-transform: uppercase;
+  text-shadow: 0 22px 70px rgba(0,0,0,.65);
+}
+
+.hpPosterTitle2{
+  margin-top: 2px;
+  font-size: clamp(22px, 2.2vw, 40px);
+  letter-spacing: .28em;
+  text-transform: uppercase;
+  color: rgba(181,161,108,.92);
+}
+
+.hpPosterCity{
+  margin-top: 18px;
+  letter-spacing: .4em;
+  font-size: 1.5rem;
+  opacity: .7;
+}
+
+/* CTA abajo (siempre visible) */
+.hpPosterBottom{
+  display:flex;
+  justify-content:center;
+  align-items:end;
+}
+
+.hpPosterCta{
+  padding: 14px 22px;
+  border-radius: 12px;
+  font-weight: 900;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  box-shadow: 0 18px 60px rgba(0,0,0,.55);
+}
+
+/* Responsive */
+@media (max-width: 520px){
+  .hpPosterFrame{ inset: 84px 14px 14px; }
+  .hpPosterLogo{ width: 96px; height: 96px; }
+}

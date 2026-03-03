@@ -24,7 +24,12 @@ body{
               radial-gradient(900px 600px at 90% 0%, rgba(181,161,108,.05), transparent 55%),
               var(--bg);
   color: var(--text);
-  font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  font-family: var(--font-body);
+}
+
+h1, h2{
+  font-family: var(--font-display);
+  letter-spacing: .04em;
 }
 
 a{

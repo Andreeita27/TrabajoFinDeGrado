@@ -23,6 +23,8 @@ import ProfessionalDetailPage from "./pages/ProfessionalDetailPage";
 import ProtectedRoute from "./auth/ProtectedRoute";
 import AdminRoute from "./auth/AdminRoute";
 
+import Footer from "./components/Footer";
+
 
 export default function App() {
   return (
@@ -62,6 +64,7 @@ export default function App() {
 
         <Route path="*" element={<div style={{ padding: 16 }}>404</div>} />
       </Routes>
+      <Footer />
     </BrowserRouter>
   );
 }

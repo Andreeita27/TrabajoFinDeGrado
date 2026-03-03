@@ -2,35 +2,120 @@
   position: sticky;
   top: 0;
   z-index: 50;
-  backdrop-filter: blur(10px);
-  background: rgba(11,11,11,.75);
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid rgba(181,161,108,.18);
+  transition: background .35s ease, backdrop-filter .35s ease, box-shadow .35s ease, border-color .35s ease;
+}
+
+/* Estado normal (scrolled / resto de páginas) -> NEGRO SÓLIDO */
+.navbar--scrolled{
+  background: #0b0b0b;              /* 👈 negro sólido */
+  backdrop-filter: none;            /* 👈 sin blur si quieres sólido */
+  box-shadow: 0 14px 50px rgba(0,0,0,.45);
+  border-bottom: 1px solid rgba(181,161,108,.22);
+}
+
+/* En Home, al principio: transparente + FIXED flotante */
+.navbar--home{
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  width: 100%;
+
+  background: transparent;
+  backdrop-filter: none;
+  box-shadow: none;
+  border-bottom: 1px solid rgba(181,161,108,.12);
+}
+
+/* En Home cuando scrolleas: NEGRO SÓLIDO */
+.navbar--home.navbar--scrolled{
+  background: #0b0b0b;              /* 👈 negro sólido */
+  backdrop-filter: none;            /* 👈 sin blur */
+  box-shadow: 0 14px 50px rgba(0,0,0,.45);
+  border-bottom: 1px solid rgba(181,161,108,.22);
 }
 
 .navbar__inner{
-  display: flex;
-  align-items: center;
-  gap: 14px;
   max-width: var(--container);
   margin: 0 auto;
-  padding: 12px 16px;
-}
+  padding: 14px 24px;
 
-.brand{
-  font-weight: 800;
-  letter-spacing: .5px;
-  margin-right: 8px;
-}
-
-.navlinks{
-  display: flex;
-  gap: 14px;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
+  gap: 16px;
 }
 
-.navright{
-  margin-left: auto;
+/* izquierda */
+.nav-left{
   display: flex;
-  gap: 10px;
+  gap: 22px;
   align-items: center;
+  justify-content: flex-start;
+  white-space: nowrap;
+}
+
+.nav-left a{
+  padding: 8px 10px;
+  border-radius: 10px;
+  opacity: .92;
+  transition: opacity .2s ease, transform .2s ease, color .2s ease;
+}
+
+.nav-left a:hover{
+  opacity: 1;
+  transform: translateY(-1px);
+}
+
+/* activo */
+.nav-left a.is-active{
+  color: var(--gold);
+}
+
+/* derecha */
+.nav-right{
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: flex-end;
+  white-space: nowrap;
+}
+
+/* logo centro */
+.nav-logo{
+  display: grid;
+  place-items: center;
+  padding: 6px 10px;
+}
+
+.nav-logo img{
+  height: 46px;
+  width: auto;
+  display: block;
+  transition: transform .25s ease, filter .25s ease, opacity .25s ease, height .25s ease;
+}
+
+/* hover */
+.nav-logo:hover img{
+  transform: scale(1.05);
+}
+
+/* LOGO BLANCO en home (navbar transparente) */
+.navbar--home:not(.navbar--scrolled) .nav-logo img{
+  filter: brightness(0) invert(1);
+  opacity: .95;
+}
+
+/* LOGO DORADO cuando scrolleas (Home) */
+.navbar--home.navbar--scrolled .nav-logo img{
+  filter: brightness(0) saturate(100%) invert(72%) sepia(25%) saturate(406%) hue-rotate(8deg) brightness(92%) contrast(92%);
+  opacity: 1;
+  height: 40px;
+}
+
+/* Fuera de Home: logo dorado (marca) */
+.navbar:not(.navbar--home) .nav-logo img{
+  filter: brightness(0) saturate(100%) invert(72%) sepia(25%) saturate(406%) hue-rotate(8deg) brightness(92%) contrast(92%);
+  opacity: 1;
 }

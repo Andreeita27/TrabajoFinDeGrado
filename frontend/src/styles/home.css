@@ -1,0 +1,299 @@
+/* ===== Home (dinámica: reveal + galería + ritmo) ===== */
+
+.homeHero {
+  padding: 22px 0 12px;
+}
+
+/* Reveal on scroll */
+.reveal {
+  opacity: 0;
+  transform: translateY(12px);
+  transition: opacity .55s ease, transform .55s ease;
+}
+.reveal--on {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Hero */
+.homeHeroCard {
+  padding: 22px;
+  position: relative;
+  overflow: hidden;
+}
+
+.homeHeroCard::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  background:
+    radial-gradient(900px 420px at 10% 20%, rgba(181,161,108,.18), transparent 60%),
+    radial-gradient(700px 380px at 90% 10%, rgba(181,161,108,.12), transparent 55%);
+  pointer-events: none;
+}
+
+.homeHeroInner {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1.1fr 0.9fr;
+  gap: 18px;
+  align-items: start;
+}
+
+@media (max-width: 980px) {
+  .homeHeroInner { grid-template-columns: 1fr; }
+}
+
+.homeH1 {
+  margin: 0;
+  font-size: 36px;
+  line-height: 1.08;
+  letter-spacing: 0.2px;
+}
+
+.homeH1 span {
+  color: var(--gold);
+}
+
+.homeLead {
+  margin: 10px 0 0;
+  color: var(--muted);
+  line-height: 1.65;
+  max-width: 72ch;
+}
+
+.homeCtas {
+  margin-top: 14px;
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+/* Right side info boxes */
+.heroSide {
+  display: grid;
+  gap: 12px;
+}
+
+.sideBox {
+  padding: 14px;
+}
+
+.sideTitle {
+  margin: 0;
+  font-weight: 900;
+}
+
+.sideText {
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.kvList {
+  margin-top: 10px;
+  display: grid;
+  gap: 8px;
+}
+
+.kvRow {
+  display: grid;
+  gap: 4px;
+}
+
+.kvKey {
+  font-size: 12px;
+  color: rgba(255,255,255,.78);
+  letter-spacing: .2px;
+}
+
+.kvVal {
+  color: rgba(255,255,255,.92);
+}
+
+/* Sections */
+.section {
+  margin-top: 14px;
+  display: grid;
+  gap: 12px;
+}
+
+.sectionHead {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: end;
+  flex-wrap: wrap;
+}
+
+.sectionTitle {
+  margin: 0;
+  font-size: 20px;
+}
+
+.sectionDesc {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+/* Services grid */
+.servicesGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+@media (max-width: 980px) {
+  .servicesGrid { grid-template-columns: 1fr; }
+}
+
+.serviceCard {
+  padding: 14px;
+  transition: transform .18s ease, border-color .18s ease;
+}
+.serviceCard:hover {
+  transform: translateY(-2px);
+  border-color: rgba(181,161,108,.45);
+}
+
+.serviceCard h3 {
+  margin: 0;
+  font-size: 15px;
+}
+
+.serviceCard p {
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.serviceActions {
+  margin-top: 12px;
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+/* Big CTA */
+.bigCta {
+  padding: 16px;
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+  border: 1px solid rgba(181,161,108,.28);
+}
+
+.bigCta strong {
+  display: block;
+}
+
+.bigCta span {
+  display: block;
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+/* Gallery (últimos trabajos) */
+.galleryGrid {
+  display: grid;
+  grid-template-columns: 1.3fr 1fr;
+  gap: 12px;
+  align-items: start;
+}
+
+@media (max-width: 980px){
+  .galleryGrid { grid-template-columns: 1fr; }
+}
+
+.galleryCards {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0,1fr));
+  gap: 10px;
+}
+
+@media (max-width: 700px){
+  .galleryCards { grid-template-columns: repeat(2, minmax(0,1fr)); }
+}
+
+.gItem {
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  overflow: hidden;
+  background: rgba(255,255,255,.03);
+  cursor: pointer;
+  transform: translateY(0);
+  transition: transform .18s ease, border-color .18s ease;
+}
+.gItem:hover{
+  transform: translateY(-2px);
+  border-color: rgba(181,161,108,.45);
+}
+.gImg {
+  width: 100%;
+  height: 130px;
+  object-fit: cover;
+  display: block;
+}
+
+/* Small “loading skeleton” */
+.skeleton {
+  height: 130px;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  background: linear-gradient(90deg, rgba(255,255,255,.03), rgba(255,255,255,.08), rgba(255,255,255,.03));
+  background-size: 200% 100%;
+  animation: shimmer 1.2s infinite linear;
+}
+
+@keyframes shimmer {
+  from { background-position: 200% 0; }
+  to   { background-position: -200% 0; }
+}
+
+/* Contact */
+.contactCard {
+  padding: 16px;
+}
+
+.contactGrid {
+  display: grid;
+  grid-template-columns: 1.1fr 0.9fr;
+  gap: 12px;
+  align-items: start;
+}
+
+@media (max-width: 980px) {
+  .contactGrid { grid-template-columns: 1fr; }
+}
+
+.contactLines {
+  display: grid;
+  gap: 10px;
+}
+
+.contactLine {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+
+.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: rgba(181,161,108,.85);
+  margin-top: 6px;
+  flex: 0 0 auto;
+}
+
+.contactMuted {
+  color: var(--muted);
+}

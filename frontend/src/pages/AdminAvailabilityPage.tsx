@@ -21,8 +21,28 @@ import type {
 import { getProfessionals } from "../api/showroomApi";
 import type { ProfessionalDto } from "../types/professional";
 
-const toIso = (v: string) => (v ? new Date(v).toISOString() : "");
-const fmt = (iso: string) => new Date(iso).toLocaleString("es-ES");
+// datetime-local devuelve "YYYY-MM-DDTHH:mm" (hora local). Backend espera LocalDateTime.
+// Le añado segundos para que sea "YYYY-MM-DDTHH:mm:ss" y NO meto zona horaria.
+const toLocalDateTime = (v: string) => {
+  if (!v) return "";
+  return v.length === 16 ? `${v}:00` : v; // si viene sin segundos, se los añado
+};
+
+// ✅ Formateo sin convertir a UTC (dd-MM-aaaa HH:mm)
+// Entrada esperada: "YYYY-MM-DDTHH:mm:ss" (o "YYYY-MM-DD HH:mm:ss")
+const fmt = (iso: string) => {
+  if (!iso) return "";
+
+  const normalized = iso.replace(" ", "T");
+  const [datePart, timePart = ""] = normalized.split("T");
+
+  const [yyyy, mm, dd] = datePart.split("-");
+  const hhmm = timePart.slice(0, 5);
+
+  if (!yyyy || !mm || !dd) return iso;
+
+  return `${dd}-${mm}-${yyyy} ${hhmm}`;
+};
 
 export default function AdminAvailabilityPage() {
   const { token, role } = useAuth();
@@ -103,7 +123,7 @@ export default function AdminAvailabilityPage() {
       return;
     }
 
-    // ✅ Al entrar, traemos lista de profesionales
+    // Al entrar, traemos lista de profesionales
     loadProfessionals();
   }, [token, role]);
 
@@ -121,8 +141,8 @@ export default function AdminAvailabilityPage() {
         return;
       }
       await createAvailabilityWindow(token, professionalIdNum, {
-        startDateTime: toIso(wFrom),
-        endDateTime: toIso(wTo),
+        startDateTime: toLocalDateTime(wFrom),
+        endDateTime: toLocalDateTime(wTo),
         note: wNote.trim() || undefined,
       });
       setWFrom("");
@@ -171,8 +191,8 @@ export default function AdminAvailabilityPage() {
         return;
       }
       await createUnavailabilityBlock(token, professionalIdNum, {
-        startDateTime: toIso(bFrom),
-        endDateTime: toIso(bTo),
+        startDateTime: toLocalDateTime(bFrom),
+        endDateTime: toLocalDateTime(bTo),
         reason: bReason.trim() || undefined,
       });
       setBFrom("");

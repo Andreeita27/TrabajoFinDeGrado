@@ -233,10 +233,10 @@ export default function CalendarPage() {
           <label>
             Tamaño:
             <select value={tattooSize} onChange={(e) => setTattooSize(e.target.value as TattooSize)}>
-              <option value="SMALL">Pequeño</option>
-              <option value="MEDIUM">Mediano</option>
-              <option value="LARGE">Grande</option>
-              <option value="XL">XL</option>
+              <option value="SMALL">Pequeño (1-10 cm)</option>
+              <option value="MEDIUM">Mediano (10-25 cm)</option>
+              <option value="LARGE">Grande (25-50 cm)</option>
+              <option value="XL">XL (+50 cm)</option>
             </select>
           </label>
         )}

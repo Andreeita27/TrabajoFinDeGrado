@@ -207,7 +207,7 @@ export default function AppointmentDetailPage() {
           </div>
 
           <div style={{ border: "1px solid #333", borderRadius: 10, padding: 14 }}>
-            <h2 style={{ marginTop: 0 }}>Imagen de inspiración</h2>
+            <h2 style={{ marginTop: 0 }}>Imagen de referencia</h2>
 
             {refError && <div style={{ color: "tomato", marginBottom: 10 }}>{refError}</div>}
 
@@ -229,17 +229,20 @@ export default function AppointmentDetailPage() {
                   }}
                 />
               ) : (
-                <div style={{ opacity: 0.85 }}>El cliente no ha subido imagen de referencia.</div>
+                <div style={{ opacity: 0.85 }}>El cliente no ha subido ninguna imagen de referencia.</div>
               )}
 
               {/* Subida */}
-              <form onSubmit={onUploadReference} style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
-                <input ref={fileRef} type="file" accept="image/*" disabled={uploading || !token} />
-                <button type="submit" disabled={uploading || !token}>
-                  {uploading ? "Subiendo..." : "Subir imagen"}
-                </button>
-              </form>
-
+              {role === "CLIENT" && (
+                <>
+                <form onSubmit={onUploadReference} style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
+                  <input ref={fileRef} type="file" accept="image/*" disabled={uploading || !token} />
+                  <button type="submit" disabled={uploading || !token}>
+                    {uploading ? "Subiendo..." : "Subir imagen"}
+                  </button>
+                </form>
+                </>
+              )}  
               <div style={{ fontSize: 12, opacity: 0.75 }}>
               </div>
             </div>

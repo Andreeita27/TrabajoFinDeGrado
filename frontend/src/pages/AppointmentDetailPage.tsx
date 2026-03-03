@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { ApiError } from "../api/apiFetch";
 import { getAppointment, uploadAppointmentReferenceImage, fetchAppointmentReferenceImageBlob } from "../api/appointmentsApi";
@@ -69,7 +69,7 @@ export default function AppointmentDetailPage() {
     load();
   }, [token, appointmentId]);
 
-  // Cargar la imagen privada como blob cuando haya cita
+  // Cargar la imagen privada como blob SOLO si existe referencia (referenceImageUrl)
   useEffect(() => {
     // Limpieza del objectURL anterior
     if (refUrl) URL.revokeObjectURL(refUrl);
@@ -79,24 +79,35 @@ export default function AppointmentDetailPage() {
     if (!token) return;
     if (!appointmentId) return;
 
+    //Si no hay imagen asociada en la cita, NO es error y NO hago fetch
+    const hasImage = !!item?.referenceImageUrl;
+    if (!hasImage) return;
+
+    let alive = true;
     setRefLoading(true);
 
     fetchAppointmentReferenceImageBlob(token, appointmentId)
       .then((blob) => {
+        if (!alive) return;
         if (!blob || blob.size === 0) return;
         const url = URL.createObjectURL(blob);
         setRefUrl(url);
       })
       .catch((e: any) => {
-        // Si no hay imagen aún
-        if (e instanceof ApiError && e.status === 404) return;
+        if (!alive) return;
+        // Aquí sí es un error real (porque la cita decía que había imagen)
         setRefError(e?.message || "No se pudo cargar la imagen de referencia");
       })
-      .finally(() => setRefLoading(false));
+      .finally(() => {
+        if (alive) setRefLoading(false);
+      });
 
-  }, [token, appointmentId]);
+    return () => {
+      alive = false;
+    };
+  }, [token, appointmentId, item?.referenceImageUrl]);
 
-  const onUploadReference = async (e: React.FormEvent) => {
+  const onUploadReference = async (e: FormEvent) => {
     e.preventDefault();
     if (!token || !appointmentId) return;
 
@@ -111,7 +122,7 @@ export default function AppointmentDetailPage() {
       setUploading(true);
       await uploadAppointmentReferenceImage(token, appointmentId, file);
 
-      // refrescamos: recargar cita + recargar blob
+      // refrescamos: recargar cita (esto actualiza referenceImageUrl)
       await load();
 
       // Fuerza recarga del blob: reseteo state y vuelvo a pedirlo
@@ -209,42 +220,72 @@ export default function AppointmentDetailPage() {
           <div style={{ border: "1px solid #333", borderRadius: 10, padding: 14 }}>
             <h2 style={{ marginTop: 0 }}>Imagen de referencia</h2>
 
-            {refError && <div style={{ color: "tomato", marginBottom: 10 }}>{refError}</div>}
+            {!!refError && <div style={{ color: "tomato", marginBottom: 10 }}>{refError}</div>}
 
             <div style={{ display: "grid", gap: 12 }}>
-              {/* Preview */}
-              {refLoading ? (
-                <div style={{ opacity: 0.85 }}>Cargando imagen…</div>
-              ) : refUrl ? (
-                <img
-                  src={refUrl}
-                  alt="Imagen de referencia"
+              {!item.referenceImageUrl && (
+                <div
                   style={{
-                    width: "100%",
-                    maxWidth: 520,
-                    height: 320,
-                    objectFit: "cover",
+                    padding: 12,
                     borderRadius: 10,
                     border: "1px solid #444",
+                    background: "rgba(255,255,255,0.04)",
+                    opacity: 0.95,
                   }}
-                />
-              ) : (
-                <div style={{ opacity: 0.85 }}>El cliente no ha subido ninguna imagen de referencia.</div>
+                >
+                  {role === "CLIENT" ? (
+                    <>
+                      <div style={{ fontWeight: 700, marginBottom: 4 }}>
+                        Aún no has subido ninguna imagen
+                      </div>
+                      <div style={{ opacity: 0.85 }}>
+                        Si quieres, puedes subir <b>1 imagen</b> desde aquí para que el tatuador adapte el diseño a tu idea.
+                      </div>
+                    </>
+                  ) : (
+                    <div style={{ fontWeight: 600 }}>
+                      El cliente no ha subido ninguna imagen de referencia.
+                    </div>
+                  )}
+                </div>
               )}
 
-              {/* Subida */}
-              {role === "CLIENT" && (
+              {/* Preview (solo si la cita tiene imagen) */}
+              {item.referenceImageUrl && (
                 <>
+                  {refLoading ? (
+                    <div style={{ opacity: 0.85 }}>Cargando imagen…</div>
+                  ) : refUrl ? (
+                    <img
+                      src={refUrl}
+                      alt="Imagen de referencia"
+                      style={{
+                        width: "100%",
+                        maxWidth: 520,
+                        height: 320,
+                        objectFit: "cover",
+                        borderRadius: 10,
+                        border: "1px solid #444",
+                      }}
+                    />
+                  ) : (
+                    // Si la cita tiene referenceImageUrl pero aún no ha podido pintar el blob:
+                    <div style={{ opacity: 0.85 }}>Cargando…</div>
+                  )}
+                </>
+              )}
+
+              {/* Subida (solo CLIENT) */}
+              {role === "CLIENT" && (
                 <form onSubmit={onUploadReference} style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
                   <input ref={fileRef} type="file" accept="image/*" disabled={uploading || !token} />
                   <button type="submit" disabled={uploading || !token}>
                     {uploading ? "Subiendo..." : "Subir imagen"}
                   </button>
                 </form>
-                </>
-              )}  
-              <div style={{ fontSize: 12, opacity: 0.75 }}>
-              </div>
+              )}
+
+              <div style={{ fontSize: 12, opacity: 0.75 }} />
             </div>
           </div>
         </div>

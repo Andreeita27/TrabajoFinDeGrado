@@ -131,55 +131,56 @@ export default function CalendarPage() {
   }, [token, professionalId, day, durationMinutes, nav]);
 
   const onCreateAppointment = async () => {
-    if (!token) return;
-    setError("");
+  if (!token) return;
+  setError("");
 
-    try {
-      if (!selectedStart) throw new Error("Selecciona un slot primero");
-      if (!bodyPlacement.trim()) throw new Error("Indica en qué parte del cuerpo quieres el tattoo.");
-      if (!ideaDescription.trim()) throw new Error("Describe tu idea.");
+  try {
+    if (!selectedStart) throw new Error("Selecciona un slot primero");
+    if (!bodyPlacement.trim()) throw new Error("Indica en qué parte del cuerpo quieres el tattoo.");
+    if (!ideaDescription.trim()) throw new Error("Describe tu idea.");
 
-      let finalClientId: number | null = null;
+    let finalClientId: number | null = null;
 
-      if (role === "CLIENT") {
-        if (!clientId) {
-          throw new Error("No se ha podido identificar tu usuario. Cierra sesión e inicia de nuevo.");
-        }
-        finalClientId = clientId;
-      } else if (role === "ADMIN") {
-        if (!selectedClient) {
-          throw new Error("Selecciona un cliente antes de crear la cita.");
-        }
-        finalClientId = selectedClient.id;
-      } else {
-        throw new Error("Rol no soportado para crear cita.");
+    if (role === "CLIENT") {
+      if (!clientId) {
+        throw new Error("No se ha podido identificar tu usuario. Cierra sesión e inicia de nuevo.");
       }
-
-      await createAppointment(token, {
-        clientId: finalClientId!,
-        professionalId,
-        appointmentType,
-        startDateTime: withSeconds(selectedStart),
-        bodyPlacement: appointmentType === "CONSULTATION" ? "" : bodyPlacement,
-        ideaDescription,
-        firstTime,
-        tattooSize: appointmentType === "CONSULTATION" ? null : tattooSize,
-        referenceImageUrl: null,
-      });
-
-      if (role === "ADMIN") {
-        nav("/admin/appointments", { replace: true });
-      } else {
-        nav("/my-appointments", { replace: true });
+      finalClientId = clientId;
+    } else if (role === "ADMIN") {
+      if (!selectedClient) {
+        throw new Error("Selecciona un cliente antes de crear la cita.");
       }
-    } catch (e: any) {
-      if (e instanceof ApiError && e.status === 401) {
-        nav("/login", { replace: true, state: { from: "/calendar" } });
-        return;
-      }
-      setError(e?.message || "Error creando cita");
+      finalClientId = selectedClient.id;
+    } else {
+      throw new Error("Rol no soportado para crear cita.");
     }
-  };
+
+    const created = await createAppointment(token, {
+      clientId: finalClientId!,
+      professionalId,
+      appointmentType,
+      startDateTime: withSeconds(selectedStart),
+      bodyPlacement: appointmentType === "CONSULTATION" ? "" : bodyPlacement,
+      ideaDescription,
+      firstTime,
+      tattooSize: appointmentType === "CONSULTATION" ? null : tattooSize,
+      referenceImageUrl: null,
+    });
+
+    if (role === "ADMIN") {
+      nav("/admin/appointments", { replace: true });
+      return;
+    }
+
+    nav(`/my-appointments/${created.id}`, { replace: true });
+  } catch (e: any) {
+    if (e instanceof ApiError && e.status === 401) {
+      nav("/login", { replace: true, state: { from: "/calendar" } });
+      return;
+    }
+    setError(e?.message || "Error creando cita");
+  }
+};
 
   const disableCreate = !selectedStart || (role === "ADMIN" && !selectedClient);
 
@@ -293,6 +294,9 @@ export default function CalendarPage() {
           onChange={(e) => setIdeaDescription(e.target.value)}
           rows={4}
         />
+        <div style={{ marginTop: 6, fontSize: 13, color: "#888" }}>
+          Podrás subir <strong>1 imagen de referencia</strong> una vez reservada la cita.
+        </div>
 
         <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
           <input type="checkbox" checked={firstTime} onChange={(e) => setFirstTime(e.target.checked)} />

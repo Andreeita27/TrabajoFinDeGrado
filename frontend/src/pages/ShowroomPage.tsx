@@ -68,19 +68,28 @@ export default function ShowroomPage() {
   };
 
   const loadTattoos = async () => {
-    setTattoosError("");
-    try {
-      const res = await getTattoos({
-        style: style || undefined,
-        coverUp,
-        color,
-        professionalId: tattooProfessionalId ? Number(tattooProfessionalId) : undefined,
-      });
-      setTattoos(res);
-    } catch (e: any) {
-      setTattoosError(e?.message || "Error cargando tatuajes");
-    }
-  };
+  setTattoosError("");
+  try {
+    const res = await getTattoos({
+      style: style || undefined,
+      coverUp,
+      color,
+      professionalId: tattooProfessionalId ? Number(tattooProfessionalId) : undefined,
+    });
+
+    //Ordena: más recientes primero (tattooDate DESC). Si falta fecha, usa id DESC.
+    const sorted = [...res].sort((a, b) => {
+      const ta = a.tattooDate ? new Date(`${a.tattooDate}T00:00:00`).getTime() : 0;
+      const tb = b.tattooDate ? new Date(`${b.tattooDate}T00:00:00`).getTime() : 0;
+      if (tb !== ta) return tb - ta;
+      return (b.id ?? 0) - (a.id ?? 0);
+    });
+
+    setTattoos(sorted);
+  } catch (e: any) {
+    setTattoosError(e?.message || "Error cargando tatuajes");
+  }
+};
 
   const loadDesigns = async () => {
     setDesignError("");

@@ -27,4 +27,8 @@ public class ErrorResponse {
     public static ErrorResponse validationError(Map<String, String> errors) {
         return new ErrorResponse(400, "bad-request", "Validation error", errors);
     }
+
+    public static ErrorResponse conflict(String message) {
+        return new ErrorResponse(409, "conflict", message, new HashMap<>());
+    }
 }

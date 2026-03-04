@@ -31,6 +31,8 @@ public class AppointmentDto {
     private AppointmentState state;
     private boolean depositPaid;
     private boolean hasReview;
+    private boolean showroomTattooCreated;
+    private Long showroomTattooId;
 
     public String getClientFullName() {
         String name = clientName == null ? "" : clientName;

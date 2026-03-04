@@ -3,10 +3,7 @@ package com.svalero.RosasTattoo.controller;
 import com.svalero.RosasTattoo.domain.Tattoo;
 import com.svalero.RosasTattoo.dto.TattooInDto;
 import com.svalero.RosasTattoo.dto.TattooDto;
-import com.svalero.RosasTattoo.exception.ClientNotFoundException;
-import com.svalero.RosasTattoo.exception.ErrorResponse;
-import com.svalero.RosasTattoo.exception.ProfessionalNotFoundException;
-import com.svalero.RosasTattoo.exception.TattooNotFoundException;
+import com.svalero.RosasTattoo.exception.*;
 import com.svalero.RosasTattoo.service.TattooService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -61,5 +58,10 @@ public class TattooController {
     @ExceptionHandler(TattooNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleTattooException(TattooNotFoundException tnfe) {
         return new ResponseEntity<>(ErrorResponse.notFound(tnfe.getMessage()), HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(DuplicateTattooException.class)
+    public ResponseEntity<ErrorResponse> handleDuplicateTattoo(DuplicateTattooException dte) {
+        return new ResponseEntity<>(ErrorResponse.conflict(dte.getMessage()), HttpStatus.CONFLICT);
     }
 }

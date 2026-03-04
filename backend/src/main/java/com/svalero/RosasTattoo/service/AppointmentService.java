@@ -1,9 +1,6 @@
 package com.svalero.RosasTattoo.service;
 
-import com.svalero.RosasTattoo.domain.Appointment;
-import com.svalero.RosasTattoo.domain.Client;
-import com.svalero.RosasTattoo.domain.Professional;
-import com.svalero.RosasTattoo.domain.UserAccount;
+import com.svalero.RosasTattoo.domain.*;
 import com.svalero.RosasTattoo.domain.enums.AppointmentState;
 import com.svalero.RosasTattoo.domain.enums.AppointmentType;
 import com.svalero.RosasTattoo.domain.enums.TattooSize;
@@ -29,6 +26,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class AppointmentService {
@@ -43,6 +41,8 @@ public class AppointmentService {
     private UserAccountRepository userAccountRepository;
     @Autowired
     private ReviewRepository reviewRepository;
+    @Autowired
+    private TattooRepository tattooRepository;
     @Autowired
     private AvailabilityWindowRepository availabilityWindowRepository;
     @Autowired
@@ -134,6 +134,20 @@ public class AppointmentService {
             dto.setClientName(c.getClientName());
             dto.setClientSurname(c.getClientSurname());
             dto.setClientFullName((c.getClientName() + " " + c.getClientSurname()).trim());
+        }
+
+        Optional<Tattoo> tattoo = tattooRepository
+                .findByClient_IdAndProfessional_IdAndTattooDate(
+                        appointment.getClient().getId(),
+                        appointment.getProfessional().getId(),
+                        appointment.getStartDateTime().toLocalDate()
+                );
+
+        if (tattoo.isPresent()) {
+            dto.setShowroomTattooCreated(true);
+            dto.setShowroomTattooId(tattoo.get().getId());
+        } else {
+            dto.setShowroomTattooCreated(false);
         }
 
         return dto;

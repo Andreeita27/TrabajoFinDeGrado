@@ -115,27 +115,12 @@ export default function TattooDetailPage() {
           <div>
             <h1 className="tdTitle">{title}</h1>
           </div>
-
-          {isAdmin && (
-            <div className="tdActions">
-              <button type="button" className="btn btn-ghost" onClick={onEdit}>
-                Editar
-              </button>
-              <button type="button" className="btn btn-primary" onClick={onDelete}>
-                Eliminar
-              </button>
-            </div>
-          )}
         </div>
 
         <div className="tdChips">
-          {tattoo.style && (
-            <span className="tdChip">{tattoo.style}</span>
-          )}
+          {tattoo.style && <span className="tdChip">{tattoo.style}</span>}
 
-          {tattoo.professionalName && (
-            <span className="tdChip">{tattoo.professionalName}</span>
-          )}
+          {tattoo.professionalName && <span className="tdChip">{tattoo.professionalName}</span>}
         </div>
       </header>
 
@@ -148,41 +133,56 @@ export default function TattooDetailPage() {
           </div>
         </section>
 
-        <section className="tdCard tdInfoCard revealItem" style={{ ["--d" as any]: "120ms" }}>
-          <h2 className="tdSectionTitle">Detalles</h2>
+        <div className="tdInfoWrapper revealItem" style={{ ["--d" as any]: "120ms" }}>
+          {isAdmin && (
+            <div className="tdInfoActions">
+              <button type="button" className="btn btn-ghost" onClick={onEdit}>
+                Editar
+              </button>
+              <button type="button" className="btn btn-primary" onClick={onDelete}>
+                Eliminar
+              </button>
+            </div>
+          )}
 
-          <div className="tdKv">
-            <div className="tdKvRow">
-              <span className="tdKvKey">Estilo</span>
-              <span className="tdKvVal">{tattoo.style || "—"}</span>
+          <section className="tdCard tdInfoCard">
+            <div className="tdInfoHeader">
+              <h2 className="tdSectionTitle">Detalles</h2>
             </div>
 
-            <div className="tdKvRow">
-              <span className="tdKvKey">Profesional</span>
-              <span className="tdKvVal">{proName}</span>
-            </div>
+            <div className="tdKv">
+              <div className="tdKvRow">
+                <span className="tdKvKey">Estilo</span>
+                <span className="tdKvVal">{tattoo.style || "—"}</span>
+              </div>
 
-            <div className="tdKvRow">
-              <span className="tdKvKey">Fecha</span>
-              <span className="tdKvVal">{dateText}</span>
-            </div>
+              <div className="tdKvRow">
+                <span className="tdKvKey">Profesional</span>
+                <span className="tdKvVal">{proName}</span>
+              </div>
 
-            <div className="tdKvRow">
-              <span className="tdKvKey">Sesiones</span>
-              <span className="tdKvVal">{tattoo.sessions}</span>
-            </div>
+              <div className="tdKvRow">
+                <span className="tdKvKey">Fecha</span>
+                <span className="tdKvVal">{dateText}</span>
+              </div>
 
-            <div className="tdKvRow">
-              <span className="tdKvKey">Cover Up</span>
-              <span className="tdKvVal">{tattoo.coverUp ? "Sí" : "No"}</span>
-            </div>
+              <div className="tdKvRow">
+                <span className="tdKvKey">Sesiones</span>
+                <span className="tdKvVal">{tattoo.sessions}</span>
+              </div>
 
-            <div className="tdKvRow">
-              <span className="tdKvKey">Color</span>
-              <span className="tdKvVal">{tattoo.color ? "Sí" : "No"}</span>
+              <div className="tdKvRow">
+                <span className="tdKvKey">Cover Up</span>
+                <span className="tdKvVal">{tattoo.coverUp ? "Sí" : "No"}</span>
+              </div>
+
+              <div className="tdKvRow">
+                <span className="tdKvKey">Color</span>
+                <span className="tdKvVal">{tattoo.color ? "Sí" : "No"}</span>
+              </div>
             </div>
-          </div>
-        </section>
+          </section>
+        </div>
       </div>
     </div>
   );

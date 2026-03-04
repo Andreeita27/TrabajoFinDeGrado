@@ -342,3 +342,36 @@
 .btn:active{
   transform: translateY(0px);
 }
+
+/* Para los botones de editar/eliminar */
+
+.tdInfoWrapper{
+  position: relative;
+}
+
+.tdInfoActions{
+  position: absolute;
+  top: -42px;
+  right: 0;
+  display: flex;
+  gap: 10px;
+}
+
+@media (max-width: 768px){
+  .tdInfoActions{
+    position: static;
+    margin-bottom: 10px;
+    justify-content: flex-end;
+  }
+}
+
+/* NO animar la card de Detalles (evita que se junte con los botones) */
+.tdInfoCard{
+  transform: none !important;
+}
+
+.tdInfoCard:hover{
+  transform: none !important;
+  border-color: rgba(181,161,108,.18) !important;
+  box-shadow: 0 24px 90px rgba(0,0,0,.38) !important;
+}

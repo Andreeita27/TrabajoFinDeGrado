@@ -7,10 +7,10 @@ export default function Footer() {
         <div className="footer__brand">
           <div className="footer__logo">62 Rosas Tattoo</div>
           <div className="footer__muted">
-            Plaza Ortilla, nº 2, local 4 · 50018 Zaragoza
+            Plaza Ortilla, nº 2, local 4 · 50018, Zaragoza
           </div>
           <div className="footer__muted">
-            Mar–Vie · 12:00–20:00 · 976 05 60 54
+            Martes – Viernes · 12:00–20:00 · 976 05 60 54
           </div>
         </div>
 
@@ -25,7 +25,7 @@ export default function Footer() {
 
           <div className="footer__col">
             <div className="footer__title">Servicios</div>
-            <a className="footer__link" href="/showroom">Showroom</a>
+            <a className="footer__link" href="/showroom">Tatuajes</a>
             <a className="footer__link" href="https://eliminartatuajeszaragoza.com/" target="_blank" rel="noreferrer">
               Láser
             </a>

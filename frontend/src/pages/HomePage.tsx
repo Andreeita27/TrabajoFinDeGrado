@@ -172,7 +172,6 @@ export default function HomePage() {
       <HomeSection
         id="tatuadores"
         bgClass="hpBgBlack"
-        reverse
         kicker="Equipo"
         title="Tatuadores"
         text="Conoce al equipo de 62 Rosas Tattoo. Te asesoramos según tu idea, el estilo y la zona para que el resultado sea redondo."
@@ -187,6 +186,7 @@ export default function HomePage() {
       <HomeSection
         id="estilos"
         bgClass="hpBgWhite"
+        reverse
         kicker="Nuestros estilos"
         title="Estilos"
         text="Trabajamos una amplia variedad de estilos, siempre con un enfoque artístico y personalizado. Te ayudamos a aterrizar tu idea para que quede potente y con buena lectura."
@@ -293,6 +293,7 @@ export default function HomePage() {
       <HomeSection
         id="reseñas"
         bgClass="hpBgWhite"
+        reverse
         // ojo: typo a propósito para que se note si no existe.
         kicker="Opiniones"
         title="Reseñas"

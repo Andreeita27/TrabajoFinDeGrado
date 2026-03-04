@@ -47,6 +47,65 @@
   color: rgba(0,0,0,.92);
 }
 
+/* =========================================
+   BOTONES DEL HOME según fondo de sección
+   (solo afecta a los CTAs dentro del Home)
+========================================= */
+
+/* Base: mantén la separación */
+.hpTextCard .btn{
+  border-width: 1px;
+}
+
+/* ---------- FONDO NEGRO (tal cual te funciona) ---------- */
+.hpBgBlack .hpTextCard .btn-ghost{
+  background: transparent;
+  border-color: rgba(181,161,108,.28);
+  color: rgba(255,255,255,.92);
+}
+.hpBgBlack .hpTextCard .btn-ghost:hover{
+  border-color: rgba(181,161,108,.55);
+  color: var(--gold);
+}
+
+/* ---------- FONDO BLANCO ---------- */
+.hpBgWhite .hpTextCard .btn-ghost{
+  background: transparent;
+  border-color: rgba(11,11,11,.18);
+  color: rgba(11,11,11,.86);
+}
+.hpBgWhite .hpTextCard .btn-ghost:hover{
+  border-color: rgba(11,11,11,.30);
+  color: rgba(11,11,11,.95);
+}
+
+/* En blanco, el primario puede quedarse dorado pero con sombra suave */
+.hpBgWhite .hpTextCard .btn-primary{
+  box-shadow: 0 10px 26px rgba(0,0,0,.12);
+}
+
+/* ---------- FONDO ORO ---------- */
+/* Aquí el ghost tiene que “contrastar”: borde oscuro + texto oscuro */
+.hpBgGold .hpTextCard .btn-ghost{
+  background: transparent;
+  border-color: rgba(11,11,11,.28);
+  color: rgba(11,11,11,.86);
+}
+.hpBgGold .hpTextCard .btn-ghost:hover{
+  border-color: rgba(11,11,11,.42);
+  color: rgba(11,11,11,.95);
+}
+
+/* Y el primario en oro: que no se “camufle” con el fondo */
+.hpBgGold .hpTextCard .btn-primary{
+  background: rgba(11,11,11,.92);
+  color: #fff;
+  border-color: rgba(11,11,11,.92);
+}
+.hpBgGold .hpTextCard .btn-primary:hover{
+  background: rgba(11,11,11,.82);
+}
+
 /* layout interno */
 .hpInner {
   width: min(1500px, 94%);
@@ -82,17 +141,6 @@
   .hpReverse .hpMedia {
     order: initial;
   }
-}
-
-/* “Flotar hacia arriba” al entrar */
-.hpReveal {
-  opacity: 0;
-  transform: translateY(28px);
-  transition: opacity .7s ease, transform .7s cubic-bezier(.2,.9,.2,1);
-}
-.hpOn .hpReveal {
-  opacity: 1;
-  transform: translateY(0);
 }
 
 /* caja de texto tipo elegante */
@@ -361,7 +409,7 @@
 
   background: 
     linear-gradient(rgba(0, 0, 0, 0), rgba(0, 0, 0, 0)),
-    url("/images/EstudioMejorada.webp") center/cover no-repeat;
+    url("/images/fachadaestudio.webp") center/cover no-repeat;
 
   opacity: .9;        /* antes .18 */
   filter: blur(1px) saturate(1) contrast(1.05);
@@ -529,4 +577,37 @@
 @media (max-width: 520px){
   .hpPosterFrame{ inset: 84px 14px 14px; }
   .hpPosterLogo{ width: 96px; height: 96px; }
+}
+
+/* =========================
+   RESEÑAS – estilo especial
+   ========================= */
+
+#reseñas .hpCarousel{
+  background: #0f0f0f;
+  border: 1px solid rgba(181,161,108,.35);
+
+  box-shadow:
+    0 25px 80px rgba(0,0,0,.18),
+    0 1px 0 rgba(255,255,255,.05) inset;
+
+  transition: transform .25s ease, box-shadow .25s ease;
+}
+
+/* efecto flotante suave */
+#reseñas .hpCarousel:hover{
+  transform: translateY(-4px);
+
+  box-shadow:
+    0 35px 100px rgba(0,0,0,.25),
+    0 1px 0 rgba(255,255,255,.06) inset;
+}
+
+/* dots más elegantes */
+#reseñas .hpDot{
+  background: rgba(0,0,0,.35);
+}
+
+#reseñas .hpDot--on{
+  background: rgba(181,161,108,.95);
 }

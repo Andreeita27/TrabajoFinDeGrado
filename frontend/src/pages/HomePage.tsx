@@ -168,10 +168,25 @@ export default function HomePage() {
           </div>
         </div>
       </section>
-      {/* 1) Estilos */}
+      {/* 1) Tatuadores */}
+      <HomeSection
+        id="tatuadores"
+        bgClass="hpBgBlack"
+        reverse
+        kicker="Equipo"
+        title="Tatuadores"
+        text="Conoce al equipo de 62 Rosas Tattoo. Te asesoramos según tu idea, el estilo y la zona para que el resultado sea redondo."
+        ctas={[
+          { label: "Ver tatuadores", onClick: () => nav("/professionals") },
+          { label: "Pedir cita", onClick: goBook },
+        ]}
+        images={imgPros}
+      />
+
+      {/* 2) Estilos */}
       <HomeSection
         id="estilos"
-        bgClass="hpBgBlack"
+        bgClass="hpBgWhite"
         kicker="Nuestros estilos"
         title="Estilos"
         text="Trabajamos una amplia variedad de estilos, siempre con un enfoque artístico y personalizado. Te ayudamos a aterrizar tu idea para que quede potente y con buena lectura."
@@ -188,10 +203,24 @@ export default function HomePage() {
         images={imgEstilos}
       />
 
-      {/* 2) Tatuajes realizados */}
+      {/* 3) Láser */}
+      <HomeSection
+        id="laser"
+        bgClass="hpBgGold"
+        kicker="Eliminación / atenuación"
+        title="Láser"
+        text="Servicio de láser gestionado desde la web específica. Si estás valorando eliminar o aclarar un tatuaje, entra aquí."
+        ctas={[
+          { label: "Ir a láser", href: LASER_URL, external: true },
+          { label: "Pedir cita", onClick: goBook },
+        ]}
+        images={imgLaser}
+      />
+
+      {/* 4) Tatuajes realizados */}
       <HomeSection
         id="tatuajes"
-        bgClass="hpBgWhite"
+        bgClass="hpBgBlack"
         reverse
         kicker="Showroom"
         title="Tatuajes realizados"
@@ -203,10 +232,10 @@ export default function HomePage() {
         images={imgHechos}
       />
 
-      {/* 3) Diseños disponibles */}
+      {/* 5) Diseños disponibles */}
       <HomeSection
         id="designs"
-        bgClass="hpBgGold"
+        bgClass="hpBgWhite"
         kicker="Flash / diseños"
         title="Diseños disponibles"
         text="Ideas preparadas para tatuar. Si te gusta un diseño, lo adaptamos a tu cuerpo, tamaño y preferencias."
@@ -215,35 +244,6 @@ export default function HomePage() {
           { label: "Pedir cita", onClick: goBook },
         ]}
         images={imgDesigns}
-      />
-
-      {/* 4) Tatuadores */}
-      <HomeSection
-        id="tatuadores"
-        bgClass="hpBgBlack"
-        reverse
-        kicker="Equipo"
-        title="Tatuadores"
-        text="Conoce al equipo de 62 Rosas Tattoo. Te asesoramos según tu idea, el estilo y la zona para que el resultado sea redondo."
-        ctas={[
-          { label: "Ver tatuadores", onClick: () => nav("/professionals") },
-          { label: "Pedir cita", onClick: goBook },
-        ]}
-        images={imgPros}
-      />
-
-      {/* 5) Láser */}
-      <HomeSection
-        id="laser"
-        bgClass="hpBgWhite"
-        kicker="Eliminación / atenuación"
-        title="Láser"
-        text="Servicio de láser gestionado desde la web específica. Si estás valorando eliminar o aclarar un tatuaje, entra aquí."
-        ctas={[
-          { label: "Ir a láser", href: LASER_URL, external: true },
-          { label: "Pedir cita", onClick: goBook },
-        ]}
-        images={imgLaser}
       />
 
       {/* 6) Reserva tu cita */}
@@ -292,8 +292,8 @@ export default function HomePage() {
       {/* 8) Reseñas */}
       <HomeSection
         id="reseñas"
-        bgClass="hpWhite"
-        // ojo: typo a propósito para que se note si no existe. Te lo dejo correcto abajo.
+        bgClass="hpBgWhite"
+        // ojo: typo a propósito para que se note si no existe.
         kicker="Opiniones"
         title="Reseñas"
         text="Opiniones reales de clientes. Nos ayudan muchísimo a mejorar y a que nuevas personas reserven con confianza."

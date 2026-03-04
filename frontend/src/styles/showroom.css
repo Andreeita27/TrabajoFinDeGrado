@@ -4,34 +4,34 @@
   padding: 18px 0 28px;
 }
 
-.showroom__header {
+.showroom .showroom__header {
   display: flex;
   flex-direction: column;
   gap: 8px;
   margin-bottom: 14px;
 }
 
-.showroom__title {
+.showroom .showroom__title {
   margin: 0;
   font-size: 28px;
   letter-spacing: 0.2px;
 }
 
-.showroom__subtitle {
+.showroom .showroom__subtitle {
   margin: 0;
   color: var(--muted);
   line-height: 1.5;
 }
 
 /* Tabs */
-.tabsRow {
+.showroom .tabsRow {
   display: flex;
   gap: 10px;
   margin: 12px 0 18px;
   flex-wrap: wrap;
 }
 
-.tabBtn {
+.showroom .tabBtn {
   padding: 10px 14px;
   border-radius: 999px;
   border: 1px solid rgba(255, 255, 255, 0.12);
@@ -42,20 +42,20 @@
   transition: transform 0.12s ease, border-color 0.12s ease, color 0.12s ease;
 }
 
-.tabBtn:hover {
+.showroom .tabBtn:hover {
   transform: translateY(-1px);
   border-color: rgba(181, 161, 108, 0.45);
   color: var(--gold);
 }
 
-.tabBtn--active {
+.showroom .tabBtn--active {
   border-color: rgba(181, 161, 108, 0.55);
   background: rgba(181, 161, 108, 0.12);
   color: var(--gold);
 }
 
 /* Section header row */
-.sectionTop {
+.showroom .sectionTop {
   display: flex;
   justify-content: space-between;
   gap: 12px;
@@ -63,27 +63,27 @@
   flex-wrap: wrap;
 }
 
-.sectionTop h2 {
+.showroom .sectionTop h2 {
   margin: 0;
 }
 
-.sectionTop p {
+.showroom .sectionTop p {
   margin: 6px 0 0;
   color: var(--muted);
   max-width: 68ch;
 }
 
 /* Panel */
-.panel {
+.showroom .panel {
   padding: 14px;
 }
 
-.panelTitle {
+.showroom .panelTitle {
   font-weight: 800;
   margin: 0 0 10px;
 }
 
-.panelError {
+.showroom .panelError {
   margin: 10px 0;
   padding: 10px 12px;
   border-radius: 12px;
@@ -93,7 +93,7 @@
 }
 
 /* Filters */
-.filtersRow {
+.showroom .filtersRow {
   margin: 12px 0 16px;
   display: flex;
   gap: 12px;
@@ -101,32 +101,32 @@
   align-items: end;
 }
 
-.field {
+.showroom .field {
   display: grid;
   gap: 6px;
   min-width: 220px;
 }
 
-.field label,
-.fieldTitle {
+.showroom .field label,
+.showroom .fieldTitle {
   font-size: 12px;
   letter-spacing: 0.2px;
   color: rgba(255, 255, 255, 0.78);
 }
 
-.field input,
-.field select {
+.showroom .field input,
+.showroom .field select {
   height: 40px;
   width: 100%;
 }
 
-.smallBtn {
+.showroom .smallBtn {
   height: 40px;
   padding: 0 14px;
 }
 
 /* Add design form */
-.addGrid {
+.showroom .addGrid {
   display: grid;
   grid-template-columns: 240px 1fr 1fr auto auto;
   gap: 10px;
@@ -134,28 +134,28 @@
 }
 
 @media (max-width: 980px) {
-  .addGrid {
+  .showroom .addGrid {
     grid-template-columns: 1fr;
   }
-  .field {
+  .showroom .field {
     min-width: unset;
   }
 }
 
 /* Design preview */
-.previewWrap {
+.showroom .previewWrap {
   margin-top: 12px;
   display: grid;
   gap: 8px;
 }
 
-.previewUrl {
+.showroom .previewUrl {
   font-size: 12px;
   color: var(--muted);
   word-break: break-all;
 }
 
-.previewImg {
+.showroom .previewImg {
   width: 100%;
   max-width: 520px;
   height: 220px;
@@ -165,13 +165,13 @@
 }
 
 /* Grid cards */
-.cardsGrid {
+.showroom .cardsGrid {
   display: grid;
   gap: 14px;
 }
 
 /* Design card */
-.designCard {
+.showroom .designCard {
   border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 12px;
@@ -181,7 +181,7 @@
   box-shadow: var(--shadow);
 }
 
-.designTop {
+.showroom .designTop {
   display: flex;
   justify-content: space-between;
   gap: 10px;
@@ -189,20 +189,20 @@
   flex-wrap: wrap;
 }
 
-.designTitle {
+.showroom .designTitle {
   font-weight: 800;
 }
 
-.designMeta {
+.showroom .designMeta {
   color: var(--muted);
 }
 
-.designActions {
+.showroom .designActions {
   display: flex;
   gap: 8px;
 }
 
-.designImg {
+.showroom .designImg {
   width: 100%;
   height: 260px;
   object-fit: cover;
@@ -210,13 +210,13 @@
 }
 
 /* Inactive list */
-.inactiveBox {
+.showroom .inactiveBox {
   margin-top: 18px;
   padding-top: 12px;
   border-top: 1px solid rgba(255, 255, 255, 0.12);
 }
 
-.inactiveRow {
+.showroom .inactiveRow {
   border: 1px dashed rgba(255, 255, 255, 0.18);
   border-radius: var(--radius);
   padding: 12px;
@@ -228,12 +228,12 @@
 }
 
 /* Tattoos list */
-.tattooList {
+.showroom .tattooList {
   display: grid;
   gap: 16px;
 }
 
-.tattooCard {
+.showroom .tattooCard {
   border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 12px;
@@ -243,29 +243,29 @@
   transition: transform 0.18s ease, border-color 0.18s ease;
 }
 
-.tattooCard:hover {
+.showroom .tattooCard:hover {
   transform: translateY(-2px);
   border-color: rgba(181, 161, 108, 0.45);
 }
 
-.tattooImg {
+.showroom .tattooImg {
   width: 100%;
   height: 220px;
   object-fit: cover;
   border-radius: 12px;
 }
 
-.tattooInfo {
+.showroom .tattooInfo {
   margin-top: 10px;
   display: grid;
   gap: 6px;
 }
 
-.tattooInfo h3 {
+.showroom .tattooInfo h3 {
   margin: 0;
 }
 
-.tattooInfo p {
+.showroom .tattooInfo p {
   margin: 0;
   color: var(--muted);
 }

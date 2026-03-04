@@ -8,6 +8,7 @@ import {
   markCompleted,
   markNoShow,
   rescheduleAppointment,
+
 } from "../api/appointmentsApi";
 import { useAuth } from "../auth/AuthContext";
 import type { AppointmentDto, AppointmentState } from "../types/appointment";
@@ -517,7 +518,7 @@ export default function AdminAppointmentsPage() {
                         </>
                       ) : null}
 
-                      {a.state === "COMPLETED" && (
+                      {a.state === "COMPLETED" && !a.showroomTattooCreated && (
                         <button onClick={() => nav(`/admin/appointments/${a.id}/tattoo/new`)}>
                           Añadir tattoo a Showroom
                         </button>

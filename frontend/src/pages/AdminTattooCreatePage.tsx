@@ -140,7 +140,7 @@ export default function AdminTattooCreatePage() {
       setLoading(true);
       await createTattoo(token, payload);
       setOk("Tattoo registrado");
-      setTimeout(() => nav("/admin/tattoos"), 600);
+      setTimeout(() => nav("/showroom"), 600);
     } catch (e: any) {
       if (e instanceof ApiError) {
         const body: any = e.body;

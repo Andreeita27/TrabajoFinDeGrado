@@ -8,8 +8,8 @@
 
 /* Estado normal (scrolled / resto de páginas) -> NEGRO SÓLIDO */
 .navbar--scrolled{
-  background: #0b0b0b;              /* 👈 negro sólido */
-  backdrop-filter: none;            /* 👈 sin blur si quieres sólido */
+  background: #0b0b0b;
+  backdrop-filter: none;
   box-shadow: 0 14px 50px rgba(0,0,0,.45);
   border-bottom: 1px solid rgba(181,161,108,.22);
 }
@@ -30,8 +30,8 @@
 
 /* En Home cuando scrolleas: NEGRO SÓLIDO */
 .navbar--home.navbar--scrolled{
-  background: #0b0b0b;              /* 👈 negro sólido */
-  backdrop-filter: none;            /* 👈 sin blur */
+  background: #0b0b0b;
+  backdrop-filter: none;
   box-shadow: 0 14px 50px rgba(0,0,0,.45);
   border-bottom: 1px solid rgba(181,161,108,.22);
 }
@@ -47,7 +47,39 @@
   gap: 16px;
 }
 
-/* izquierda */
+/* =========================
+   TIPOGRAFÍA
+   ========================= */
+
+/* Asegura que toda la navbar use la misma fuente/suavizado */
+.navbar{
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Menú izquierda */
+.nav-left a{
+  font-weight: 500;
+  font-size: 16px;
+  letter-spacing: .01em;
+  line-height: 1;
+}
+
+/* Botones derecha */
+.nav-right .btn{
+  font-family: inherit;
+  font-weight: 500;          /* clave: baja de 600 */
+  font-size: 16px;
+  letter-spacing: .01em;
+  line-height: 1;
+  padding: 8px 12px;         /* más parecido al link */
+  border-radius: 12px;
+}
+
+/* =========================
+   IZQUIERDA
+   ========================= */
 .nav-left{
   display: flex;
   gap: 22px;
@@ -73,7 +105,9 @@
   color: var(--gold);
 }
 
-/* derecha */
+/* =========================
+   DERECHA
+   ========================= */
 .nav-right{
   display: flex;
   gap: 12px;
@@ -82,7 +116,9 @@
   white-space: nowrap;
 }
 
-/* logo centro */
+/* =========================
+   LOGO CENTRO
+   ========================= */
 .nav-logo{
   display: grid;
   place-items: center;
@@ -96,7 +132,6 @@
   transition: transform .25s ease, filter .25s ease, opacity .25s ease, height .25s ease;
 }
 
-/* hover */
 .nav-logo:hover img{
   transform: scale(1.05);
 }
@@ -114,7 +149,7 @@
   height: 40px;
 }
 
-/* Fuera de Home: logo dorado (marca) */
+/* Fuera de Home: logo dorado */
 .navbar:not(.navbar--home) .nav-logo img{
   filter: brightness(0) saturate(100%) invert(72%) sepia(25%) saturate(406%) hue-rotate(8deg) brightness(92%) contrast(92%);
   opacity: 1;

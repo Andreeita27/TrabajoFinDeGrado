@@ -12,6 +12,9 @@
   --shadow: 0 10px 30px rgba(0,0,0,.35);
 
   --container: 1100px;
+
+  --font-display: "Playfair Display", serif;
+  --font-body: "Montserrat", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
 }
 
 *{ box-sizing: border-box; }
@@ -27,9 +30,19 @@ body{
   font-family: var(--font-body);
 }
 
-h1, h2{
+h1, h2, h3{
   font-family: var(--font-display);
-  letter-spacing: .04em;
+  letter-spacing: .02em;
+}
+
+button, input, select, textarea, .btn, .navbar, .nav-left a, .nav-right a{
+  font-family: var(--font-body);
+}
+
+.hpPosterKicker, .hpKicker, .hpPosterCity{
+  font-family: var(--font-body);
+  letter-spacing: .35em;
+  text-transform: uppercase;
 }
 
 a{
@@ -94,4 +107,25 @@ a:hover{
 .input:focus, select:focus, textarea:focus{
   border-color: rgba(181,161,108,.55);
   box-shadow: 0 0 0 3px rgba(181,161,108,.15);
+}
+
+/* ✅ Accesibilidad: foco visible en teclado */
+a:focus-visible,
+button:focus-visible,
+.btn:focus-visible,
+.tabBtn:focus-visible{
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(181,161,108,.22);
+  border-color: rgba(181,161,108,.55);
+  border-radius: 10px;
+}
+
+/* ✅ Respeta “reduce motion” */
+@media (prefers-reduced-motion: reduce){
+  *, *::before, *::after{
+    animation-duration: .001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .001ms !important;
+    scroll-behavior: auto !important;
+  }
 }

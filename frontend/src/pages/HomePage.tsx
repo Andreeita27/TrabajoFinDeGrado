@@ -369,6 +369,106 @@ function HomeStylesMosaic() {
   );
 }
 
+function HomeLaserMedia() {
+  const nav = useNavigate();
+
+  const instagramUrl = "https://instagram.com/eliminartatuajeszaragoza";
+
+  const idealFor = [
+    "Aclarar un tatuaje antes de un cover up",
+    "Eliminar una pieza antigua",
+    "Corregir trabajos que ya no encajan contigo",
+    "Eliminar micropigmentación",
+  ];
+
+  return (
+    <div className="hpLaserMedia">
+      <article
+        className="hpProCard hpProCard--clickable hpLaserErikoCard"
+        role="button"
+        tabIndex={0}
+        onClick={() => nav("/laser")}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            nav("/laser");
+          }
+        }}
+      >
+        <div className="hpProDiamond">
+          <img
+            src="/home/eriko.jpg"
+            alt="Eriko"
+            loading="lazy"
+            onError={(e) => {
+              (e.currentTarget as HTMLImageElement).src = "/images/erikolaser.jpg";
+            }}
+          />
+        </div>
+
+        <div className="hpProBody">
+          <h3 className="hpProName">Eriko</h3>
+          <div className="hpProRole">Especialista en eliminación / atenuación</div>
+
+          <div className="hpProPills">
+            <span className="hpProPill">Láser</span>
+          </div>
+
+          <div className="hpProActions">
+            <button
+              type="button"
+              className="hpIconBtn"
+              title="Instagram"
+              onClick={(e) => {
+                e.stopPropagation();
+                window.open(instagramUrl, "_blank", "noreferrer");
+              }}
+            >
+              <svg viewBox="0 0 24 24" aria-hidden="true" className="hpIconSvg">
+                <path
+                  d="M7.5 2h9A5.5 5.5 0 0 1 22 7.5v9A5.5 5.5 0 0 1 16.5 22h-9A5.5 5.5 0 0 1 2 16.5v-9A5.5 5.5 0 0 1 7.5 2Zm0 2A3.5 3.5 0 0 0 4 7.5v9A3.5 3.5 0 0 0 7.5 20h9A3.5 3.5 0 0 0 20 16.5v-9A3.5 3.5 0 0 0 16.5 4h-9ZM12 7a5 5 0 1 1 0 10 5 5 0 0 1 0-10Zm0 2a3 3 0 1 0 0 6 3 3 0 0 0 0-6Zm5.6-2.2a1.2 1.2 0 1 1 0 2.4 1.2 1.2 0 0 1 0-2.4Z"
+                  fill="currentColor"
+                />
+              </svg>
+            </button>
+
+            <button
+              type="button"
+              className="hpIconBtn hpIconBtn--arrow"
+              title="Ver más información"
+              onClick={(e) => {
+                e.stopPropagation();
+                nav("/laser");
+              }}
+            >
+              <svg viewBox="0 0 24 24" aria-hidden="true" className="hpIconSvg hpIconSvg--arrow">
+                <path
+                  d="M13.5 5.5a1 1 0 0 1 1.4 0l5 5a1 1 0 0 1 0 1.4l-5 5a1 1 0 1 1-1.4-1.4L16.8 12H5a1 1 0 0 1 0-2h11.8l-3.3-3.1a1 1 0 0 1 0-1.4Z"
+                  fill="currentColor"
+                />
+              </svg>
+            </button>
+          </div>
+        </div>
+      </article>
+
+      <article className="hpLaserInfoCard">
+        <div className="hpLaserInfoCard__kicker">Casos habituales</div>
+        <h3 className="hpLaserInfoCard__title">Ideal para</h3>
+
+        <div className="hpLaserInfoCard__list">
+          {idealFor.map((item, index) => (
+            <div key={`${item}-${index}`} className="hpLaserInfoItem">
+              <span className="hpLaserInfoItem__line" />
+              <span className="hpLaserInfoItem__text">{item}</span>
+            </div>
+          ))}
+        </div>
+      </article>
+    </div>
+  );
+}
+
 export default function HomePage() {
   const nav = useNavigate();
   const { isAuthenticated } = useAuth();
@@ -381,7 +481,6 @@ export default function HomePage() {
   // IMÁGENES INVENTADAS
   const imgHechos = ["/home/done_01.jpg", "/home/done_02.jpg", "/home/done_03.jpg"];
   const imgDesigns = ["/home/designs_01.jpg", "/home/designs_02.jpg", "/home/designs_03.jpg"];
-  const imgLaser = ["/home/laser_01.jpg", "/home/laser_02.jpg"];
   const imgCita = ["/home/book_01.jpg", "/home/book_02.jpg"];
 
   return (
@@ -455,12 +554,12 @@ export default function HomePage() {
         kicker="Eliminación / atenuación"
         title="Láser"
         text="Si estás valorando eliminar o aclarar un tatuaje, también ofrecemos servicio de láser. Eriko es un gran profesional
-        que cuenta con la última tecnología en eliminación/atenuación de tatuajes y micropigmentación. Visita su página web
-        y ponte en contacto con él vía WhatsApp."
+        que cuenta con la última tecnología en eliminación / atenuación de tatuajes y micropigmentación. Visita su página web
+        y ponte en contacto con él vía WhatsApp o Instagram."
         ctas={[
           { label: "Información láser", href: LASER_URL, external: true },
         ]}
-        images={imgLaser}
+        media={<HomeLaserMedia />}
       />
 
       {/* 4) Tatuajes realizados */}

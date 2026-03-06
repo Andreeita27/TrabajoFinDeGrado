@@ -35,6 +35,9 @@ export default function Navbar() {
     <header className={headerClass}>
       <div className="navbar__inner">
         <nav className="nav-left">
+          <Link className={isActive("/") ? "is-active" : ""} to="/">
+            Inicio
+          </Link>
           <Link className={isActive("/showroom") ? "is-active" : ""} to="/showroom">
             Showroom
           </Link>
@@ -62,10 +65,13 @@ export default function Navbar() {
             </>
           ) : (
             <>
+              <Link to="/calendar" className="btn btn-primary">
+                Reservar cita
+              </Link>
               <Link to={accountLink} className="btn btn-ghost">
                 {accountText}
               </Link>
-              <button className="btn btn-primary" onClick={logout}>
+              <button className="btn btn-ghost" onClick={logout}>
                 Cerrar sesión
               </button>
             </>

@@ -256,6 +256,7 @@ export default function ShowroomPage() {
 
   return (
     <div className="container showroom">
+
       <header className="showroomHeader">
         <div className="showroomHeader__top">
           <div>
@@ -265,25 +266,26 @@ export default function ShowroomPage() {
               Explora tatuajes realizados y diseños disponibles del estudio.
             </p>
           </div>
-
-          <div className="tabsRow">
-            <button
-              type="button"
-              onClick={() => setTab("TATTOOS")}
-              className={`tabBtn ${tab === "TATTOOS" ? "tabBtn--active" : ""}`}
-            >
-              Tatuajes realizados
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setTab("DESIGNS")}
-              className={`tabBtn ${tab === "DESIGNS" ? "tabBtn--active" : ""}`}
-            >
-              Diseños disponibles
-            </button>
-          </div>
         </div>
+      </header>
+
+      <div className="tabsRow">
+        <button
+          type="button"
+          onClick={() => setTab("TATTOOS")}
+          className={`tabBtn ${tab === "TATTOOS" ? "tabBtn--active" : ""}`}
+        >
+          Tatuajes realizados
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setTab("DESIGNS")}
+          className={`tabBtn ${tab === "DESIGNS" ? "tabBtn--active" : ""}`}
+        >
+          Diseños disponibles
+        </button>
+      </div>
 
         {/* Panel filtros */}
         {tab === "TATTOOS" && (
@@ -364,7 +366,6 @@ export default function ShowroomPage() {
             </div>
           </div>
         )}
-      </header>
 
       {tab === "DESIGNS" && (
         <section>

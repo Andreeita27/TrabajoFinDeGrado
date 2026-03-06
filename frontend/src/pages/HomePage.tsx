@@ -297,6 +297,78 @@ function HomeResidentProfessionals() {
   );
 }
 
+function HomeStylesMosaic() {
+  const nav = useNavigate();
+
+  const styles = [
+    {
+      title: "Tradicional",
+      subtitle: "Clásico, sólido y atemporal",
+      image: "/home/tradicional.jpg",
+      filterValue: "Tradicional",
+    },
+    {
+      title: "Neotradicional",
+      subtitle: "Color, fuerza y composición",
+      image: "/home/neotradicional.jpg",
+      filterValue: "Neotradicional",
+    },
+    {
+      title: "Realismo Black & Grey",
+      subtitle: "Sombras, contraste y detalle",
+      image: "/home/realismo.jpg",
+      filterValue: "Realismo",
+    },
+    {
+      title: "Neotribal",
+      subtitle: "Líneas orgánicas y composición moderna",
+      image: "/home/neotribal.jpg",
+      filterValue: "Neotribal",
+    },
+  ];
+
+  return (
+    <div className="hpStylesMedia">
+      <div className="hpStylesGrid">
+        {styles.map((item, index) => (
+          <article
+            key={`${item.title}-${index}`}
+            className={`hpStyleCard hpStyleCard--${index + 1}`}
+            role="button"
+            tabIndex={0}
+            onClick={() => nav(`/showroom?style=${encodeURIComponent(item.filterValue)}`)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                nav(`/showroom?style=${encodeURIComponent(item.filterValue)}`);
+              }
+            }}
+          >
+            <img
+              src={item.image}
+              alt={item.title}
+              className="hpStyleCard__img"
+              loading="lazy"
+              onError={(e) => {
+                (e.currentTarget as HTMLImageElement).src = "/images/logo-sinfondo.svg";
+              }}
+            />
+
+            <div className="hpStyleCard__overlay" />
+
+            <div className="hpStyleCard__body">
+              <div className="hpStyleCard__kicker">Estilo</div>
+              <h3 className="hpStyleCard__title">{item.title}</h3>
+              <p className="hpStyleCard__text">{item.subtitle}</p>
+              <span className="hpStyleCard__link">Ver tattoos</span>
+            </div>
+          </article>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default function HomePage() {
   const nav = useNavigate();
   const { isAuthenticated } = useAuth();
@@ -307,7 +379,6 @@ export default function HomePage() {
   };
 
   // IMÁGENES INVENTADAS
-  const imgEstilos = ["/home/styles_01.jpg", "/home/styles_02.jpg", "/home/styles_03.jpg"];
   const imgHechos = ["/home/done_01.jpg", "/home/done_02.jpg", "/home/done_03.jpg"];
   const imgDesigns = ["/home/designs_01.jpg", "/home/designs_02.jpg", "/home/designs_03.jpg"];
   const imgLaser = ["/home/laser_01.jpg", "/home/laser_02.jpg"];
@@ -364,13 +435,17 @@ export default function HomePage() {
         title="Estilos"
         text="Trabajamos una amplia variedad de estilos, siempre con un enfoque artístico y personalizado. 
         Te ayudamos a aterrizar tu idea para que quede tal y como la habías imaginado."
-        bullets={["Tradicional / Neotradicional", "Realismo Black and Grey / Blackwork", 
-          "Fineline / Ornamental", "Cover up (consultar primero con el tatuador)"]}
+        bullets={[
+          "Tradicional / Neotradicional",
+          "Realismo Black and Grey / Blackwork",
+          "Fineline / Ornamental",
+          "Cover up (consultar primero con el tatuador)",
+        ]}
         ctas={[
           { label: "Ver showroom", onClick: () => nav("/showroom") },
           { label: "Pedir cita", onClick: goBook },
         ]}
-        images={imgEstilos}
+        media={<HomeStylesMosaic />}
       />
 
       {/* 3) Láser */}

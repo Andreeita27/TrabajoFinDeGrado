@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { ApiError } from "../api/apiFetch";
 import { useAuth } from "../auth/AuthContext";
 
@@ -31,6 +31,7 @@ function withBase(url?: string | null) {
 
 export default function ShowroomPage() {
   const nav = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { role, token } = useAuth();
   const isAdmin = role === "ADMIN";
 
@@ -40,7 +41,7 @@ export default function ShowroomPage() {
   const [tattoos, setTattoos] = useState<TattooDto[]>([]);
   const [tattoosError, setTattoosError] = useState("");
 
-  const [style, setStyle] = useState("");
+  const [style, setStyle] = useState(() => searchParams.get("style") ?? "");
   const [coverUp, setCoverUp] = useState<boolean | undefined>(undefined);
   const [color, setColor] = useState<boolean | undefined>(undefined);
   const [tattooProfessionalId, setTattooProfessionalId] = useState<string>("");
@@ -108,6 +109,11 @@ export default function ShowroomPage() {
   useEffect(() => {
     loadTattoos();
   }, [style, coverUp, color, tattooProfessionalId]);
+
+  useEffect(() => {
+    const styleFromUrl = searchParams.get("style") ?? "";
+    setStyle((prev) => (prev === styleFromUrl ? prev : styleFromUrl));
+  }, [searchParams]);
 
   useEffect(() => {
     loadDesigns();
@@ -289,7 +295,18 @@ export default function ShowroomPage() {
                   className="input"
                   placeholder="Ej: Neotradicional..."
                   value={style}
-                  onChange={(e) => setStyle(e.target.value)}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    setStyle(value);
+
+                    const nextParams = new URLSearchParams(searchParams);
+                    if (value.trim()) {
+                      nextParams.set("style", value);
+                    } else {
+                      nextParams.delete("style");
+                    }
+                    setSearchParams(nextParams, { replace: true });
+                  }}
                 />
               </label>
 

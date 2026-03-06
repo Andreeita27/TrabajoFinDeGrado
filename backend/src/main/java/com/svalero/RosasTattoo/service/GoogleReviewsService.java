@@ -41,7 +41,7 @@ public class GoogleReviewsService {
             String response = restClient.get()
                     .uri("https://places.googleapis.com/v1/places/{placeId}", placeId)
                     .header("X-Goog-Api-Key", apiKey)
-                    .header("X-Goog-FieldMask", "displayName,rating,userRatingCount,reviews,googleMapsUri")
+                    .header("X-Goog-FieldMask", "displayName,rating,userRatingCount,reviews.text,reviews.originalText,reviews.rating,reviews.relativePublishTimeDescription,reviews.publishTime,reviews.authorAttribution,googleMapsUri")
                     .retrieve()
                     .body(String.class);
 
@@ -64,7 +64,14 @@ public class GoogleReviewsService {
                     review.setAuthorPhotoUri(readText(reviewNode, "authorAttribution", "photoUri"));
                     review.setAuthorUri(readText(reviewNode, "authorAttribution", "uri"));
                     review.setRating(readInt(reviewNode, "rating"));
-                    review.setText(readText(reviewNode, "text", "text"));
+                    String originalText = readText(reviewNode, "originalText", "text");
+                    String translatedText = readText(reviewNode, "text", "text");
+
+                    review.setText(
+                            originalText != null && !originalText.isBlank()
+                                    ? originalText
+                                    : translatedText
+                    );
                     review.setRelativePublishTimeDescription(readText(reviewNode, "relativePublishTimeDescription"));
                     review.setPublishTime(readText(reviewNode, "publishTime"));
                     reviews.add(review);

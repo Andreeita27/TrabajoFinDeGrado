@@ -4,6 +4,7 @@ import { useAuth } from "../auth/AuthContext";
 import HomeCarousel from "../components/HomeCarousel";
 import "../styles/homeOnePage.css";
 import HomeMap from "../components/HomeMap";
+import GoogleReviewsSection from "../components/GoogleReviewsSection";
 
 import { getProfessionals } from "../api/showroomApi";
 import type { ProfessionalDto } from "../types/professional";
@@ -311,7 +312,6 @@ export default function HomePage() {
   const imgDesigns = ["/home/designs_01.jpg", "/home/designs_02.jpg", "/home/designs_03.jpg"];
   const imgLaser = ["/home/laser_01.jpg", "/home/laser_02.jpg"];
   const imgCita = ["/home/book_01.jpg", "/home/book_02.jpg"];
-  const imgReviews = ["/home/reviews_01.jpg", "/home/reviews_02.jpg"];
 
   return (
     <div className="hpPage">
@@ -454,19 +454,7 @@ export default function HomePage() {
       />
 
       {/* 8) Reseñas */}
-      <HomeSection
-        id="reseñas"
-        bgClass="hpBgWhite"
-        reverse
-        kicker="Opiniones"
-        title="Reseñas"
-        text="Opiniones reales de clientes. Nos ayudan muchísimo a mejorar. Déjanos la tuya después de completar la cita."
-        ctas={[
-          { label: "Ver reseñas", onClick: () => nav("/reviews") },
-          { label: "Pedir cita", onClick: goBook },
-        ]}
-        images={imgReviews}
-      />
+      <GoogleReviewsSection />
     </div>
   );
 }

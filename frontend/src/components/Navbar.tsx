@@ -44,8 +44,8 @@ export default function Navbar() {
           <Link className={isActive("/professionals") ? "is-active" : ""} to="/professionals">
             Tatuadores
           </Link>
-          <Link className={isActive("/reviews") ? "is-active" : ""} to="/reviews">
-            Reseñas
+          <Link className={isActive("/laser") ? "is-active" : ""} to="/laser">
+            Láser
           </Link>
         </nav>
 

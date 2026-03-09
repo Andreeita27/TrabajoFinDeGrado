@@ -568,8 +568,9 @@ export default function HomePage() {
         reverse
         kicker="Dónde estamos"
         title="Ubicación"
-        text="Plaza Ortilla, número 2, local 4, 50018 Zaragoza. De martes a viernes de 12:00 a 20:00h."
-        bullets={["Tel: 976 05 60 54", "Instagram: @62rosastattoo", "Email: 62rosastattoo@gmail.com"]}
+        text="Podrás encontrarnos en Plaza Ortilla, nº2, local 4, en el barrio del Actur, en Zaragoza. 
+        Nuestro horario es de martes a viernes de 12:00 a 20:00h."
+        bullets={["Teléfono: 976 05 60 54", "Instagram: 62rosastattoo", "Email: 62rosastattoo@gmail.com"]}
         ctas={[
           {
             label: "Abrir en Google Maps",

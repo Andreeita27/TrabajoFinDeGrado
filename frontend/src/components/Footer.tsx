@@ -19,7 +19,7 @@ export default function Footer() {
             <div className="footer__title">Contacto</div>
             <a className="footer__link" href="mailto:62rosastattoo@gmail.com">62rosastattoo@gmail.com</a>
             <a className="footer__link" href="https://www.instagram.com/62rosastattoo/" target="_blank" rel="noreferrer">
-              @62rosastattoo
+              Instagram: 62rosastattoo
             </a>
           </div>
 

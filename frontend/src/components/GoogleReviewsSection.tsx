@@ -8,6 +8,34 @@ function renderStars(rating?: number | null) {
   return "★".repeat(safe) + "☆".repeat(5 - safe);
 }
 
+type AvatarProps = {
+  authorName?: string | null;
+  authorPhotoUri?: string | null;
+};
+
+function ReviewAvatar({ authorName, authorPhotoUri }: AvatarProps) {
+  const [imgError, setImgError] = useState(false);
+
+  if (!authorPhotoUri || imgError) {
+    return (
+      <div className="googleReviewCard__avatarPlaceholder">
+        {(authorName?.[0] || "G").toUpperCase()}
+      </div>
+    );
+  }
+
+  return (
+    <img
+      src={authorPhotoUri}
+      alt={authorName ?? "Autor de la reseña"}
+      className="googleReviewCard__avatar"
+      loading="lazy"
+      referrerPolicy="no-referrer"
+      onError={() => setImgError(true)}
+    />
+  );
+}
+
 export default function GoogleReviewsSection() {
   const [data, setData] = useState<GoogleReviewsResponseDto | null>(null);
   const [loading, setLoading] = useState(true);
@@ -123,17 +151,10 @@ export default function GoogleReviewsSection() {
               >
                 <div className="googleReviewCard__top">
                   <div className="googleReviewCard__author">
-                    {review.authorPhotoUri ? (
-                      <img
-                        src={review.authorPhotoUri}
-                        alt={review.authorName ?? "Autor de la reseña"}
-                        className="googleReviewCard__avatar"
-                      />
-                    ) : (
-                      <div className="googleReviewCard__avatarPlaceholder">
-                        {(review.authorName?.[0] || "G").toUpperCase()}
-                      </div>
-                    )}
+                    <ReviewAvatar
+                      authorName={review.authorName}
+                      authorPhotoUri={review.authorPhotoUri}
+                    />
 
                     <div>
                       <div className="googleReviewCard__name">

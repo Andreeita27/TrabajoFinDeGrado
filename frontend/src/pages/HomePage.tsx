@@ -31,6 +31,7 @@ type SectionProps = {
   ctas?: { label: string; onClick?: () => void; href?: string; external?: boolean }[];
   images?: string[];
   media?: React.ReactNode;
+  mediaClassName?: String;
 };
 
 function useInViewOnce() {
@@ -120,7 +121,7 @@ function HomeSection(p: SectionProps) {
           </div>
         </div>
 
-        <div className="hpMedia hpReveal">
+        <div className={`hpMedia hpReveal ${p.mediaClassName ?? ""}`}>
           {p.media ? p.media : <HomeCarousel images={p.images ?? []} intervalMs={2600} alt={p.title} />}
         </div>
       </div>
@@ -397,11 +398,11 @@ function HomeLaserMedia() {
       >
         <div className="hpProDiamond">
           <img
-            src="/home/eriko.jpg"
+            src="/home/erikolaser.jpg"
             alt="Eriko"
             loading="lazy"
             onError={(e) => {
-              (e.currentTarget as HTMLImageElement).src = "/images/erikolaser.jpg";
+              (e.currentTarget as HTMLImageElement).src = "/images/estudio.svg";
             }}
           />
         </div>
@@ -479,8 +480,6 @@ export default function HomePage() {
   };
 
   // IMÁGENES INVENTADAS
-  const imgHechos = ["/home/done_01.jpg", "/home/done_02.jpg", "/home/done_03.jpg"];
-  const imgDesigns = ["/home/designs_01.jpg", "/home/designs_02.jpg", "/home/designs_03.jpg"];
   const imgCita = ["/home/book_01.jpg", "/home/book_02.jpg"];
 
   return (
@@ -562,56 +561,11 @@ export default function HomePage() {
         media={<HomeLaserMedia />}
       />
 
-      {/* 4) Tatuajes realizados */}
-      <HomeSection
-        id="tatuajes"
-        bgClass="hpBgBlack"
-        reverse
-        kicker="Showroom"
-        title="Tatuajes realizados"
-        text="Una selección de trabajos realizados en el estudio. Cada diseño se crea de manera personalizada, adaptándose a la anatomía
-        y a la idea del cliente. Pídenos una cita consulta para hablar de ello."
-        ctas={[
-          { label: "Ir al showroom", onClick: () => nav("/showroom") },
-          { label: "Pedir cita", onClick: goBook },
-        ]}
-        images={imgHechos}
-      />
-
-      {/* 5) Diseños disponibles */}
-      <HomeSection
-        id="designs"
-        bgClass="hpBgWhite"
-        kicker="Flash / diseños"
-        title="Diseños disponibles"
-        text="Ideas preparadas para tatuar. Si te gusta un diseño, lo adaptamos a tu cuerpo, tamaño y preferencias."
-        ctas={[
-          { label: "Ver diseños", onClick: () => nav("/showroom") },
-          { label: "Pedir cita", onClick: goBook },
-        ]}
-        images={imgDesigns}
-      />
-
-      {/* 6) Reserva tu cita */}
-      <HomeSection
-        id="reserva"
-        bgClass="hpBgGold"
-        reverse
-        kicker="Citas"
-        title="Reserva tu cita"
-        text="Reserva online según disponibilidad real. Después podrás gestionar tu cita y subir tu imagen de referencia."
-        bullets={["Disponibilidad por duración", "Gestión desde tu zona privada"]}
-        ctas={[
-          { label: "Reservar ahora", onClick: goBook },
-          { label: "Ver mis citas", onClick: () => nav("/my-appointments") },
-        ]}
-        images={imgCita}
-      />
-
-      {/* 7) Ubicación + mapa */}
+      {/* 4) Ubicación + mapa */}
       <HomeSection
         id="ubicacion"
         bgClass="hpBgBlack"
+        reverse
         kicker="Dónde estamos"
         title="Ubicación"
         text="Plaza Ortilla, número 2, local 4, 50018 Zaragoza. De martes a viernes de 12:00 a 20:00h."
@@ -625,6 +579,22 @@ export default function HomePage() {
           { label: "Llamar ahora", href: "tel:976056054" },
         ]}
         media={<HomeMap src={MAP_EMBED} />}
+        mediaClassName="hpMedia--map"
+      />
+
+      {/* 5) Reserva tu cita */}
+      <HomeSection
+        id="reserva"
+        bgClass="hpBgWhite"
+        kicker="Citas"
+        title="Reserva tu cita"
+        text="Reserva online según disponibilidad real. Después podrás gestionar tu cita y subir tu imagen de referencia."
+        bullets={["Disponibilidad por duración", "Gestión desde tu zona privada"]}
+        ctas={[
+          { label: "Reservar ahora", onClick: goBook },
+          { label: "Ver mis citas", onClick: () => nav("/my-appointments") },
+        ]}
+        images={imgCita}
       />
 
       {/* 8) Reseñas */}

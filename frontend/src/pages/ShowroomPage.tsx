@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { ApiError } from "../api/apiFetch";
 import { useAuth } from "../auth/AuthContext";
 
@@ -22,6 +22,8 @@ import "../styles/showroom.css";
 type TabKey = "DESIGNS" | "TATTOOS";
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL as string;
+const SHOWROOM_SCROLL_KEY = "showroom:scrollY";
+const SHOWROOM_RETURN_FLAG_KEY = "showroom:restoreOnBack";
 
 function withBase(url?: string | null) {
   if (!url) return "";
@@ -29,22 +31,39 @@ function withBase(url?: string | null) {
   return `${BASE_URL}${url}`;
 }
 
+function parseBooleanParam(value: string | null): boolean | undefined {
+  if (value === "true") return true;
+  if (value === "false") return false;
+  return undefined;
+}
+
 export default function ShowroomPage() {
   const nav = useNavigate();
+  const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
   const { role, token } = useAuth();
   const isAdmin = role === "ADMIN";
 
-  const [tab, setTab] = useState<TabKey>("TATTOOS");
+  const initialTab = (searchParams.get("tab") as TabKey) || "TATTOOS";
+
+  const [tab, setTab] = useState<TabKey>(
+    initialTab === "DESIGNS" ? "DESIGNS" : "TATTOOS"
+  );
 
   // Tattoos
   const [tattoos, setTattoos] = useState<TattooDto[]>([]);
   const [tattoosError, setTattoosError] = useState("");
 
   const [style, setStyle] = useState(() => searchParams.get("style") ?? "");
-  const [coverUp, setCoverUp] = useState<boolean | undefined>(undefined);
-  const [color, setColor] = useState<boolean | undefined>(undefined);
-  const [tattooProfessionalId, setTattooProfessionalId] = useState<string>("");
+  const [coverUp, setCoverUp] = useState<boolean | undefined>(() =>
+    parseBooleanParam(searchParams.get("coverUp"))
+  );
+  const [color, setColor] = useState<boolean | undefined>(() =>
+    parseBooleanParam(searchParams.get("color"))
+  );
+  const [tattooProfessionalId, setTattooProfessionalId] = useState<string>(
+    () => searchParams.get("professionalId") ?? ""
+  );
 
   // Designs
   const [designs, setDesigns] = useState<DesignDto[]>([]);
@@ -57,9 +76,8 @@ export default function ShowroomPage() {
   const [designTitle, setDesignTitle] = useState("");
   const [designImageUrl, setDesignImageUrl] = useState("");
   const [designFilterProfessionalId, setDesignFilterProfessionalId] =
-    useState<string>("");
+    useState<string>(() => searchParams.get("designProfessionalId") ?? "");
 
-  // mostrar/ocultar formulario de añadir diseño
   const [showAddDesign, setShowAddDesign] = useState(false);
 
   const resetAddDesignForm = () => {
@@ -69,28 +87,33 @@ export default function ShowroomPage() {
   };
 
   const loadTattoos = async () => {
-  setTattoosError("");
-  try {
-    const res = await getTattoos({
-      style: style || undefined,
-      coverUp,
-      color,
-      professionalId: tattooProfessionalId ? Number(tattooProfessionalId) : undefined,
-    });
+    setTattoosError("");
+    try {
+      const res = await getTattoos({
+        style: style || undefined,
+        coverUp,
+        color,
+        professionalId: tattooProfessionalId
+          ? Number(tattooProfessionalId)
+          : undefined,
+      });
 
-    //Ordena: más recientes primero (tattooDate DESC). Si falta fecha, usa id DESC.
-    const sorted = [...res].sort((a, b) => {
-      const ta = a.tattooDate ? new Date(`${a.tattooDate}T00:00:00`).getTime() : 0;
-      const tb = b.tattooDate ? new Date(`${b.tattooDate}T00:00:00`).getTime() : 0;
-      if (tb !== ta) return tb - ta;
-      return (b.id ?? 0) - (a.id ?? 0);
-    });
+      const sorted = [...res].sort((a, b) => {
+        const ta = a.tattooDate
+          ? new Date(`${a.tattooDate}T00:00:00`).getTime()
+          : 0;
+        const tb = b.tattooDate
+          ? new Date(`${b.tattooDate}T00:00:00`).getTime()
+          : 0;
+        if (tb !== ta) return tb - ta;
+        return (b.id ?? 0) - (a.id ?? 0);
+      });
 
-    setTattoos(sorted);
-  } catch (e: any) {
-    setTattoosError(e?.message || "Error cargando tatuajes");
-  }
-};
+      setTattoos(sorted);
+    } catch (e: any) {
+      setTattoosError(e?.message || "Error cargando tatuajes");
+    }
+  };
 
   const loadDesigns = async () => {
     setDesignError("");
@@ -111,11 +134,6 @@ export default function ShowroomPage() {
   }, [style, coverUp, color, tattooProfessionalId]);
 
   useEffect(() => {
-    const styleFromUrl = searchParams.get("style") ?? "";
-    setStyle((prev) => (prev === styleFromUrl ? prev : styleFromUrl));
-  }, [searchParams]);
-
-  useEffect(() => {
     loadDesigns();
   }, [isAdmin, token]);
 
@@ -125,7 +143,6 @@ export default function ShowroomPage() {
       .catch(() => setPros([]));
   }, [isAdmin]);
 
-  // Si deja de ser admin, oculto formulario por si acaso
   useEffect(() => {
     if (!isAdmin) {
       setShowAddDesign(false);
@@ -137,6 +154,107 @@ export default function ShowroomPage() {
     if (tab !== "DESIGNS") setDesignFilterProfessionalId("");
   }, [tab]);
 
+  // Estado -> URL
+  useEffect(() => {
+    const nextParams = new URLSearchParams();
+
+    nextParams.set("tab", tab);
+
+    if (style.trim()) nextParams.set("style", style.trim());
+    if (typeof coverUp === "boolean") {
+      nextParams.set("coverUp", String(coverUp));
+    }
+    if (typeof color === "boolean") {
+      nextParams.set("color", String(color));
+    }
+    if (tattooProfessionalId) {
+      nextParams.set("professionalId", tattooProfessionalId);
+    }
+    if (designFilterProfessionalId) {
+      nextParams.set("designProfessionalId", designFilterProfessionalId);
+    }
+
+    const current = searchParams.toString();
+    const next = nextParams.toString();
+
+    if (current !== next) {
+      setSearchParams(nextParams, { replace: true });
+    }
+  }, [
+    tab,
+    style,
+    coverUp,
+    color,
+    tattooProfessionalId,
+    designFilterProfessionalId,
+    searchParams,
+    setSearchParams,
+  ]);
+
+  // URL -> estado
+  useEffect(() => {
+    const tabFromUrl = searchParams.get("tab");
+    const nextTab: TabKey = tabFromUrl === "DESIGNS" ? "DESIGNS" : "TATTOOS";
+    if (tab !== nextTab) setTab(nextTab);
+
+    const styleFromUrl = searchParams.get("style") ?? "";
+    if (style !== styleFromUrl) setStyle(styleFromUrl);
+
+    const coverUpFromUrl = parseBooleanParam(searchParams.get("coverUp"));
+    if (coverUp !== coverUpFromUrl) setCoverUp(coverUpFromUrl);
+
+    const colorFromUrl = parseBooleanParam(searchParams.get("color"));
+    if (color !== colorFromUrl) setColor(colorFromUrl);
+
+    const tattooProfessionalIdFromUrl = searchParams.get("professionalId") ?? "";
+    if (tattooProfessionalId !== tattooProfessionalIdFromUrl) {
+      setTattooProfessionalId(tattooProfessionalIdFromUrl);
+    }
+
+    const designProfessionalIdFromUrl =
+      searchParams.get("designProfessionalId") ?? "";
+    if (designFilterProfessionalId !== designProfessionalIdFromUrl) {
+      setDesignFilterProfessionalId(designProfessionalIdFromUrl);
+    }
+  }, [searchParams]);
+
+  // Guardar scroll mientras estás en Showroom
+  useEffect(() => {
+    const saveScroll = () => {
+      sessionStorage.setItem(SHOWROOM_SCROLL_KEY, String(window.scrollY));
+    };
+
+    window.addEventListener("scroll", saveScroll, { passive: true });
+    return () => window.removeEventListener("scroll", saveScroll);
+  }, []);
+
+  // Restaurar scroll solo si vuelves con el botón propio de la web
+  useEffect(() => {
+    const mustRestore =
+      sessionStorage.getItem(SHOWROOM_RETURN_FLAG_KEY) === "true";
+
+    if (!mustRestore) return;
+
+    const saved = sessionStorage.getItem(SHOWROOM_SCROLL_KEY);
+    if (!saved) {
+      sessionStorage.removeItem(SHOWROOM_RETURN_FLAG_KEY);
+      return;
+    }
+
+    const y = Number(saved);
+    if (!Number.isFinite(y)) {
+      sessionStorage.removeItem(SHOWROOM_RETURN_FLAG_KEY);
+      return;
+    }
+
+    const id = window.setTimeout(() => {
+      window.scrollTo({ top: y, left: 0, behavior: "auto" });
+      sessionStorage.removeItem(SHOWROOM_RETURN_FLAG_KEY);
+    }, 100);
+
+    return () => window.clearTimeout(id);
+  }, [tattoos.length, tab]);
+
   const filteredDesigns = useMemo(() => {
     if (!designFilterProfessionalId) return designs;
 
@@ -146,6 +264,7 @@ export default function ShowroomPage() {
 
       const pro = pros.find((p) => p.id === pid);
       const name = pro?.professionalName?.trim().toLowerCase();
+
       return name
         ? String(d.professionalName ?? "").trim().toLowerCase() === name
         : true;
@@ -156,6 +275,7 @@ export default function ShowroomPage() {
     () => filteredDesigns.filter((d) => d.active),
     [filteredDesigns]
   );
+
   const inactiveDesigns = useMemo(
     () => filteredDesigns.filter((d) => !d.active),
     [filteredDesigns]
@@ -186,10 +306,12 @@ export default function ShowroomPage() {
       setDesignError("Inicia sesión como admin.");
       return;
     }
+
     if (!designProfessionalId) {
       setDesignError("Selecciona un tatuador.");
       return;
     }
+
     if (!designImageUrl.trim()) {
       setDesignError("Debes subir una imagen.");
       return;
@@ -198,6 +320,7 @@ export default function ShowroomPage() {
     setDesignError("");
     try {
       setDesignSaving(true);
+
       await createDesign(token, {
         professionalId: Number(designProfessionalId),
         imageUrl: designImageUrl.trim(),
@@ -254,9 +377,18 @@ export default function ShowroomPage() {
     }
   };
 
+  const goToTattooDetail = (tattooId: number) => {
+    sessionStorage.setItem(SHOWROOM_SCROLL_KEY, String(window.scrollY));
+
+    nav(`/showroom/${tattooId}`, {
+      state: {
+        returnTo: `${location.pathname}${location.search}`,
+      },
+    });
+  };
+
   return (
     <div className="container showroom">
-
       <header className="showroomHeader">
         <div className="showroomHeader__top">
           <div>
@@ -287,85 +419,73 @@ export default function ShowroomPage() {
         </button>
       </div>
 
-        {/* Panel filtros */}
-        {tab === "TATTOOS" && (
-          <div className="filtersCard">
-            <div className="filtersGrid">
-              <label className="field">
-                <span className="fieldTitle">Estilo</span>
-                <input
-                  className="input"
-                  placeholder="Ej: Neotradicional..."
-                  value={style}
-                  onChange={(e) => {
-                    const value = e.target.value;
-                    setStyle(value);
+      {tab === "TATTOOS" && (
+        <div className="filtersCard">
+          <div className="filtersGrid">
+            <label className="field">
+              <span className="fieldTitle">Estilo</span>
+              <input
+                className="input"
+                placeholder="Ej: Neotradicional..."
+                value={style}
+                onChange={(e) => setStyle(e.target.value)}
+              />
+            </label>
 
-                    const nextParams = new URLSearchParams(searchParams);
-                    if (value.trim()) {
-                      nextParams.set("style", value);
-                    } else {
-                      nextParams.delete("style");
-                    }
-                    setSearchParams(nextParams, { replace: true });
-                  }}
-                />
-              </label>
+            <label className="field">
+              <span className="fieldTitle">Tatuador</span>
+              <select
+                className="input"
+                value={tattooProfessionalId}
+                onChange={(e) => setTattooProfessionalId(e.target.value)}
+              >
+                <option value="">Todos</option>
+                {pros.map((p) => (
+                  <option key={p.id} value={String(p.id)}>
+                    {p.professionalName}
+                  </option>
+                ))}
+              </select>
+            </label>
 
-              <label className="field">
-                <span className="fieldTitle">Tatuador</span>
-                <select
-                  className="input"
-                  value={tattooProfessionalId}
-                  onChange={(e) => setTattooProfessionalId(e.target.value)}
-                >
-                  <option value="">Todos</option>
-                  {pros.map((p) => (
-                    <option key={p.id} value={String(p.id)}>
-                      {p.professionalName}
-                    </option>
-                  ))}
-                </select>
-              </label>
+            <label className="field">
+              <span className="fieldTitle">Cover up</span>
+              <select
+                className="input"
+                value={typeof coverUp === "boolean" ? String(coverUp) : ""}
+                onChange={(e) =>
+                  setCoverUp(
+                    e.target.value === ""
+                      ? undefined
+                      : e.target.value === "true"
+                  )
+                }
+              >
+                <option value="">Todos</option>
+                <option value="true">Sí</option>
+                <option value="false">No</option>
+              </select>
+            </label>
 
-              <label className="field">
-                <span className="fieldTitle">Cover up</span>
-                <select
-                  className="input"
-                  value={typeof coverUp === "boolean" ? String(coverUp) : ""}
-                  onChange={(e) =>
-                    setCoverUp(
-                      e.target.value === ""
-                        ? undefined
-                        : e.target.value === "true"
-                    )
-                  }
-                >
-                  <option value="">Todos</option>
-                  <option value="true">Sí</option>
-                  <option value="false">No</option>
-                </select>
-              </label>
-
-              <label className="field">
-                <span className="fieldTitle">Color</span>
-                <select
-                  className="input"
-                  value={typeof color === "boolean" ? String(color) : ""}
-                  onChange={(e) =>
-                    setColor(
-                      e.target.value === "" ? undefined : e.target.value === "true"
-                    )
-                  }
-                >
-                  <option value="">Todos</option>
-                  <option value="true">Color</option>
-                  <option value="false">Blanco y negro</option>
-                </select>
-              </label>
-            </div>
+            <label className="field">
+              <span className="fieldTitle">Color</span>
+              <select
+                className="input"
+                value={typeof color === "boolean" ? String(color) : ""}
+                onChange={(e) =>
+                  setColor(
+                    e.target.value === "" ? undefined : e.target.value === "true"
+                  )
+                }
+              >
+                <option value="">Todos</option>
+                <option value="true">Color</option>
+                <option value="false">Blanco y negro</option>
+              </select>
+            </label>
           </div>
-        )}
+        </div>
+      )}
 
       {tab === "DESIGNS" && (
         <section>
@@ -570,7 +690,11 @@ export default function ShowroomPage() {
                     style={{ ["--d" as any]: `${i * 60}ms` }}
                   >
                     <div className="galleryMedia">
-                      <img src={withBase(d.imageUrl)} alt={d.title ?? "Diseño"} loading="lazy" />
+                      <img
+                        src={withBase(d.imageUrl)}
+                        alt={d.title ?? "Diseño"}
+                        loading="lazy"
+                      />
                       <div className="galleryShade" />
                     </div>
 
@@ -611,7 +735,7 @@ export default function ShowroomPage() {
         <section>
           {tattoosError && <div className="panelError">{tattoosError}</div>}
 
-          {(!tattoosError && tattoos.length === 0) ? (
+          {!tattoosError && tattoos.length === 0 ? (
             <p className="emptyText">No hay tatuajes con esos filtros.</p>
           ) : (
             <div className="galleryGrid">
@@ -622,9 +746,9 @@ export default function ShowroomPage() {
                   style={{ ["--d" as any]: `${i * 50}ms` }}
                   role="button"
                   tabIndex={0}
-                  onClick={() => nav(`/showroom/${t.id}`)}
+                  onClick={() => goToTattooDetail(t.id)}
                   onKeyDown={(e) => {
-                    if (e.key === "Enter") nav(`/showroom/${t.id}`);
+                    if (e.key === "Enter") goToTattooDetail(t.id);
                   }}
                 >
                   <div className="galleryMedia">

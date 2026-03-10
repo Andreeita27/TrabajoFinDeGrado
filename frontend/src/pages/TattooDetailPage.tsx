@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { getTattooById } from "../api/showroomApi";
 import type { TattooDto } from "../types/tattoo";
 import { useAuth } from "../auth/AuthContext";
@@ -9,6 +9,7 @@ import { ApiError } from "../api/apiFetch";
 import "../styles/tattooDetail.css";
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL as string;
+const SHOWROOM_RETURN_FLAG_KEY = "showroom:restoreOnBack";
 
 function withBase(url?: string | null) {
   if (!url) return "";
@@ -30,11 +31,22 @@ export default function TattooDetailPage() {
   const tattooId = useMemo(() => Number(id), [id]);
 
   const nav = useNavigate();
+  const location = useLocation();
   const { role, token } = useAuth();
   const isAdmin = role === "ADMIN";
 
   const [tattoo, setTattoo] = useState<TattooDto | null>(null);
   const [error, setError] = useState("");
+
+  const returnTo =
+    typeof location.state?.returnTo === "string" && location.state.returnTo.trim()
+      ? location.state.returnTo
+      : "/showroom";
+
+  const goBackToShowroom = () => {
+    sessionStorage.setItem(SHOWROOM_RETURN_FLAG_KEY, "true");
+    nav(returnTo);
+  };
 
   useEffect(() => {
     setError("");
@@ -59,7 +71,10 @@ export default function TattooDetailPage() {
     if (!isAdmin) return;
 
     if (!token) {
-      nav("/login", { replace: true, state: { from: `/showroom/${tattooId}` } });
+      nav("/login", {
+        replace: true,
+        state: { from: `/showroom/${tattooId}` },
+      });
       return;
     }
 
@@ -69,7 +84,8 @@ export default function TattooDetailPage() {
     setError("");
     try {
       await deleteTattoo(token, tattooId);
-      nav("/showroom", { replace: true });
+      sessionStorage.setItem(SHOWROOM_RETURN_FLAG_KEY, "true");
+      nav(returnTo, { replace: true });
     } catch (err: any) {
       if (err instanceof ApiError && (err.status === 401 || err.status === 403)) {
         nav("/login", { replace: true });
@@ -83,9 +99,9 @@ export default function TattooDetailPage() {
     return (
       <div className="container tdetail">
         <p className="panelError">{error}</p>
-        <Link to="/showroom" className="tdBack">
+        <button type="button" className="tdBack tdBackBtn" onClick={goBackToShowroom}>
           ← Volver al showroom
-        </Link>
+        </button>
       </div>
     );
   }
@@ -104,9 +120,9 @@ export default function TattooDetailPage() {
 
   return (
     <div className="container tdetail">
-      <Link to="/showroom" className="tdBack">
+      <button type="button" className="tdBack tdBackBtn" onClick={goBackToShowroom}>
         ← Volver al showroom
-      </Link>
+      </button>
 
       <header className="tdHeader revealItem">
         <div className="tdEyebrow">Showroom</div>
@@ -119,7 +135,6 @@ export default function TattooDetailPage() {
 
         <div className="tdChips">
           {tattoo.style && <span className="tdChip">{tattoo.style}</span>}
-
           {tattoo.professionalName && <span className="tdChip">{tattoo.professionalName}</span>}
         </div>
       </header>

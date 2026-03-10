@@ -375,3 +375,18 @@
   border-color: rgba(181,161,108,.18) !important;
   box-shadow: 0 24px 90px rgba(0,0,0,.38) !important;
 }
+
+.tdBackBtn {
+  appearance: none;
+  -webkit-appearance: none;
+  background: transparent;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+}
+
+.tdBackBtn:focus-visible {
+  outline: none;
+}

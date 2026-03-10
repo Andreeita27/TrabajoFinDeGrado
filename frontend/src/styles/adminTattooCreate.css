@@ -1,0 +1,376 @@
+.admin-tattoo-create-page {
+  width: min(1120px, calc(100% - 2rem));
+  margin: 0 auto;
+  padding: 1.9rem 0 4rem;
+}
+
+.admin-tattoo-create-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  color: rgba(255, 255, 255, 0.84);
+  text-decoration: none;
+  border: 1px solid rgba(181, 161, 108, 0.16);
+  background: rgba(255, 255, 255, 0.03);
+  padding: 0.72rem 1rem;
+  border-radius: 999px;
+  transition:
+    transform 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease,
+    background 0.2s ease;
+}
+
+.admin-tattoo-create-back:hover {
+  transform: translateY(-2px);
+  color: #b5a16c;
+  border-color: rgba(181, 161, 108, 0.38);
+  background: rgba(181, 161, 108, 0.08);
+}
+
+.admin-tattoo-create-hero {
+  margin-top: 1.2rem;
+  margin-bottom: 1.5rem;
+}
+
+.admin-tattoo-create-kicker {
+  margin: 0 0 0.45rem;
+  color: #b5a16c;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.admin-tattoo-create-title {
+  margin: 0;
+  font-family: "Playfair Display", serif;
+  font-size: clamp(2.2rem, 5vw, 3.8rem);
+  line-height: 1.04;
+  color: #ffffff;
+}
+
+.admin-tattoo-create-text {
+  margin: 0.95rem 0 0;
+  color: rgba(255, 255, 255, 0.76);
+  line-height: 1.75;
+  max-width: 72ch;
+}
+
+.admin-tattoo-create-feedback {
+  margin-bottom: 1rem;
+  padding: 0.95rem 1rem;
+  border-radius: 18px;
+  border: 1px solid rgba(181, 161, 108, 0.18);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.015)),
+    rgba(10, 10, 10, 0.88);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.22);
+}
+
+.admin-tattoo-create-feedback--error {
+  color: #ffd8d8;
+  border-color: rgba(255, 120, 120, 0.28);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.015)),
+    rgba(50, 10, 10, 0.42);
+}
+
+.admin-tattoo-create-feedback--success {
+  color: #e9f8df;
+  border-color: rgba(126, 208, 126, 0.28);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.015)),
+    rgba(17, 44, 17, 0.45);
+}
+
+.admin-tattoo-create-grid {
+  display: grid;
+  grid-template-columns: 1.05fr 0.95fr;
+  gap: 1.2rem;
+  align-items: start;
+}
+
+.admin-tattoo-create-panel {
+  padding: 1.2rem;
+  border-radius: 24px;
+  border: 1px solid rgba(181, 161, 108, 0.2);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.015)),
+    rgba(10, 10, 10, 0.9);
+  box-shadow: 0 22px 56px rgba(0, 0, 0, 0.3);
+}
+
+.admin-tattoo-create-panel__title {
+  margin: 0;
+  font-family: "Playfair Display", serif;
+  font-size: 1.55rem;
+  color: #fff;
+}
+
+.admin-tattoo-create-panel__text {
+  margin: 0.45rem 0 1rem;
+  color: rgba(255, 255, 255, 0.72);
+  line-height: 1.7;
+}
+
+.admin-tattoo-create-info {
+  display: grid;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.admin-tattoo-create-info-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: flex-start;
+  padding: 0.95rem 1rem;
+  border-radius: 16px;
+  border: 1px solid rgba(181, 161, 108, 0.13);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.admin-tattoo-create-info-key {
+  font-size: 0.74rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(181, 161, 108, 0.88);
+  font-weight: 700;
+}
+
+.admin-tattoo-create-info-val {
+  text-align: right;
+  color: rgba(255, 255, 255, 0.92);
+  line-height: 1.55;
+  font-weight: 500;
+}
+
+.admin-tattoo-create-form {
+  display: grid;
+  gap: 0.95rem;
+}
+
+.admin-tattoo-create-field {
+  display: grid;
+  gap: 0.42rem;
+}
+
+.admin-tattoo-create-label {
+  font-size: 0.74rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(181, 161, 108, 0.88);
+  font-weight: 700;
+}
+
+.admin-tattoo-create-checks {
+  display: grid;
+  gap: 0.8rem;
+}
+
+.admin-tattoo-create-check {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  padding: 0.95rem 1rem;
+  border-radius: 16px;
+  border: 1px solid rgba(181, 161, 108, 0.16);
+  background: rgba(255, 255, 255, 0.03);
+  color: rgba(255, 255, 255, 0.84);
+}
+
+.admin-tattoo-create-check input {
+  accent-color: #b5a16c;
+}
+
+.admin-tattoo-create-upload {
+  padding: 1rem;
+  border-radius: 18px;
+  border: 1px solid rgba(181, 161, 108, 0.16);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.admin-tattoo-create-upload-note {
+  margin: 0.5rem 0 0;
+  color: rgba(255, 255, 255, 0.66);
+  line-height: 1.65;
+  font-size: 0.92rem;
+}
+
+.admin-tattoo-create-actions {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-top: 0.4rem;
+}
+
+.admin-tattoo-create-btn {
+  border: 1px solid transparent;
+  border-radius: 12px;
+  padding: 0.82rem 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    transform 0.2s ease,
+    border-color 0.2s ease,
+    background 0.2s ease,
+    color 0.2s ease;
+}
+
+.admin-tattoo-create-btn:hover {
+  transform: translateY(-2px);
+}
+
+.admin-tattoo-create-btn:disabled {
+  opacity: 0.58;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.admin-tattoo-create-btn--primary {
+  background: #b5a16c;
+  color: #0b0b0b;
+}
+
+.admin-tattoo-create-btn--primary:hover {
+  background: #a38f5e;
+}
+
+.admin-tattoo-create-btn--ghost {
+  background: transparent;
+  color: #fff;
+  border-color: rgba(181, 161, 108, 0.22);
+}
+
+.admin-tattoo-create-btn--ghost:hover {
+  color: #b5a16c;
+  border-color: rgba(181, 161, 108, 0.45);
+}
+
+.admin-tattoo-create-preview-wrap {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.admin-tattoo-create-preview-url {
+  font-size: 0.82rem;
+  color: rgba(255, 255, 255, 0.62);
+  word-break: break-all;
+}
+
+.admin-tattoo-create-preview {
+  overflow: hidden;
+  border-radius: 24px;
+  border: 1px solid rgba(181, 161, 108, 0.16);
+  background:
+    radial-gradient(900px 500px at -10% -20%, rgba(181,161,108,0.1), transparent 45%),
+    #0a0a0a;
+  box-shadow: 0 20px 46px rgba(0, 0, 0, 0.25);
+  min-height: 320px;
+  display: grid;
+  place-items: center;
+}
+
+.admin-tattoo-create-preview img {
+  width: 100%;
+  max-height: 620px;
+  object-fit: contain;
+  display: block;
+  background: #0b0b0b;
+}
+
+.admin-tattoo-create-empty {
+  padding: 1.1rem;
+  border-radius: 18px;
+  border: 1px solid rgba(181, 161, 108, 0.16);
+  background: rgba(255,255,255,0.03);
+  color: rgba(255,255,255,0.76);
+  line-height: 1.7;
+}
+
+.admin-tattoo-create-state-box {
+  padding: 1rem 1.05rem;
+  border-radius: 18px;
+  border: 1px solid rgba(181, 161, 108, 0.16);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.admin-tattoo-create-state-box p {
+  margin: 0.45rem 0 0;
+  color: rgba(255, 255, 255, 0.78);
+  line-height: 1.7;
+}
+
+.admin-tattoo-create-loading {
+  color: rgba(255, 255, 255, 0.76);
+}
+
+.admin-tattoo-create-badge {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 0.45rem 0.78rem;
+  border: 1px solid rgba(181, 161, 108, 0.25);
+  background: rgba(181, 161, 108, 0.12);
+  color: #f2e6c2;
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.admin-tattoo-create-badge--pending {
+  border-color: rgba(181, 161, 108, 0.25);
+  background: rgba(181, 161, 108, 0.12);
+  color: #f2e6c2;
+}
+
+.admin-tattoo-create-badge--confirmed {
+  border-color: rgba(92, 163, 115, 0.3);
+  background: rgba(92, 163, 115, 0.14);
+  color: #dff5e5;
+}
+
+.admin-tattoo-create-badge--cancelled {
+  border-color: rgba(191, 92, 92, 0.3);
+  background: rgba(191, 92, 92, 0.14);
+  color: #ffe0e0;
+}
+
+.admin-tattoo-create-badge--completed {
+  border-color: rgba(125, 125, 125, 0.3);
+  background: rgba(125, 125, 125, 0.14);
+  color: #ececec;
+}
+
+.admin-tattoo-create-badge--no-show {
+  border-color: rgba(140, 110, 170, 0.3);
+  background: rgba(140, 110, 170, 0.14);
+  color: #efe6ff;
+}
+
+@media (max-width: 960px) {
+  .admin-tattoo-create-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .admin-tattoo-create-page {
+    padding-top: 5.1rem;
+  }
+
+  .admin-tattoo-create-panel {
+    padding: 1rem;
+    border-radius: 20px;
+  }
+
+  .admin-tattoo-create-info-row {
+    flex-direction: column;
+  }
+
+  .admin-tattoo-create-info-val {
+    text-align: left;
+  }
+}

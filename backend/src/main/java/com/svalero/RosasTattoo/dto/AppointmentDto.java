@@ -30,7 +30,6 @@ public class AppointmentDto {
     private int durationMinutes;
     private AppointmentState state;
     private boolean depositPaid;
-    private boolean hasReview;
     private boolean showroomTattooCreated;
     private Long showroomTattooId;
 

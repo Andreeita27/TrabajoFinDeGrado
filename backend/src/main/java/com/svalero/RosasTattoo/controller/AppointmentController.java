@@ -12,10 +12,7 @@ import com.svalero.RosasTattoo.service.AppointmentService;
 import com.svalero.RosasTattoo.service.FileStorageService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.FileSystemResource;
-import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -25,16 +22,14 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.security.access.AccessDeniedException;
 import com.svalero.RosasTattoo.exception.AppointmentConflictException;
 
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.springframework.format.annotation.DateTimeFormat;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
+import java.time.LocalDate;
 
 @RestController
 public class AppointmentController {
@@ -158,6 +153,19 @@ public class AppointmentController {
     ) {
         return ResponseEntity.ok(
                 appointmentService.getAvailability(professionalId, dateFrom, dateTo, durationMinutes, stepMinutes)
+        );
+    }
+
+    @PreAuthorize("hasAnyRole('ADMIN','CLIENT')")
+    @GetMapping("/availability/month-summary")
+    public ResponseEntity<MonthlyAvailabilitySummaryDto> getAvailabilityMonthSummary(
+            @RequestParam(value = "professionalId") long professionalId,
+            @RequestParam(value = "month") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate month,
+            @RequestParam(value = "durationMinutes", required = false) Integer durationMinutes,
+            @RequestParam(value = "stepMinutes", required = false) Integer stepMinutes
+    ) {
+        return ResponseEntity.ok(
+                appointmentService.getMonthlyAvailabilitySummary(professionalId, month, durationMinutes, stepMinutes)
         );
     }
 

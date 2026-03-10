@@ -64,4 +64,19 @@ public interface AppointmentRepository extends CrudRepository<Appointment, Long>
             @Param("endDateTime") LocalDateTime endDateTime,
             @Param("excludeId") Long excludeId
     );
+
+    @Query(value = """
+    SELECT *
+    FROM `appointment` a
+    WHERE a.`professional_id` = :professionalId
+      AND a.`appointment_state` <> 'CANCELLED'
+      AND a.`start_date_time` < :to
+      AND TIMESTAMPADD(MINUTE, a.`duration_minutes`, a.`start_date_time`) > :from
+    ORDER BY a.`start_date_time` ASC
+    """, nativeQuery = true)
+    List<Appointment> findActiveIntersecting(
+            @Param("professionalId") long professionalId,
+            @Param("from") LocalDateTime from,
+            @Param("to") LocalDateTime to
+    );
 }

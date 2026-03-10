@@ -322,3 +322,215 @@
     min-height: 280px;
   }
 }
+
+/* =========================
+   ANIMACIONES / REVEAL
+   ========================= */
+
+.laser-reveal {
+  opacity: 0;
+  transform: translateY(42px);
+  transition:
+    opacity 0.8s ease,
+    transform 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform, opacity;
+}
+
+.laser-reveal--visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.laser-hero.laser-reveal {
+  opacity: 0;
+  transform: translateY(36px);
+}
+
+.laser-hero.laser-reveal--visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.laser-hero__copy > * {
+  opacity: 0;
+  transform: translateY(16px);
+  animation: laserFadeUp 0.7s ease forwards;
+}
+
+.laser-hero__copy > *:nth-child(1) { animation-delay: 0.08s; }
+.laser-hero__copy > *:nth-child(2) { animation-delay: 0.16s; }
+.laser-hero__copy > *:nth-child(3) { animation-delay: 0.24s; }
+.laser-hero__copy > *:nth-child(4) { animation-delay: 0.32s; }
+.laser-hero__copy > *:nth-child(5) { animation-delay: 0.4s; }
+.laser-hero__copy > *:nth-child(6) { animation-delay: 0.48s; }
+
+.laser-hero__img,
+.laser-machines__img {
+  transition:
+    transform 0.7s ease,
+    box-shadow 0.7s ease,
+    filter 0.7s ease;
+  animation: laserFloat 6.5s ease-in-out infinite;
+}
+
+.laser-hero__media:hover .laser-hero__img,
+.laser-section__media:hover .laser-machines__img {
+  transform: translateY(-6px) scale(1.01);
+  box-shadow: 0 28px 60px rgba(0, 0, 0, 0.32);
+  filter: brightness(1.03);
+}
+
+.laser-benefit,
+.laser-machine-card,
+.laser-gallery__item,
+.laser-faq__item {
+  transition:
+    transform 0.35s ease,
+    box-shadow 0.35s ease,
+    border-color 0.35s ease,
+    background 0.35s ease;
+}
+
+.laser-benefit:hover,
+.laser-machine-card:hover,
+.laser-gallery__item:hover,
+.laser-faq__item:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 24px 54px rgba(0, 0, 0, 0.28);
+  border-color: rgba(181, 161, 108, 0.28);
+  background: rgba(255, 255, 255, 0.045);
+}
+
+.laser-benefits .laser-benefit {
+  opacity: 0;
+  transform: translateY(24px);
+  animation: laserFadeUp 0.7s ease forwards;
+}
+
+.laser-benefits .laser-benefit:nth-child(1) { animation-delay: 0.08s; }
+.laser-benefits .laser-benefit:nth-child(2) { animation-delay: 0.18s; }
+.laser-benefits .laser-benefit:nth-child(3) { animation-delay: 0.28s; }
+
+.laser-machines .laser-machine-card {
+  opacity: 0;
+  transform: translateY(24px);
+  animation: laserFadeUp 0.7s ease forwards;
+}
+
+.laser-machines .laser-machine-card:nth-child(1) { animation-delay: 0.1s; }
+.laser-machines .laser-machine-card:nth-child(2) { animation-delay: 0.2s; }
+
+.laser-gallery__item,
+.laser-faq__item {
+  opacity: 0;
+  transform: translateY(24px);
+  animation: laserFadeUp 0.7s ease forwards;
+}
+
+.laser-gallery__img {
+  transition: transform 0.7s ease, filter 0.7s ease;
+}
+
+.laser-gallery__item:hover .laser-gallery__img {
+  transform: scale(1.035);
+  filter: brightness(1.04);
+}
+
+.laser-faq__question {
+  transition: color 0.25s ease, background 0.25s ease;
+}
+
+.laser-faq__item:hover .laser-faq__question {
+  color: #f7f2e3;
+}
+
+.laser-faq__question::after {
+  transition:
+    transform 0.25s ease,
+    color 0.25s ease;
+}
+
+.laser-faq__item[open] .laser-faq__question::after {
+  transform: translateY(-50%) rotate(180deg);
+}
+
+.laser-hero__copy,
+.laser-hero__media,
+.laser-section,
+.laser-cta {
+  position: relative;
+  overflow: hidden;
+}
+
+.laser-hero__copy::before,
+.laser-hero__media::before,
+.laser-section::before,
+.laser-cta::before {
+  content: "";
+  position: absolute;
+  inset: -30%;
+  background: linear-gradient(
+    120deg,
+    transparent 35%,
+    rgba(181, 161, 108, 0.06) 50%,
+    transparent 65%
+  );
+  transform: translateX(-120%) rotate(8deg);
+  pointer-events: none;
+  opacity: 0;
+}
+
+.laser-hero__copy:hover::before,
+.laser-hero__media:hover::before,
+.laser-section:hover::before,
+.laser-cta:hover::before {
+  opacity: 1;
+  animation: laserSweep 1.2s ease;
+}
+
+@keyframes laserFadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(22px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes laserFloat {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+@keyframes laserSweep {
+  from {
+    transform: translateX(-120%) rotate(8deg);
+  }
+  to {
+    transform: translateX(120%) rotate(8deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .laser-reveal,
+  .laser-hero.laser-reveal,
+  .laser-hero__copy > *,
+  .laser-benefits .laser-benefit,
+  .laser-machines .laser-machine-card,
+  .laser-gallery__item,
+  .laser-faq__item,
+  .laser-hero__img,
+  .laser-machines__img {
+    opacity: 1 !important;
+    transform: none !important;
+    animation: none !important;
+    transition: none !important;
+  }
+}

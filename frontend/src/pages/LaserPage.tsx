@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from "react";
 import "../styles/laser.css";
 
 const LASER_EXTERNAL_URL = "https://eliminartatuajeszaragoza.com/";
@@ -47,15 +48,67 @@ function openLaserSite() {
   window.open(LASER_EXTERNAL_URL, "_blank", "noopener,noreferrer");
 }
 
+function useInViewOnce<T extends HTMLElement>() {
+  const ref = useRef<T | null>(null);
+  const [isVisible, setIsVisible] = useState(false);
+
+  useEffect(() => {
+    const node = ref.current;
+    if (!node) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsVisible(true);
+          observer.disconnect();
+        }
+      },
+      {
+        threshold: 0.18,
+        rootMargin: "0px 0px -40px 0px",
+      }
+    );
+
+    observer.observe(node);
+
+    return () => observer.disconnect();
+  }, []);
+
+  return { ref, isVisible };
+}
+
+type RevealProps = {
+  children: React.ReactNode;
+  className?: string;
+};
+
+function RevealSection({ children, className = "" }: RevealProps) {
+  const { ref, isVisible } = useInViewOnce<HTMLElement>();
+
+  return (
+    <section
+      ref={ref}
+      className={`laser-reveal ${isVisible ? "laser-reveal--visible" : ""} ${className}`}
+    >
+      {children}
+    </section>
+  );
+}
+
 export default function LaserPage() {
+  const heroReveal = useInViewOnce<HTMLElement>();
+
   return (
     <main className="laser-page">
-      <header className="laser-hero">
+      <header
+        ref={heroReveal.ref}
+        className={`laser-hero ${heroReveal.isVisible ? "laser-reveal--visible" : "laser-reveal"}`}
+      >
         <div className="laser-hero__copy">
           <p className="laser-hero__kicker">Tratamiento láser</p>
 
           <h1 className="laser-hero__title">
-            Eliminación y aclarado
+            Eliminación y atenuación
             <br />
             de tatuajes
           </h1>
@@ -106,7 +159,7 @@ export default function LaserPage() {
         </div>
       </header>
 
-      <section className="laser-section">
+      <RevealSection className="laser-section">
         <div className="laser-section__head">
           <p className="laser-section__kicker">Cómo funciona</p>
           <h2 className="laser-section__title">Qué puede hacer el tratamiento</h2>
@@ -144,9 +197,9 @@ export default function LaserPage() {
             </p>
           </article>
         </div>
-      </section>
+      </RevealSection>
 
-      <section className="laser-section laser-section--dark laser-section--split">
+      <RevealSection className="laser-section laser-section--dark laser-section--split">
         <div className="laser-section__copy">
           <p className="laser-section__kicker">Tecnología</p>
           <h2 className="laser-section__title">Máquinas y función de cada una</h2>
@@ -188,9 +241,9 @@ export default function LaserPage() {
             className="laser-machines__img"
           />
         </div>
-      </section>
+      </RevealSection>
 
-      <section className="laser-section">
+      <RevealSection className="laser-section">
         <div className="laser-section__head">
           <p className="laser-section__kicker">Resultados</p>
           <h2 className="laser-section__title">Antes y después</h2>
@@ -202,7 +255,11 @@ export default function LaserPage() {
 
         <div className="laser-gallery">
           {beforeAfterImages.map((img, index) => (
-            <figure key={img} className="laser-gallery__item">
+            <figure
+              key={img}
+              className="laser-gallery__item"
+              style={{ animationDelay: `${index * 120}ms` }}
+            >
               <img
                 src={img}
                 alt={`Antes y después del tratamiento láser ${index + 1}`}
@@ -211,25 +268,29 @@ export default function LaserPage() {
             </figure>
           ))}
         </div>
-      </section>
+      </RevealSection>
 
-      <section className="laser-section laser-section--dark">
+      <RevealSection className="laser-section laser-section--dark">
         <div className="laser-section__head">
           <p className="laser-section__kicker">FAQ</p>
           <h2 className="laser-section__title">Preguntas frecuentes</h2>
         </div>
 
         <div className="laser-faq">
-          {faqItems.map((item) => (
-            <details key={item.q} className="laser-faq__item">
+          {faqItems.map((item, index) => (
+            <details
+              key={item.q}
+              className="laser-faq__item"
+              style={{ animationDelay: `${index * 90}ms` }}
+            >
               <summary className="laser-faq__question">{item.q}</summary>
               <p className="laser-faq__answer">{item.a}</p>
             </details>
           ))}
         </div>
-      </section>
+      </RevealSection>
 
-      <section className="laser-cta">
+      <RevealSection className="laser-cta">
         <div className="laser-cta__content">
           <p className="laser-cta__kicker">Contacto</p>
           <h2 className="laser-cta__title">Consulta tu caso directamente con Eriko</h2>
@@ -250,7 +311,7 @@ export default function LaserPage() {
             </button>
           </div>
         </div>
-      </section>
+      </RevealSection>
     </main>
   );
 }

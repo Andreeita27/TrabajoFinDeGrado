@@ -14,4 +14,5 @@ public class MonthlyAvailabilityDayDto {
     private String status; // AVAILABLE | BLOCKED | NO_WINDOWS | FULL | WEEKEND
     private boolean weekend;
     private boolean past;
+    private String reason;
 }

@@ -23,6 +23,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.time.LocalDate;
 
@@ -699,7 +700,7 @@ public class AppointmentService {
             boolean past = current.isBefore(today);
 
             if (weekend) {
-                result.add(new MonthlyAvailabilityDayDto(current, "WEEKEND", true, past));
+                result.add(new MonthlyAvailabilityDayDto(current, "WEEKEND", true, past, null));
                 current = current.plusDays(1);
                 continue;
             }
@@ -714,7 +715,7 @@ public class AppointmentService {
             boolean hasPublishedWindows = !dayWindows.isEmpty();
 
             if (!hasPublishedWindows) {
-                result.add(new MonthlyAvailabilityDayDto(current, "NO_WINDOWS", false, past));
+                result.add(new MonthlyAvailabilityDayDto(current, "NO_WINDOWS", false, past, "Este profesional todavía no ha abierto agenda para este día."));
                 current = current.plusDays(1);
                 continue;
             }
@@ -741,11 +742,19 @@ public class AppointmentService {
             );
 
             if (hasAvailability) {
-                result.add(new MonthlyAvailabilityDayDto(current, "AVAILABLE", false, past));
+                result.add(new MonthlyAvailabilityDayDto(current, "AVAILABLE", false, past, "Hay huecos disponibles este día."));
             } else if (!dayBlocks.isEmpty()) {
-                result.add(new MonthlyAvailabilityDayDto(current, "BLOCKED", false, past));
+                String reason = dayBlocks.stream()
+                        .map(UnavailabilityBlock::getReason)
+                        .filter(Objects::nonNull)
+                        .filter(s -> !s.isBlank())
+                        .distinct()
+                        .reduce((a, b) -> a + " · " + b)
+                        .orElse("Día bloqueado por indisponibilidad.");
+
+                result.add(new MonthlyAvailabilityDayDto(current, "BLOCKED", false, past, reason));
             } else {
-                result.add(new MonthlyAvailabilityDayDto(current, "FULL", false, past));
+                result.add(new MonthlyAvailabilityDayDto(current, "FULL", false, past, "No quedan huecos libres para este día."));
             }
 
             current = current.plusDays(1);

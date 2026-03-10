@@ -1,31 +1,29 @@
 import { useState } from "react";
 import MyAppointmentsPage from "./MyAppointmentsPage";
 import MyProfilePage from "./MyProfilePage";
+import "../styles/account.css";
 
 type Tab = "APPOINTMENTS" | "PROFILE";
-
-const tabBtn = (active: boolean): React.CSSProperties => ({
-  padding: "10px 14px",
-  border: "1px solid #333",
-  background: active ? "#222" : "transparent",
-  color: active ? "white" : "#ddd",
-  borderRadius: 10,
-  cursor: "pointer",
-  fontWeight: active ? 700 : 600,
-});
 
 export default function MyAccountPage() {
   const [tab, setTab] = useState<Tab>("APPOINTMENTS");
 
   return (
-    <div style={{ padding: 16 }}>
-      <h1>Mi cuenta</h1>
+    <div className="account-page">
+      <header className="account-hero">
+        <p className="account-hero__kicker">Área privada</p>
+        <h1 className="account-hero__title">Mi cuenta</h1>
+        <p className="account-hero__text">
+          Desde aquí puedes gestionar tus citas, revisar tu información personal
+          y mantener tu perfil al día de forma cómoda.
+        </p>
+      </header>
 
-      <div style={{ display: "flex", gap: 10, marginBottom: 16, flexWrap: "wrap" }}>
+      <div className="account-tabs">
         <button
           type="button"
           onClick={() => setTab("APPOINTMENTS")}
-          style={tabBtn(tab === "APPOINTMENTS")}
+          className={`account-tab ${tab === "APPOINTMENTS" ? "account-tab--active" : ""}`}
         >
           Gestionar mis citas
         </button>
@@ -33,13 +31,19 @@ export default function MyAccountPage() {
         <button
           type="button"
           onClick={() => setTab("PROFILE")}
-          style={tabBtn(tab === "PROFILE")}
+          className={`account-tab ${tab === "PROFILE" ? "account-tab--active" : ""}`}
         >
           Gestionar mis datos
         </button>
       </div>
 
-      {tab === "APPOINTMENTS" ? <MyAppointmentsPage embedded /> : <MyProfilePage embedded />}
+      <section className="account-panel">
+        {tab === "APPOINTMENTS" ? (
+          <MyAppointmentsPage embedded />
+        ) : (
+          <MyProfilePage embedded />
+        )}
+      </section>
     </div>
   );
 }

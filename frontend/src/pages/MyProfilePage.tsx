@@ -4,6 +4,7 @@ import { ApiError } from "../api/apiFetch";
 import { changeMyPassword, getMe, updateMe } from "../api/userAccountApi";
 import { useAuth } from "../auth/AuthContext";
 import type { UserAccountUpdateDto } from "../types/userAccount";
+import "../styles/account.css";
 
 type Props = {
   embedded?: boolean;
@@ -23,7 +24,6 @@ export default function MyProfilePage({ embedded = false }: Props) {
     showPhoto: false,
   });
 
-  // Password form separado
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [newPassword2, setNewPassword2] = useState("");
@@ -34,6 +34,7 @@ export default function MyProfilePage({ embedded = false }: Props) {
     setError("");
     setOk("");
     setLoading(true);
+
     try {
       const me = await getMe(token);
       setForm({
@@ -91,8 +92,9 @@ export default function MyProfilePage({ embedded = false }: Props) {
         showPhoto: !!form.showPhoto,
       });
 
-      setOk("Datos actualizados");
-      setOk((prev) => prev + " (Si cambiaste el email, puede que tengas que volver a iniciar sesión).");
+      setOk(
+        "Datos actualizados. Si cambiaste el email, puede que tengas que volver a iniciar sesión."
+      );
     } catch (e: any) {
       if (e instanceof ApiError && e.status === 409) {
         setError("Ese email ya está registrado.");
@@ -151,29 +153,48 @@ export default function MyProfilePage({ embedded = false }: Props) {
   };
 
   return (
-    <div style={{ padding: embedded ? 0 : 16, maxWidth: 720 }}>
+    <div>
       {!embedded ? (
-        <h1>Gestionar mis datos</h1>
+        <>
+          <h1 className="account-section-title">Gestionar mis datos</h1>
+          <p className="account-section-text">
+            Actualiza tu email, tu teléfono y tus preferencias de privacidad.
+          </p>
+        </>
       ) : (
-        <h2 style={{ marginTop: 0 }}>Gestionar mis datos</h2>
+        <>
+          <h2 className="account-section-title">Gestionar mis datos</h2>
+          <p className="account-section-text">
+            Actualiza tu email, tu teléfono y tus preferencias de privacidad.
+          </p>
+        </>
       )}
 
-      {error && <div style={{ color: "tomato", marginBottom: 10 }}>{error}</div>}
-      {ok && <div style={{ color: "lightgreen", marginBottom: 10 }}>{ok}</div>}
+      {(error || ok) && (
+        <div
+          className={`account-feedback ${
+            error ? "account-feedback--error" : "account-feedback--success"
+          }`}
+        >
+          {error || ok}
+        </div>
+      )}
 
-      <form onSubmit={onSaveProfile} style={{ display: "grid", gap: 12, marginBottom: 18 }}>
-        <label style={{ display: "grid", gap: 6 }}>
-          Email
+      <form onSubmit={onSaveProfile} className="account-form-grid" style={{ marginTop: "1.25rem" }}>
+        <label className="account-field">
+          <span className="account-field__label">Email</span>
           <input
+            className="input"
             value={form.email}
             onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
             disabled={loading}
           />
         </label>
 
-        <label style={{ display: "grid", gap: 6 }}>
-          Teléfono (opcional)
+        <label className="account-field">
+          <span className="account-field__label">Teléfono (opcional)</span>
           <input
+            className="input"
             value={form.phone ?? ""}
             onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))}
             disabled={loading}
@@ -181,33 +202,43 @@ export default function MyProfilePage({ embedded = false }: Props) {
           />
         </label>
 
-        <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
+        <label className="account-checkbox">
           <input
             type="checkbox"
             checked={!!form.showPhoto}
             onChange={(e) => setForm((f) => ({ ...f, showPhoto: e.target.checked }))}
             disabled={loading}
           />
-          Doy consentimiento para que mis tatuajes puedan mostrarse en la web.
+          <span>
+            Doy consentimiento para que mis tatuajes puedan mostrarse en la web.
+          </span>
         </label>
 
-        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-          <button type="submit" disabled={loading}>
+        <div className="account-inline-actions">
+          <button type="submit" className="account-btn account-btn--primary" disabled={loading}>
             {loading ? "Guardando..." : "Guardar cambios"}
           </button>
-          <button type="button" onClick={load} disabled={loading}>
+
+          <button
+            type="button"
+            className="account-btn account-btn--ghost"
+            onClick={load}
+            disabled={loading}
+          >
             Recargar
           </button>
         </div>
       </form>
 
-      <hr style={{ margin: "16px 0" }} />
+      <hr className="account-divider" />
 
-      <h3 style={{ marginTop: 0 }}>Cambiar contraseña</h3>
-      <form onSubmit={onChangePassword} style={{ display: "grid", gap: 12 }}>
-        <label style={{ display: "grid", gap: 6 }}>
-          Contraseña actual
+      <h3 className="account-subtitle">Cambiar contraseña</h3>
+
+      <form onSubmit={onChangePassword} className="account-form-grid">
+        <label className="account-field">
+          <span className="account-field__label">Contraseña actual</span>
           <input
+            className="input"
             type="password"
             value={currentPassword}
             onChange={(e) => setCurrentPassword(e.target.value)}
@@ -215,9 +246,10 @@ export default function MyProfilePage({ embedded = false }: Props) {
           />
         </label>
 
-        <label style={{ display: "grid", gap: 6 }}>
-          Nueva contraseña
+        <label className="account-field">
+          <span className="account-field__label">Nueva contraseña</span>
           <input
+            className="input"
             type="password"
             value={newPassword}
             onChange={(e) => setNewPassword(e.target.value)}
@@ -225,9 +257,10 @@ export default function MyProfilePage({ embedded = false }: Props) {
           />
         </label>
 
-        <label style={{ display: "grid", gap: 6 }}>
-          Repite nueva contraseña
+        <label className="account-field">
+          <span className="account-field__label">Repite nueva contraseña</span>
           <input
+            className="input"
             type="password"
             value={newPassword2}
             onChange={(e) => setNewPassword2(e.target.value)}
@@ -235,9 +268,11 @@ export default function MyProfilePage({ embedded = false }: Props) {
           />
         </label>
 
-        <button type="submit" disabled={loading}>
-          {loading ? "Actualizando..." : "Actualizar contraseña"}
-        </button>
+        <div className="account-inline-actions">
+          <button type="submit" className="account-btn account-btn--primary" disabled={loading}>
+            {loading ? "Actualizando..." : "Actualizar contraseña"}
+          </button>
+        </div>
       </form>
     </div>
   );

@@ -11,6 +11,7 @@ import { getAvailability } from "../api/availabilityApi";
 import { useAuth } from "../auth/AuthContext";
 import type { AppointmentDto } from "../types/appointment";
 import type { AvailabilitySlotDto } from "../types/availability";
+import "../styles/account.css";
 
 type Props = {
   embedded?: boolean;
@@ -112,7 +113,6 @@ export default function MyAppointmentsPage({ embedded = false }: Props) {
     setRescheduleSaving(false);
   };
 
-  // Cargar slots cuando el usuario elige día para reprogramar
   useEffect(() => {
     if (!token) return;
     if (!rescheduleId) return;
@@ -168,68 +168,133 @@ export default function MyAppointmentsPage({ embedded = false }: Props) {
   };
 
   return (
-    <div style={{ padding: embedded ? 0 : 16 }}>
-      {!embedded && <h1>Mis citas</h1>}
-      {embedded && <h2 style={{ marginTop: 0 }}>Gestionar mis citas</h2>}
+    <div>
+      {!embedded ? (
+        <>
+          <h1 className="account-section-title">Mis citas</h1>
+          <p className="account-section-text">
+            Consulta el estado de tus reservas, revisa el detalle y gestiona
+            cambios cuando sea posible.
+          </p>
+        </>
+      ) : (
+        <>
+          <h2 className="account-section-title">Gestionar mis citas</h2>
+          <p className="account-section-text">
+            Consulta el estado de tus reservas, revisa el detalle y gestiona
+            cambios cuando sea posible.
+          </p>
+        </>
+      )}
 
-      {error && <div style={{ color: "tomato", marginBottom: 10 }}>{error}</div>}
+      {error && (
+        <div className="account-feedback account-feedback--error">
+          {error}
+        </div>
+      )}
 
       {items.length === 0 ? (
-        <div>No tienes citas todavía.</div>
+        <div className="account-empty">No tienes citas todavía.</div>
       ) : (
-        <ul style={{ paddingLeft: 18 }}>
+        <div className="account-appointments">
           {items.map((a) => {
             const now = new Date();
             const start = new Date(String(a.startDateTime));
             const diffMs = start.getTime() - now.getTime();
             const diffHours = diffMs / (1000 * 60 * 60);
             const canModify = diffHours >= 24;
-            const isPendingOrConfirmed = a.state === "PENDING" || a.state === "CONFIRMED";
+            const isPendingOrConfirmed =
+              a.state === "PENDING" || a.state === "CONFIRMED";
 
             return (
-              <li key={a.id} style={{ marginBottom: 14 }}>
-                <div>
-                  <b>{formatSlotLabel(String(a.startDateTime))}</b> — {a.professionalName} — {a.state} —{" "}
-                  {a.durationMinutes} min
+              <article key={a.id} className="account-appointment-card">
+                <div className="account-appointment-card__top">
+                  <div>
+                    <h3 className="account-appointment-card__date">
+                      {formatSlotLabel(String(a.startDateTime))}
+                    </h3>
+                    <p className="account-appointment-card__meta">
+                      <strong>Profesional:</strong> {a.professionalName}
+                      <br />
+                      <strong>Duración:</strong> {a.durationMinutes} min
+                      <br />
+                      <strong>Estado:</strong> {a.state}
+                    </p>
+                  </div>
+
+                  <div className="account-badge">{a.state}</div>
                 </div>
 
-                <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 6 }}>
+                <div className="account-actions">
                   {role === "ADMIN" && !a.depositPaid && a.state === "PENDING" && (
-                    <button onClick={() => onPayDeposit(a.id)}>Confirmar señal</button>
+                    <button
+                      type="button"
+                      onClick={() => onPayDeposit(a.id)}
+                      className="account-btn account-btn--ghost"
+                    >
+                      Confirmar señal
+                    </button>
                   )}
 
                   {isPendingOrConfirmed && canModify && (
                     <>
-                      <button onClick={() => nav(`/my-appointments/${a.id}`)}>Ver detalle</button>
-                      <button onClick={() => onCancel(a.id)}>Cancelar</button>
-                      <button onClick={() => openReschedule(a)}>Reprogramar</button>
+                      <button
+                        type="button"
+                        onClick={() => nav(`/my-appointments/${a.id}`)}
+                        className="account-btn account-btn--ghost"
+                      >
+                        Ver detalle
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => onCancel(a.id)}
+                        className="account-btn account-btn--ghost"
+                      >
+                        Cancelar
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => openReschedule(a)}
+                        className="account-btn account-btn--primary"
+                      >
+                        Reprogramar
+                      </button>
                     </>
                   )}
 
                   {isPendingOrConfirmed && !canModify && (
-                    <button onClick={() => nav(`/my-appointments/${a.id}`)}>Ver detalle</button>
+                    <button
+                      type="button"
+                      onClick={() => nav(`/my-appointments/${a.id}`)}
+                      className="account-btn account-btn--ghost"
+                    >
+                      Ver detalle
+                    </button>
                   )}
 
                   {!isPendingOrConfirmed && (
-                    <button onClick={() => nav(`/my-appointments/${a.id}`)}>Ver detalle</button>
+                    <button
+                      type="button"
+                      onClick={() => nav(`/my-appointments/${a.id}`)}
+                      className="account-btn account-btn--ghost"
+                    >
+                      Ver detalle
+                    </button>
                   )}
                 </div>
 
                 {rescheduleId === a.id && (
-                  <div
-                    style={{
-                      marginTop: 10,
-                      padding: 10,
-                      border: "1px solid #333",
-                      borderRadius: 8,
-                      maxWidth: 720,
-                    }}
-                  >
-                    <div style={{ fontWeight: 600, marginBottom: 8 }}>Reprogramar cita</div>
+                  <div className="account-reschedule">
+                    <h4 className="account-subtitle" style={{ marginBottom: "0.75rem" }}>
+                      Reprogramar cita
+                    </h4>
 
-                    <label style={{ display: "grid", gap: 6, maxWidth: 260 }}>
-                      Día
+                    <label className="account-field" style={{ maxWidth: "260px" }}>
+                      <span className="account-field__label">Día</span>
                       <input
+                        className="input"
                         type="date"
                         value={rescheduleDay}
                         onChange={(e) => setRescheduleDay(e.target.value)}
@@ -237,29 +302,31 @@ export default function MyAppointmentsPage({ embedded = false }: Props) {
                       />
                     </label>
 
-                    <div style={{ marginTop: 10 }}>
+                    <div>
                       {rescheduleLoading ? (
-                        <div style={{ opacity: 0.8 }}>Cargando slots…</div>
+                        <p className="account-muted">Cargando slots…</p>
                       ) : rescheduleSlots.length === 0 ? (
-                        <div style={{ opacity: 0.8 }}>
-                          {rescheduleDay ? "No hay slots disponibles ese día." : "Selecciona un día para ver slots."}
-                        </div>
+                        <p className="account-muted">
+                          {rescheduleDay
+                            ? "No hay slots disponibles ese día."
+                            : "Selecciona un día para ver slots."}
+                        </p>
                       ) : (
-                        <div style={{ display: "grid", gap: 6 }}>
+                        <div className="account-slots">
                           {rescheduleSlots.map((s, idx) => {
-                            const start = String((s as any).startDateTime);
+                            const startValue = String((s as any).startDateTime);
 
                             return (
-                              <label key={idx} style={{ display: "flex", gap: 10, alignItems: "center" }}>
+                              <label key={idx} className="account-slot">
                                 <input
                                   type="radio"
                                   name={`slot-${a.id}`}
-                                  value={start}
-                                  checked={rescheduleStart === start}
-                                  onChange={() => setRescheduleStart(start)}
+                                  value={startValue}
+                                  checked={rescheduleStart === startValue}
+                                  onChange={() => setRescheduleStart(startValue)}
                                   disabled={rescheduleSaving}
                                 />
-                                {formatSlotLabel(start)}
+                                <span>{formatSlotLabel(startValue)}</span>
                               </label>
                             );
                           })}
@@ -267,24 +334,31 @@ export default function MyAppointmentsPage({ embedded = false }: Props) {
                       )}
                     </div>
 
-                    <div style={{ display: "flex", gap: 8, marginTop: 10, flexWrap: "wrap" }}>
+                    <div className="account-inline-actions" style={{ marginTop: "1rem" }}>
                       <button
+                        type="button"
                         onClick={onSaveReschedule}
                         disabled={!rescheduleStart || rescheduleLoading || rescheduleSaving}
+                        className="account-btn account-btn--primary"
                       >
                         {rescheduleSaving ? "Guardando..." : "Guardar cambio"}
                       </button>
 
-                      <button onClick={closeReschedule} disabled={rescheduleLoading || rescheduleSaving}>
+                      <button
+                        type="button"
+                        onClick={closeReschedule}
+                        disabled={rescheduleLoading || rescheduleSaving}
+                        className="account-btn account-btn--ghost"
+                      >
                         Cancelar
                       </button>
                     </div>
                   </div>
                 )}
-              </li>
+              </article>
             );
           })}
-        </ul>
+        </div>
       )}
     </div>
   );

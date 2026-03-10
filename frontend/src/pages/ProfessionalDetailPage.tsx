@@ -341,17 +341,24 @@ export default function ProfessionalDetailPage() {
 
                 <label className="professional-edit-form__field professional-edit-form__field--full">
                   <span>Foto de perfil</span>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    disabled={saving || uploadingPhoto}
-                    onChange={async (e) => {
-                      const f = e.target.files?.[0];
-                      if (!f) return;
-                      await onPickProfilePhoto(f);
-                      e.currentTarget.value = "";
-                    }}
-                  />
+
+                  <label className="file-upload">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      disabled={saving || uploadingPhoto}
+                      onChange={async (e) => {
+                        const f = e.target.files?.[0];
+                        if (!f) return;
+                        await onPickProfilePhoto(f);
+                        e.currentTarget.value = "";
+                      }}
+                    />
+
+                    <span className="file-upload__button">
+                      {uploadingPhoto ? "Subiendo..." : "Seleccionar imagen"}
+                    </span>
+                  </label>
                 </label>
 
                 {form.profilePhoto.trim() && (

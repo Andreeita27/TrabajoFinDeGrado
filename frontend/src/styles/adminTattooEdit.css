@@ -316,3 +316,38 @@
     text-align: left;
   }
 }
+
+/* input file bonito */
+
+.file-upload {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.8rem;
+  cursor: pointer;
+}
+
+.file-upload input[type="file"] {
+  display: none;
+}
+
+.file-upload__button {
+  padding: 0.55rem 1rem;
+  border-radius: 999px;
+  border: 1px solid rgba(181,161,108,0.35);
+  background: rgba(181,161,108,0.08);
+  color: #b5a16c;
+  font-size: 0.9rem;
+  font-weight: 600;
+  transition: all .25s ease;
+}
+
+.file-upload__button:hover {
+  background: rgba(181,161,108,0.18);
+  border-color: rgba(181,161,108,0.55);
+  transform: translateY(-1px);
+}
+
+.file-upload input:disabled + .file-upload__button {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

@@ -201,16 +201,17 @@ export default function MyAppointmentsPage({ embedded = false }: Props) {
     }
   };
 
-  return (
-    <div>
+  const content = (
+    <>
       {!embedded ? (
-        <>
+        <div className="account-standalone__hero">
+          <p className="account-page-kicker">Zona privada</p>
           <h1 className="account-section-title">Mis citas</h1>
           <p className="account-section-text">
             Consulta el estado de tus reservas, revisa el detalle y gestiona
             cambios cuando sea posible.
           </p>
-        </>
+        </div>
       ) : (
         <>
           <h2 className="account-section-title">Gestionar mis citas</h2>
@@ -396,6 +397,18 @@ export default function MyAppointmentsPage({ embedded = false }: Props) {
           })}
         </div>
       )}
-    </div>
+    </>
+  );
+
+  if (embedded) {
+    return <div>{content}</div>;
+  }
+
+  return (
+    <main className="account-standalone-page">
+      <section className="account-standalone-shell">
+        {content}
+      </section>
+    </main>
   );
 }

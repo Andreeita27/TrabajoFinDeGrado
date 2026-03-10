@@ -399,13 +399,19 @@ export default function AppointmentDetailPage() {
                   className="apdUploadForm"
                   style={{ marginTop: "1rem" }}
                 >
-                  <input
-                    ref={fileRef}
-                    type="file"
-                    accept="image/*"
-                    disabled={uploading || !token}
-                    className="apdFileInput"
-                  />
+                  <label className="file-upload">
+                    <input
+                      ref={fileRef}
+                      type="file"
+                      accept="image/*"
+                      disabled={uploading || !token}
+                      className="apdFileInput"
+                    />
+
+                    <span className="file-upload__button">
+                      Seleccionar imagen
+                    </span>
+                  </label>
 
                   <button
                     type="submit"

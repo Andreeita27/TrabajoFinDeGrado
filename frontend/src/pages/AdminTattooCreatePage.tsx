@@ -384,17 +384,24 @@ export default function AdminTattooCreatePage() {
                 <div className="admin-tattoo-create-upload">
                   <label className="admin-tattoo-create-field">
                     <span className="admin-tattoo-create-label">Imagen del tattoo</span>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      disabled={loading || uploadingImage}
-                      onChange={async (e) => {
-                        const f = e.target.files?.[0];
-                        if (!f) return;
-                        await onPickImage(f);
-                        e.currentTarget.value = "";
-                      }}
-                    />
+
+                    <label className="file-upload">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        disabled={loading || uploadingImage}
+                        onChange={async (e) => {
+                          const f = e.target.files?.[0];
+                          if (!f) return;
+                          await onPickImage(f);
+                          e.currentTarget.value = "";
+                        }}
+                      />
+
+                      <span className="file-upload__button">
+                        {uploadingImage ? "Subiendo..." : "Seleccionar imagen"}
+                      </span>
+                    </label>
                   </label>
 
                   <p className="admin-tattoo-create-upload-note">

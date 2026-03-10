@@ -26,9 +26,7 @@ export default function Footer() {
           <div className="footer__col">
             <div className="footer__title">Servicios</div>
             <a className="footer__link" href="/showroom">Tatuajes</a>
-            <a className="footer__link" href="https://eliminartatuajeszaragoza.com/" target="_blank" rel="noreferrer">
-              Láser
-            </a>
+            <a className="footer__link" href="/laser">Láser</a>
           </div>
         </div>
 

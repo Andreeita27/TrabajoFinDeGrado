@@ -5,6 +5,7 @@ import HomeCarousel from "../components/HomeCarousel";
 import "../styles/homeOnePage.css";
 import HomeMap from "../components/HomeMap";
 import GoogleReviewsSection from "../components/GoogleReviewsSection";
+import BookingPreviewCard from "../components/BookingPreviewCard";
 
 import { getProfessionals } from "../api/showroomApi";
 import type { ProfessionalDto } from "../types/professional";
@@ -26,12 +27,12 @@ type SectionProps = {
   reverse?: boolean;
   kicker: string;
   title: string;
-  text: string;
+  text: React.ReactNode;
   bullets?: string[];
   ctas?: { label: string; onClick?: () => void; href?: string; external?: boolean }[];
   images?: string[];
   media?: React.ReactNode;
-  mediaClassName?: String;
+  mediaClassName?: string;
 };
 
 function useInViewOnce() {
@@ -79,7 +80,7 @@ function HomeSection(p: SectionProps) {
 
             <h2 className="hpTitle">{p.title}</h2>
 
-            <p className="hpP">{p.text}</p>
+            <div className="hpP">{p.text}</div>
 
             {p.bullets?.length ? (
               <ul className="hpBullets">
@@ -436,10 +437,10 @@ function HomeLaserMedia() {
             <button
               type="button"
               className="hpIconBtn hpIconBtn--arrow"
-              title="Ver más información"
+              title="Página web de Eriko"
               onClick={(e) => {
                 e.stopPropagation();
-                nav("/laser");
+                window.open(LASER_URL, "_blank", "noreferrer");
               }}
             >
               <svg viewBox="0 0 24 24" aria-hidden="true" className="hpIconSvg hpIconSvg--arrow">
@@ -479,9 +480,6 @@ export default function HomePage() {
     else nav("/login", { state: { from: "/calendar" } });
   };
 
-  // IMÁGENES INVENTADAS
-  const imgCita = ["/home/book_01.jpg", "/home/book_02.jpg"];
-
   return (
     <div className="hpPage">
       <section className="hpPosterHero">
@@ -514,9 +512,30 @@ export default function HomePage() {
         bgClass="hpBgBlack"
         kicker="Equipo"
         title="Tatuadores"
-        text="Nuestro equipo de tatuadores cuenta con una amplia experiencia en cualquier estilo, consiguiendo adaptar tu idea de manera 
-        profesional. David el Titi y Acerete son nuestros tatuadores residentes, pero contamos también con artistas invitados que vienen
-        a nuestro estudio regularmente."
+        text={
+          <>
+            <p>
+              Nuestro equipo de tatuadores cuenta con una amplia experiencia en distintos estilos,
+              adaptando cada proyecto de forma <strong>totalmente personalizada</strong>.
+            </p>
+
+            <p>
+              En 62 Rosas Tattoo creemos que cada tatuaje debe construirse contigo, escuchando tu
+              idea y transformándola en una pieza sólida, equilibrada y pensada para durar en el tiempo.
+            </p>
+
+            <p>
+              Nuestros tatuadores residentes son <strong>David el Titi</strong> y{" "}
+              <strong>Acerete Tattoo</strong>, dos artistas con estilos muy definidos y una gran
+              trayectoria profesional.
+            </p>
+
+            <p>
+              Además, el estudio recibe regularmente <strong>artistas invitados</strong>, lo que
+              nos permite ofrecer variedad artística y nuevas perspectivas en cada temporada.
+            </p>
+          </>
+        }
         ctas={[
           { label: "Conoce a todos los tatuadores", onClick: () => nav("/professionals") },
         ]}
@@ -531,14 +550,25 @@ export default function HomePage() {
         reverse
         kicker="Nuestros estilos"
         title="Estilos"
-        text="Trabajamos una amplia variedad de estilos, siempre con un enfoque artístico y personalizado. 
-        Te ayudamos a aterrizar tu idea para que quede tal y como la habías imaginado."
-        bullets={[
-          "Tradicional / Neotradicional",
-          "Realismo Black and Grey / Blackwork",
-          "Fineline / Ornamental",
-          "Cover up (consultar primero con el tatuador)",
-        ]}
+        text={
+          <>
+            <p>
+              Trabajamos una amplia variedad de estilos de tatuaje, siempre con un enfoque{" "}
+              <strong>artístico, técnico y personalizado</strong>.
+            </p>
+
+            <p>
+              Nuestro objetivo es ayudarte a transformar tu idea en una pieza bien diseñada,
+              pensada para tu anatomía y ejecutada con el máximo nivel de detalle.
+            </p>
+
+            <p>
+              Si no tienes claro el estilo que buscas, nuestros tatuadores pueden{" "}
+              <strong>orientarte durante el proceso de diseño</strong> para encontrar la mejor
+              solución para tu proyecto.
+            </p>
+          </>
+        }
         ctas={[
           { label: "Ver showroom", onClick: () => nav("/showroom") },
           { label: "Pedir cita", onClick: goBook },
@@ -552,11 +582,29 @@ export default function HomePage() {
         bgClass="hpBgGold"
         kicker="Eliminación / atenuación"
         title="Láser"
-        text="Si estás valorando eliminar o aclarar un tatuaje, también ofrecemos servicio de láser. Eriko es un gran profesional
-        que cuenta con la última tecnología en eliminación / atenuación de tatuajes y micropigmentación. Visita su página web
-        y ponte en contacto con él vía WhatsApp o Instagram."
+        text={
+          <>
+            <p>
+              Si estás valorando <strong>eliminar o aclarar un tatuaje</strong>, en el
+              estudio también contamos con servicio especializado de láser.
+            </p>
+
+            <p>
+              El tratamiento lo realiza <strong>Eriko</strong>, profesional con amplia
+              experiencia en eliminación y atenuación de tatuajes y
+              micropigmentación, utilizando tecnología específica para conseguir
+              resultados progresivos y seguros.
+            </p>
+
+            <p>
+              Desde nuestra web puedes consultar la información general del servicio.
+              Para una valoración personalizada o resolver dudas sobre tu caso,
+              puedes acceder a su página oficial y contactar directamente con él.
+            </p>
+          </>
+        }
         ctas={[
-          { label: "Información láser", href: LASER_URL, external: true },
+          { label: "Información láser", onClick: () => nav("/laser") },
         ]}
         media={<HomeLaserMedia />}
       />
@@ -568,8 +616,24 @@ export default function HomePage() {
         reverse
         kicker="Dónde estamos"
         title="Ubicación"
-        text="Podrás encontrarnos en Plaza Ortilla, nº2, local 4, en el barrio del Actur, en Zaragoza. 
-        Nuestro horario es de martes a viernes de 12:00 a 20:00h."
+        text={
+          <>
+            <p>
+              Nuestro estudio se encuentra en <strong>Plaza Ortilla nº2, local 4</strong>, en el
+              barrio del <strong>Actur, Zaragoza</strong>.
+            </p>
+
+            <p>
+              Es un espacio pensado para trabajar con tranquilidad, cuidar cada detalle del
+              proceso y ofrecer una experiencia cómoda tanto para clientes habituales como para
+              quienes se tatúan por primera vez.
+            </p>
+
+            <p>
+              Nuestro horario de atención es <strong>de martes a viernes, de 12:00 a 20:00h</strong>.
+            </p>
+          </>
+        }
         bullets={["Teléfono: 976 05 60 54", "Instagram: 62rosastattoo", "Email: 62rosastattoo@gmail.com"]}
         ctas={[
           {
@@ -589,16 +653,28 @@ export default function HomePage() {
         bgClass="hpBgWhite"
         kicker="Citas"
         title="Reserva tu cita"
-        text="Reserva online según disponibilidad real. Después podrás gestionar tu cita y subir tu imagen de referencia."
-        bullets={["Disponibilidad por duración", "Gestión desde tu zona privada"]}
+        text={
+          <>
+            <p>
+              Puedes <strong>reservar tu cita online</strong> de forma sencilla según la
+              disponibilidad real del estudio.
+            </p>
+
+            <p>
+              Una vez confirmada tu reserva, tendrás acceso a tu <strong>zona privada</strong>,
+              donde podrás gestionar tus citas y subir tu imagen de referencia para que el
+              tatuador pueda preparar tu proyecto con antelación.
+            </p>
+          </>
+        }
         ctas={[
           { label: "Reservar ahora", onClick: goBook },
           { label: "Ver mis citas", onClick: () => nav("/my-appointments") },
         ]}
-        images={imgCita}
+        media={<BookingPreviewCard />}
       />
 
-      {/* 8) Reseñas */}
+      {/* 6) Reseñas */}
       <GoogleReviewsSection />
     </div>
   );

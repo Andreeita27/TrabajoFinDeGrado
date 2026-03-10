@@ -67,10 +67,13 @@ function formatDayLabel(day: string) {
 }
 
 function formatMonthLabel(date: Date) {
-  return date.toLocaleDateString("es-ES", {
-    month: "long",
-    year: "numeric",
-  });
+  const month = date.toLocaleDateString("es-ES", { month: "long" });
+  const year = date.getFullYear();
+
+  const monthCap =
+    month.charAt(0).toUpperCase() + month.slice(1);
+
+  return `${monthCap} ${year}`;
 }
 
 function formatAppointmentType(type: AppointmentType) {

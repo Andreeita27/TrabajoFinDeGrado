@@ -33,6 +33,40 @@ function formatSlotLabel(iso: string) {
   }
 }
 
+function formatState(state?: string) {
+  switch (state) {
+    case "PENDING":
+      return "Pendiente";
+    case "CONFIRMED":
+      return "Confirmada";
+    case "CANCELLED":
+      return "Cancelada";
+    case "COMPLETED":
+      return "Completada";
+    case "NO_SHOW":
+      return "No asistió";
+    default:
+      return state ?? "-";
+  }
+}
+
+function getStateBadgeClass(state?: string) {
+  switch (state) {
+    case "PENDING":
+      return "account-badge account-badge--pending";
+    case "CONFIRMED":
+      return "account-badge account-badge--confirmed";
+    case "CANCELLED":
+      return "account-badge account-badge--cancelled";
+    case "COMPLETED":
+      return "account-badge account-badge--completed";
+    case "NO_SHOW":
+      return "account-badge account-badge--no-show";
+    default:
+      return "account-badge";
+  }
+}
+
 export default function MyAppointmentsPage({ embedded = false }: Props) {
   const { token, role } = useAuth();
   const nav = useNavigate();
@@ -218,11 +252,13 @@ export default function MyAppointmentsPage({ embedded = false }: Props) {
                       <br />
                       <strong>Duración:</strong> {a.durationMinutes} min
                       <br />
-                      <strong>Estado:</strong> {a.state}
+                      <strong>Estado:</strong> {formatState(a.state)}
                     </p>
                   </div>
 
-                  <div className="account-badge">{a.state}</div>
+                  <div className={getStateBadgeClass(a.state)}>
+                    {formatState(a.state)}
+                  </div>
                 </div>
 
                 <div className="account-actions">

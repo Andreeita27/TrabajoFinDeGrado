@@ -1,15 +1,74 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { ApiError } from "../api/apiFetch";
-import { getAppointment, uploadAppointmentReferenceImage, fetchAppointmentReferenceImageBlob } from "../api/appointmentsApi";
+import {
+  getAppointment,
+  uploadAppointmentReferenceImage,
+  fetchAppointmentReferenceImageBlob,
+} from "../api/appointmentsApi";
 import { useAuth } from "../auth/AuthContext";
 import type { AppointmentDto } from "../types/appointment";
+import "../styles/appointmentDetail.css";
 
 function formatDate(iso: string) {
   try {
-    return new Date(iso).toLocaleString("es-ES");
+    return new Date(iso).toLocaleString("es-ES", {
+      dateStyle: "full",
+      timeStyle: "short",
+    });
   } catch {
     return iso;
+  }
+}
+
+function formatAppointmentType(type?: string) {
+  return type === "CONSULTATION" ? "Consulta" : "Sesión de tatuaje";
+}
+
+function formatState(state?: string) {
+  switch (state) {
+    case "PENDING":
+      return "Pendiente";
+    case "CONFIRMED":
+      return "Confirmada";
+    case "CANCELLED":
+      return "Cancelada";
+    case "COMPLETED":
+      return "Completada";
+    default:
+      return state ?? "-";
+  }
+}
+
+function getStateBadgeClass(state?: string) {
+  switch (state) {
+    case "PENDING":
+      return "apdStatus apdStatus--pending";
+    case "CONFIRMED":
+      return "apdStatus apdStatus--confirmed";
+    case "CANCELLED":
+      return "apdStatus apdStatus--cancelled";
+    case "COMPLETED":
+      return "apdStatus apdStatus--completed";
+    case "NO_SHOW":
+      return "apdStatus apdStatus--no-show";
+    default:
+      return "apdStatus";
+  }
+}
+
+function formatTattooSize(size?: string) {
+  switch (size) {
+    case "SMALL":
+      return "Pequeño";
+    case "MEDIUM":
+      return "Mediano";
+    case "LARGE":
+      return "Grande";
+    case "XL":
+      return "Extra grande";
+    default:
+      return size ?? "-";
   }
 }
 
@@ -31,7 +90,7 @@ export default function AppointmentDetailPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const [refUrl, setRefUrl] = useState<string>(""); // objectURL
+  const [refUrl, setRefUrl] = useState<string>("");
   const [refLoading, setRefLoading] = useState(false);
   const [refError, setRefError] = useState("");
   const [uploading, setUploading] = useState(false);
@@ -64,24 +123,17 @@ export default function AppointmentDetailPage() {
     }
   };
 
-  // Carga principal
   useEffect(() => {
     load();
   }, [token, appointmentId]);
 
-  // Cargar la imagen privada como blob SOLO si existe referencia (referenceImageUrl)
   useEffect(() => {
-    // Limpieza del objectURL anterior
     if (refUrl) URL.revokeObjectURL(refUrl);
     setRefUrl("");
     setRefError("");
 
-    if (!token) return;
-    if (!appointmentId) return;
-
-    //Si no hay imagen asociada en la cita, NO es error y NO hago fetch
-    const hasImage = !!item?.referenceImageUrl;
-    if (!hasImage) return;
+    if (!token || !appointmentId) return;
+    if (!item?.referenceImageUrl) return;
 
     let alive = true;
     setRefLoading(true);
@@ -95,7 +147,6 @@ export default function AppointmentDetailPage() {
       })
       .catch((e: any) => {
         if (!alive) return;
-        // Aquí sí es un error real (porque la cita decía que había imagen)
         setRefError(e?.message || "No se pudo cargar la imagen de referencia");
       })
       .finally(() => {
@@ -118,20 +169,21 @@ export default function AppointmentDetailPage() {
     }
 
     setRefError("");
+
     try {
       setUploading(true);
       await uploadAppointmentReferenceImage(token, appointmentId, file);
 
-      // refrescamos: recargar cita (esto actualiza referenceImageUrl)
       await load();
 
-      // Fuerza recarga del blob: reseteo state y vuelvo a pedirlo
       if (refUrl) URL.revokeObjectURL(refUrl);
       setRefUrl("");
 
       setRefLoading(true);
       const blob = await fetchAppointmentReferenceImageBlob(token, appointmentId);
-      if (blob && blob.size > 0) setRefUrl(URL.createObjectURL(blob));
+      if (blob && blob.size > 0) {
+        setRefUrl(URL.createObjectURL(blob));
+      }
     } catch (e: any) {
       if (e instanceof ApiError && (e.status === 401 || e.status === 403)) {
         nav("/login", { replace: true, state: { from: loc.pathname } });
@@ -141,153 +193,237 @@ export default function AppointmentDetailPage() {
     } finally {
       setUploading(false);
       setRefLoading(false);
-
-      // Limpia el input para poder re-subir la misma imagen si quieres
       if (fileRef.current) fileRef.current.value = "";
     }
   };
 
+  const clientText =
+    item?.clientFullName ??
+    (`${item?.clientName ?? ""} ${item?.clientSurname ?? ""}`.trim() ||
+      (item?.clientId ? `#${item.clientId}` : "-"));
+
   return (
-    <div style={{ padding: 16, maxWidth: 980, margin: "0 auto" }}>
-      <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
-        <button onClick={() => nav(backTo)}>Volver</button>
-        <h1 style={{ margin: 0 }}>Detalle de cita</h1>
-      </div>
+    <div className="apd">
+      <button type="button" onClick={() => nav(backTo)} className="apdBack">
+        ← Volver
+      </button>
 
-      {loading && <div style={{ marginTop: 12, opacity: 0.8 }}>Cargando…</div>}
-      {error && <div style={{ marginTop: 12, color: "tomato" }}>{error}</div>}
+      <header className="apdHeader">
+        <p className="apdKicker">Gestión de citas</p>
 
-      {!loading && !error && !item && <div style={{ marginTop: 12 }}>No encontrada.</div>}
-
-      {item && (
-        <div style={{ marginTop: 16, display: "grid", gap: 14 }}>
-          <div style={{ border: "1px solid #333", borderRadius: 10, padding: 14, display: "grid", gap: 8 }}>
-            <div>
-              <b>Fecha:</b> {formatDate(String(item.startDateTime))}
-            </div>
-
-            <div>
-              <b>Tipo:</b> {item.appointmentType === "CONSULTATION" ? "Consulta" : "Sesión de tatuaje"}
-            </div>
-
-            <div>
-              <b>Profesional:</b> {item.professionalName}
-            </div>
-
-            {canSeeClientInfo && (
-              <div>
-                <b>Cliente:</b>{" "}
-                {item.clientFullName ?? (`${item.clientName ?? ""} ${item.clientSurname ?? ""}`.trim() || `#${item.clientId}`)}
-              </div>
-            )}
-
-            <div>
-              <b>Estado:</b> {item.state}
-            </div>
-
-            {item.appointmentType === "TATTOO" && (
-              <div>
-                <b>Zona:</b> {item.bodyPlacement}
-              </div>
-            )}
-
-            {item.appointmentType === "TATTOO" && (
-              <div>
-                <b>Tamaño:</b> {item.tattooSize}
-              </div>
-            )}
-
-            <div>
-              <b>Primera vez:</b> {item.firstTime ? "Sí" : "No"}
-            </div>
-
-            <div>
-              <b>Duración:</b> {item.durationMinutes} min
-            </div>
-
-            {item.appointmentType === "TATTOO" && (
-              <div>
-                <b>Señal pagada:</b> {item.depositPaid ? "Sí" : "No"}
-              </div>
-            )}
-
-            <div>
-              <b>Descripción idea:</b>
-              <div style={{ marginTop: 6, whiteSpace: "pre-wrap" }}>{item.ideaDescription}</div>
-            </div>
+        <div className="apdTitleRow">
+          <div>
+            <h1 className="apdTitle">Detalle de cita</h1>
+            <p className="apdSubtitle">
+              Consulta toda la información de la reserva, revisa la idea del
+              tatuaje y gestiona la imagen de referencia desde un mismo sitio.
+            </p>
           </div>
 
-          <div style={{ border: "1px solid #333", borderRadius: 10, padding: 14 }}>
-            <h2 style={{ marginTop: 0 }}>Imagen de referencia</h2>
+          {item?.state && (
+            <div className={getStateBadgeClass(item.state)}>
+              {formatState(item.state)}
+            </div>
+          )}
+        </div>
+      </header>
 
-            {!!refError && <div style={{ color: "tomato", marginBottom: 10 }}>{refError}</div>}
+      {loading && (
+        <div className="apdFeedback apdFeedback--muted">
+          <span className="apdLoading">Cargando detalle de la cita…</span>
+        </div>
+      )}
 
-            <div style={{ display: "grid", gap: 12 }}>
-              {!item.referenceImageUrl && (
-                <div
-                  style={{
-                    padding: 12,
-                    borderRadius: 10,
-                    border: "1px solid #444",
-                    background: "rgba(255,255,255,0.04)",
-                    opacity: 0.95,
-                  }}
-                >
+      {error && (
+        <div className="apdFeedback apdFeedback--error">{error}</div>
+      )}
+
+      {!loading && !error && !item && (
+        <div className="apdFeedback apdFeedback--muted">
+          No se ha encontrado la cita.
+        </div>
+      )}
+
+      {item && (
+        <div className="apdGrid">
+          <section className="apdCard">
+            <div className="apdCard__body">
+              <h2 className="apdSectionTitle">Información de la cita</h2>
+
+              <div className="apdMeta">
+                <div className="apdMetaRow">
+                  <span className="apdMetaKey">Fecha y hora</span>
+                  <span className="apdMetaVal">
+                    {formatDate(String(item.startDateTime))}
+                  </span>
+                </div>
+
+                <div className="apdMetaRow">
+                  <span className="apdMetaKey">Tipo</span>
+                  <span className="apdMetaVal">
+                    {formatAppointmentType(item.appointmentType)}
+                  </span>
+                </div>
+
+                <div className="apdMetaRow">
+                  <span className="apdMetaKey">Profesional</span>
+                  <span className="apdMetaVal">{item.professionalName}</span>
+                </div>
+
+                {canSeeClientInfo && (
+                  <div className="apdMetaRow">
+                    <span className="apdMetaKey">Cliente</span>
+                    <span className="apdMetaVal">{clientText}</span>
+                  </div>
+                )}
+
+                <div className="apdMetaRow">
+                  <span className="apdMetaKey">Estado</span>
+                  <span className="apdMetaVal">{formatState(item.state)}</span>
+                </div>
+
+                <div className="apdMetaRow">
+                  <span className="apdMetaKey">Primera vez</span>
+                  <span className="apdMetaVal">
+                    {item.firstTime ? "Sí" : "No"}
+                  </span>
+                </div>
+
+                <div className="apdMetaRow">
+                  <span className="apdMetaKey">Duración</span>
+                  <span className="apdMetaVal">
+                    {item.durationMinutes} min
+                  </span>
+                </div>
+
+                {item.appointmentType === "TATTOO" && (
+                  <div className="apdMetaRow">
+                    <span className="apdMetaKey">Zona</span>
+                    <span className="apdMetaVal">
+                      {item.bodyPlacement || "-"}
+                    </span>
+                  </div>
+                )}
+
+                {item.appointmentType === "TATTOO" && (
+                  <div className="apdMetaRow">
+                    <span className="apdMetaKey">Tamaño</span>
+                    <span className="apdMetaVal">
+                      {formatTattooSize(item.tattooSize)}
+                    </span>
+                  </div>
+                )}
+
+                {item.appointmentType === "TATTOO" && (
+                  <div className="apdMetaRow">
+                    <span className="apdMetaKey">Señal pagada</span>
+                    <span className="apdMetaVal">
+                      {item.depositPaid ? "Sí" : "No"}
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              <div className="apdDescription">
+                <p className="apdDescriptionLabel">Descripción de la idea</p>
+                <p className="apdDescriptionText">
+                  {item.ideaDescription || "No se ha indicado ninguna descripción."}
+                </p>
+              </div>
+            </div>
+          </section>
+
+          <section className="apdCard">
+            {item.referenceImageUrl ? (
+              <div className="apdHeroMedia">
+                {refLoading ? (
+                  <div className="apdEmptyMedia">
+                    <div className="apdEmptyBox">Cargando imagen de referencia…</div>
+                  </div>
+                ) : refUrl ? (
+                  <>
+                    <img src={refUrl} alt="Imagen de referencia de la cita" />
+                    <div className="apdHeroShade" />
+                    <div className="apdHeroBadge">Imagen de referencia</div>
+                  </>
+                ) : (
+                  <div className="apdEmptyMedia">
+                    <div className="apdEmptyBox">
+                      No se ha podido mostrar la imagen de referencia.
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="apdEmptyMedia">
+                <div className="apdEmptyBox">
                   {role === "CLIENT" ? (
                     <>
-                      <div style={{ fontWeight: 700, marginBottom: 4 }}>
-                        Aún no has subido ninguna imagen
-                      </div>
-                      <div style={{ opacity: 0.85 }}>
-                        Si quieres, puedes subir <b>1 imagen</b> desde aquí para que el tatuador adapte el diseño a tu idea.
-                      </div>
+                      <strong>Aún no has subido ninguna imagen.</strong>
+                      <br />
+                      Puedes añadir una imagen de referencia para que el
+                      tatuador entienda mejor tu idea y la adapte al diseño.
                     </>
                   ) : (
-                    <div style={{ fontWeight: 600 }}>
-                      El cliente no ha subido ninguna imagen de referencia.
-                    </div>
+                    <>
+                      <strong>Sin imagen de referencia.</strong>
+                      <br />
+                      El cliente todavía no ha subido ninguna imagen para esta cita.
+                    </>
                   )}
+                </div>
+              </div>
+            )}
+
+            <div className="apdUploadArea">
+              <h2 className="apdSectionTitle" style={{ marginBottom: "0.5rem" }}>
+                Imagen de referencia
+              </h2>
+              <p className="apdSectionText">
+                Aquí puedes revisar la imagen asociada a la cita o añadir una
+                nueva.
+              </p>
+
+              {refError && (
+                <div
+                  className="apdFeedback apdFeedback--error"
+                  style={{ marginTop: "1rem", marginBottom: "0" }}
+                >
+                  {refError}
                 </div>
               )}
 
-              {/* Preview (solo si la cita tiene imagen) */}
-              {item.referenceImageUrl && (
-                <>
-                  {refLoading ? (
-                    <div style={{ opacity: 0.85 }}>Cargando imagen…</div>
-                  ) : refUrl ? (
-                    <img
-                      src={refUrl}
-                      alt="Imagen de referencia"
-                      style={{
-                        width: "100%",
-                        maxWidth: 520,
-                        height: 320,
-                        objectFit: "cover",
-                        borderRadius: 10,
-                        border: "1px solid #444",
-                      }}
-                    />
-                  ) : (
-                    // Si la cita tiene referenceImageUrl pero aún no ha podido pintar el blob:
-                    <div style={{ opacity: 0.85 }}>Cargando…</div>
-                  )}
-                </>
-              )}
-
-              {/* Subida (solo CLIENT) */}
               {role === "CLIENT" && (
-                <form onSubmit={onUploadReference} style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
-                  <input ref={fileRef} type="file" accept="image/*" disabled={uploading || !token} />
-                  <button type="submit" disabled={uploading || !token}>
+                <form
+                  onSubmit={onUploadReference}
+                  className="apdUploadForm"
+                  style={{ marginTop: "1rem" }}
+                >
+                  <input
+                    ref={fileRef}
+                    type="file"
+                    accept="image/*"
+                    disabled={uploading || !token}
+                    className="apdFileInput"
+                  />
+
+                  <button
+                    type="submit"
+                    disabled={uploading || !token}
+                    className="apdButton apdButton--primary"
+                  >
                     {uploading ? "Subiendo..." : "Subir imagen"}
                   </button>
                 </form>
               )}
 
-              <div style={{ fontSize: 12, opacity: 0.75 }} />
+              <p className="apdUploadNote">
+                {role === "CLIENT"
+                  ? "Puedes subir una imagen para que el profesional tenga una referencia visual más clara."
+                  : "Las imágenes de referencia ayudan a preparar mejor el diseño antes de la sesión."}
+              </p>
             </div>
-          </div>
+          </section>
         </div>
       )}
     </div>

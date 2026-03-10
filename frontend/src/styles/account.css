@@ -207,6 +207,36 @@
   text-transform: uppercase;
 }
 
+.account-badge--pending {
+  border-color: rgba(181, 161, 108, 0.25);
+  background: rgba(181, 161, 108, 0.12);
+  color: #f2e6c2;
+}
+
+.account-badge--confirmed {
+  border-color: rgba(92, 163, 115, 0.3);
+  background: rgba(92, 163, 115, 0.14);
+  color: #dff5e5;
+}
+
+.account-badge--cancelled {
+  border-color: rgba(191, 92, 92, 0.3);
+  background: rgba(191, 92, 92, 0.14);
+  color: #ffe0e0;
+}
+
+.account-badge--completed {
+  border-color: rgba(125, 125, 125, 0.3);
+  background: rgba(125, 125, 125, 0.14);
+  color: #ececec;
+}
+
+.account-badge--no-show {
+  border-color: rgba(140, 110, 170, 0.3);
+  background: rgba(140, 110, 170, 0.14);
+  color: #efe6ff;
+}
+
 .account-actions {
   display: flex;
   gap: 0.65rem;

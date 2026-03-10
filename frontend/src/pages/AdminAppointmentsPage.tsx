@@ -35,6 +35,112 @@ function formatSlotLabel(iso: string) {
   }
 }
 
+function formatState(state?: string) {
+  switch (state) {
+    case "PENDING":
+      return "Pendiente";
+    case "CONFIRMED":
+      return "Confirmada";
+    case "COMPLETED":
+      return "Completada";
+    case "CANCELLED":
+      return "Cancelada";
+    case "NO_SHOW":
+      return "No asistió";
+    default:
+      return state ?? "-";
+  }
+}
+
+function getStateBadgeStyle(state?: string): React.CSSProperties {
+  switch (state) {
+    case "PENDING":
+      return {
+        display: "inline-flex",
+        alignItems: "center",
+        borderRadius: 999,
+        padding: "0.38rem 0.7rem",
+        border: "1px solid rgba(181, 161, 108, 0.35)",
+        background: "rgba(181, 161, 108, 0.14)",
+        color: "#f4e8c8",
+        fontSize: 12,
+        fontWeight: 700,
+        letterSpacing: "0.06em",
+        textTransform: "uppercase",
+      };
+    case "CONFIRMED":
+      return {
+        display: "inline-flex",
+        alignItems: "center",
+        borderRadius: 999,
+        padding: "0.38rem 0.7rem",
+        border: "1px solid rgba(92, 163, 115, 0.35)",
+        background: "rgba(92, 163, 115, 0.16)",
+        color: "#dff5e5",
+        fontSize: 12,
+        fontWeight: 700,
+        letterSpacing: "0.06em",
+        textTransform: "uppercase",
+      };
+    case "COMPLETED":
+      return {
+        display: "inline-flex",
+        alignItems: "center",
+        borderRadius: 999,
+        padding: "0.38rem 0.7rem",
+        border: "1px solid rgba(125, 125, 125, 0.35)",
+        background: "rgba(125, 125, 125, 0.16)",
+        color: "#ececec",
+        fontSize: 12,
+        fontWeight: 700,
+        letterSpacing: "0.06em",
+        textTransform: "uppercase",
+      };
+    case "CANCELLED":
+      return {
+        display: "inline-flex",
+        alignItems: "center",
+        borderRadius: 999,
+        padding: "0.38rem 0.7rem",
+        border: "1px solid rgba(191, 92, 92, 0.35)",
+        background: "rgba(191, 92, 92, 0.16)",
+        color: "#ffe0e0",
+        fontSize: 12,
+        fontWeight: 700,
+        letterSpacing: "0.06em",
+        textTransform: "uppercase",
+      };
+    case "NO_SHOW":
+      return {
+        display: "inline-flex",
+        alignItems: "center",
+        borderRadius: 999,
+        padding: "0.38rem 0.7rem",
+        border: "1px solid rgba(140, 110, 170, 0.35)",
+        background: "rgba(140, 110, 170, 0.16)",
+        color: "#efe6ff",
+        fontSize: 12,
+        fontWeight: 700,
+        letterSpacing: "0.06em",
+        textTransform: "uppercase",
+      };
+    default:
+      return {
+        display: "inline-flex",
+        alignItems: "center",
+        borderRadius: 999,
+        padding: "0.38rem 0.7rem",
+        border: "1px solid rgba(181, 161, 108, 0.3)",
+        background: "rgba(181, 161, 108, 0.12)",
+        color: "#f4e8c8",
+        fontSize: 12,
+        fontWeight: 700,
+        letterSpacing: "0.06em",
+        textTransform: "uppercase",
+      };
+  }
+}
+
 export default function AdminAppointmentsPage() {
   const { token, role } = useAuth();
   const nav = useNavigate();
@@ -490,7 +596,9 @@ export default function AdminAppointmentsPage() {
                   </td>
 
                   <td style={{ padding: 8, borderBottom: "1px solid #eee" }}>
-                    <b>{a.state}</b>
+                    <span style={getStateBadgeStyle(a.state)}>
+                      {formatState(a.state)}
+                    </span>
                   </td>
 
                   <td style={{ padding: 8, borderBottom: "1px solid #eee" }}>

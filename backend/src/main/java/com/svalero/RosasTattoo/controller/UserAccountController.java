@@ -33,10 +33,10 @@ public class UserAccountController {
         String email = auth.getName();
         UserAccount account = userAccountRepository.findByEmail(email).orElse(null);
         if (account == null || !account.isEnabled()) {
-            throw new RuntimeException("Unauthorized");
+            throw new IllegalStateException("Unauthorized");
         }
         if (account.getRole() != Role.CLIENT || account.getClient() == null) {
-            throw new RuntimeException("Only CLIENT accounts can use /me");
+            throw new IllegalStateException("Only CLIENT accounts can use /me");
         }
         return account;
     }
@@ -70,7 +70,7 @@ public class UserAccountController {
                 return new ResponseEntity<>(null, HttpStatus.CONFLICT);
             }
             account.setEmail(newEmail);
-            c.setEmail(newEmail); // mantener sincronizado
+            c.setEmail(newEmail);
         }
 
         c.setPhone(body.getPhone());
@@ -105,8 +105,8 @@ public class UserAccountController {
         return ResponseEntity.noContent().build();
     }
 
-    @ExceptionHandler(RuntimeException.class)
-    public ResponseEntity<ErrorResponse> handleRuntime(RuntimeException ex) {
+    @ExceptionHandler(IllegalStateException.class)
+    public ResponseEntity<ErrorResponse> handleIllegalState(IllegalStateException ex) {
         ErrorResponse error = ErrorResponse.generalError(403, "forbidden", ex.getMessage());
         return new ResponseEntity<>(error, HttpStatus.FORBIDDEN);
     }

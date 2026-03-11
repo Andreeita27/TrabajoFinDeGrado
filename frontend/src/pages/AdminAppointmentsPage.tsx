@@ -233,8 +233,9 @@ export default function AdminAppointmentsPage() {
     try {
       await confirmDeposit(token, id);
       await load();
-    } catch (e: any) {
-      setError(e?.message || "Error confirmando señal");
+    } catch (e) {
+      const message = e instanceof Error ? e.message : "Error confirmando señal";
+      setError(message);
     }
   };
 
@@ -245,8 +246,9 @@ export default function AdminAppointmentsPage() {
     try {
       await cancelAppointment(token, id);
       await load();
-    } catch (e: any) {
-      setError(e?.message || "Error cancelando cita");
+    } catch (e) {
+      const message = e instanceof Error ? e.message : "Error cancelando cita";
+      setError(message);
     }
   };
 
@@ -260,8 +262,9 @@ export default function AdminAppointmentsPage() {
     try {
       await markCompleted(token, id);
       await load();
-    } catch (e: any) {
-      setError(e?.message || "Error marcando como completada");
+    } catch (e) {
+      const message = e instanceof Error ? e.message : "Error marcando completada";
+      setError(message);
     }
   };
 
@@ -275,8 +278,9 @@ export default function AdminAppointmentsPage() {
     try {
       await markNoShow(token, id);
       await load();
-    } catch (e: any) {
-      setError(e?.message || "Error marcando como no asistida");
+    } catch (e) {
+      const message = e instanceof Error ? e.message : "Error marcando como no asistida";
+      setError(message);
     }
   };
 
@@ -346,8 +350,9 @@ export default function AdminAppointmentsPage() {
       await rescheduleAppointment(token, rescheduleId, withSeconds(rescheduleStart));
       closeReschedule();
       await load();
-    } catch (e: any) {
-      setError(e?.message || "Error reprogramando cita");
+    } catch (e) {
+      const message = e instanceof Error ? e.message : "Error reprogramando cita";
+      setError(message);
     } finally {
       setRescheduleSaving(false);
     }

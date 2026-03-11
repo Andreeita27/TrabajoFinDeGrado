@@ -25,8 +25,9 @@ export default function ProfessionalsPage() {
     try {
       const data = await getProfessionals();
       setItems(data);
-    } catch (e: any) {
-      setError(e?.message || "Error cargando profesionales");
+    } catch (e) {
+      const message = e instanceof Error ? e.message : "Error cargando profesionales";
+      setError(message);
     } finally {
       setLoading(false);
     }

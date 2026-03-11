@@ -112,8 +112,9 @@ export default function MyAppointmentsPage({ embedded = false }: Props) {
       setError("");
       await confirmDeposit(token, id);
       await load();
-    } catch (e: any) {
-      setError(e?.message || "Error confirmando señal");
+    } catch (e) {
+      const message = e instanceof Error ? e.message : "Error confirmando señal";
+      setError(message);
     }
   };
 
@@ -123,8 +124,9 @@ export default function MyAppointmentsPage({ embedded = false }: Props) {
       setError("");
       await cancelAppointment(token, id);
       await load();
-    } catch (e: any) {
-      setError(e?.message || "Error cancelando cita");
+    } catch (e) {
+      const message = e instanceof Error ? e.message : "Error cancelando cita";
+      setError(message);
     }
   };
 
@@ -194,8 +196,9 @@ export default function MyAppointmentsPage({ embedded = false }: Props) {
       await rescheduleAppointment(token, rescheduleId, withSeconds(rescheduleStart));
       closeReschedule();
       await load();
-    } catch (e: any) {
-      setError(e?.message || "Error reprogramando cita");
+    } catch (e) {
+      const message = e instanceof Error ? e.message : "Error reprogramando cita";
+      setError(message);
     } finally {
       setRescheduleSaving(false);
     }

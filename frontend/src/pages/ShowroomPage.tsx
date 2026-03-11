@@ -110,8 +110,9 @@ export default function ShowroomPage() {
       });
 
       setTattoos(sorted);
-    } catch (e: any) {
-      setTattoosError(e?.message || "Error cargando tatuajes");
+    } catch (e) {
+      const message = e instanceof Error ? e.message : "Error cargando tatuajes";
+      setTattoosError(message);
     }
   };
 

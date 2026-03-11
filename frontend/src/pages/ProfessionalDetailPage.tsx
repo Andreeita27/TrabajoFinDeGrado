@@ -99,8 +99,9 @@ export default function ProfessionalDetailPage() {
         booksOpened: !!p.booksOpened,
         yearsExperience: Number.isFinite(p.yearsExperience) ? p.yearsExperience : 0,
       });
-    } catch (e: any) {
-      setError(e?.message || "Error cargando profesional");
+    } catch (e) {
+      const message = e instanceof Error ? e.message : "Error cargando profesional";
+      setError(message);
     } finally {
       setLoading(false);
     }

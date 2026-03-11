@@ -15,15 +15,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
-import org.springframework.validation.FieldError;
-import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.security.access.AccessDeniedException;
-import com.svalero.RosasTattoo.exception.AppointmentConflictException;
-
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.springframework.format.annotation.DateTimeFormat;
 
@@ -174,12 +168,6 @@ public class AppointmentController {
         return ResponseEntity.ok(appointmentService.markCompleted(id));
     }
 
-    @ExceptionHandler(AppointmentNotFoundException.class)
-    public ResponseEntity<ErrorResponse> handleException(AppointmentNotFoundException anfe) {
-        ErrorResponse errorResponse = ErrorResponse.notFound(anfe.getMessage());
-        return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
-    }
-
     @ExceptionHandler(ClientNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleClientException(ClientNotFoundException cnfe) {
         ErrorResponse errorResponse = ErrorResponse.notFound("Cliente no encontrado");
@@ -190,23 +178,6 @@ public class AppointmentController {
     public ResponseEntity<ErrorResponse> handleProfessionalException(ProfessionalNotFoundException pnfe) {
         ErrorResponse errorResponse = ErrorResponse.notFound("Profesional no encontrado");
         return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
-    }
-
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ErrorResponse> handleValidationException(MethodArgumentNotValidException manve) {
-        Map<String, String> errors = new HashMap<>();
-        manve.getBindingResult().getAllErrors().forEach(error -> {
-            String fieldName = ((FieldError) error).getField();
-            String message = error.getDefaultMessage();
-            errors.put(fieldName, message);
-        });
-        return new ResponseEntity<>(ErrorResponse.validationError(errors), HttpStatus.BAD_REQUEST);
-    }
-
-    @ExceptionHandler(AppointmentConflictException.class)
-    public ResponseEntity<ErrorResponse> handleAppointmentConflict(AppointmentConflictException ace) {
-        ErrorResponse errorResponse = ErrorResponse.generalError(409, "conflict", ace.getMessage());
-        return new ResponseEntity<>(errorResponse, HttpStatus.CONFLICT);
     }
 
     @ExceptionHandler(IllegalStateException.class)

@@ -3,6 +3,7 @@ package com.svalero.RosasTattoo.controller;
 import com.svalero.RosasTattoo.dto.UnavailabilityBlockDto;
 import com.svalero.RosasTattoo.dto.UnavailabilityBlockInDto;
 import com.svalero.RosasTattoo.exception.ProfessionalNotFoundException;
+import com.svalero.RosasTattoo.exception.UnavailabilityBlockNotFoundException;
 import com.svalero.RosasTattoo.service.UnavailabilityBlockService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,13 +34,13 @@ public class UnavailabilityBlockController {
 
     @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/unavailability-blocks/{blockId}/toggle")
-    public UnavailabilityBlockDto toggle(@PathVariable long blockId) {
+    public UnavailabilityBlockDto toggle(@PathVariable long blockId) throws UnavailabilityBlockNotFoundException {
         return unavailabilityBlockService.toggle(blockId);
     }
 
     @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/unavailability-blocks/{blockId}")
-    public void delete(@PathVariable long blockId) {
+    public void delete(@PathVariable long blockId) throws UnavailabilityBlockNotFoundException {
         unavailabilityBlockService.delete(blockId);
     }
 }

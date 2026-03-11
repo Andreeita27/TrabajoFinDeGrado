@@ -44,7 +44,7 @@ public class FileStorageService {
 
         String ct = file.getContentType();
         if (ct == null || !ALLOWED.contains(ct)) {
-            throw new IllegalArgumentException("Tipo no permitido. Usa JPG/PNG/WebP");
+            throw new IllegalArgumentException("Formato no permitido. Usa JPG/PNG/WebP");
         }
 
         String ext = switch (ct) {
@@ -67,11 +67,11 @@ public class FileStorageService {
     }
 
     public String savePrivateAppointmentImage(long appointmentId, MultipartFile file) throws IOException {
-        if (file == null || file.isEmpty()) throw new IllegalArgumentException("File is empty");
+        if (file == null || file.isEmpty()) throw new IllegalArgumentException("El archivo está vacío.");
 
         String ct = file.getContentType();
         if (ct == null || !ALLOWED.contains(ct)) {
-            throw new IllegalArgumentException("Invalid content type: " + ct);
+            throw new IllegalArgumentException("Formato inválido: " + ct);
         }
 
         String ext = switch (ct) {

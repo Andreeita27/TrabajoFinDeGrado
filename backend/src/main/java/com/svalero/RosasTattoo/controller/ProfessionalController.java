@@ -2,21 +2,15 @@ package com.svalero.RosasTattoo.controller;
 
 import com.svalero.RosasTattoo.dto.ProfessionalInDto;
 import com.svalero.RosasTattoo.dto.ProfessionalDto;
-import com.svalero.RosasTattoo.exception.ErrorResponse;
 import com.svalero.RosasTattoo.exception.ProfessionalNotFoundException;
 import com.svalero.RosasTattoo.service.ProfessionalService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize; // ✅ AÑADIR
-import org.springframework.validation.FieldError;
-import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 @RestController
 public class ProfessionalController {
@@ -58,24 +52,5 @@ public class ProfessionalController {
     public ResponseEntity<Void> deleteProfessional(@PathVariable long id) throws ProfessionalNotFoundException {
         professionalService.delete(id);
         return ResponseEntity.noContent().build();
-    }
-
-    @ExceptionHandler(ProfessionalNotFoundException.class)
-    public ResponseEntity<ErrorResponse> handleException(ProfessionalNotFoundException pnfe) {
-        ErrorResponse errorResponse = ErrorResponse.notFound(pnfe.getMessage());
-        return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
-    }
-
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ErrorResponse> handleException(MethodArgumentNotValidException manve) {
-        Map<String, String> errors = new HashMap<>();
-        manve.getBindingResult().getAllErrors().forEach(error -> {
-            String fieldName = ((FieldError) error).getField();
-            String message = error.getDefaultMessage();
-            errors.put(fieldName, message);
-        });
-
-        ErrorResponse errorResponse = ErrorResponse.validationError(errors);
-        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
     }
 }

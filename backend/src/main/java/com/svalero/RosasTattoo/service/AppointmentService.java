@@ -78,7 +78,7 @@ public class AppointmentService {
         if (type == AppointmentType.CONSULTATION) return 30;
 
         if (tattooSize == null) {
-            throw new IllegalArgumentException("Tattoo size is mandatory for tattoo appointments.");
+            throw new IllegalArgumentException("Debes indicar el tamaño del tattoo.");
         }
 
         return switch (tattooSize) {

@@ -7,6 +7,7 @@ import com.svalero.RosasTattoo.dto.ChangePasswordDto;
 import com.svalero.RosasTattoo.dto.UserAccountDto;
 import com.svalero.RosasTattoo.dto.UserAccountUpdateDto;
 import com.svalero.RosasTattoo.exception.ErrorResponse;
+import com.svalero.RosasTattoo.exception.ForbiddenOperationException;
 import com.svalero.RosasTattoo.repository.ClientRepository;
 import com.svalero.RosasTattoo.repository.UserAccountRepository;
 import jakarta.validation.Valid;
@@ -29,20 +30,23 @@ public class UserAccountController {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
-    private UserAccount requireClientAccount(Authentication auth) {
+    private UserAccount requireClientAccount(Authentication auth) throws ForbiddenOperationException {
         String email = auth.getName();
         UserAccount account = userAccountRepository.findByEmail(email).orElse(null);
+
         if (account == null || !account.isEnabled()) {
-            throw new IllegalStateException("Unauthorized");
+            throw new ForbiddenOperationException("Unauthorized");
         }
+
         if (account.getRole() != Role.CLIENT || account.getClient() == null) {
-            throw new IllegalStateException("Only CLIENT accounts can use /me");
+            throw new ForbiddenOperationException("Only CLIENT accounts can use /me");
         }
+
         return account;
     }
 
     @GetMapping("/me")
-    public ResponseEntity<UserAccountDto> getMe(Authentication auth) {
+    public ResponseEntity<UserAccountDto> getMe(Authentication auth) throws ForbiddenOperationException {
         UserAccount account = requireClientAccount(auth);
         Client c = account.getClient();
 
@@ -59,7 +63,7 @@ public class UserAccountController {
     }
 
     @PutMapping("/me")
-    public ResponseEntity<UserAccountDto> updateMe(Authentication auth, @Valid @RequestBody UserAccountUpdateDto body) {
+    public ResponseEntity<?> updateMe(Authentication auth, @Valid @RequestBody UserAccountUpdateDto body) throws ForbiddenOperationException {
         UserAccount account = requireClientAccount(auth);
         Client c = account.getClient();
 
@@ -67,7 +71,8 @@ public class UserAccountController {
 
         if (!newEmail.equalsIgnoreCase(account.getEmail())) {
             if (userAccountRepository.existsByEmail(newEmail)) {
-                return new ResponseEntity<>(null, HttpStatus.CONFLICT);
+                return ResponseEntity.status(HttpStatus.CONFLICT)
+                        .body(ErrorResponse.conflict("Email already in use"));
             }
             account.setEmail(newEmail);
             c.setEmail(newEmail);
@@ -92,22 +97,17 @@ public class UserAccountController {
     }
 
     @PutMapping("/me/password")
-    public ResponseEntity<Void> changePassword(Authentication auth, @Valid @RequestBody ChangePasswordDto body) {
+    public ResponseEntity<?> changePassword(Authentication auth, @Valid @RequestBody ChangePasswordDto body) throws ForbiddenOperationException {
         UserAccount account = requireClientAccount(auth);
 
         if (!passwordEncoder.matches(body.getCurrentPassword(), account.getPasswordHash())) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ErrorResponse.badRequest("Current password is incorrect"));
         }
 
         account.setPasswordHash(passwordEncoder.encode(body.getNewPassword()));
         userAccountRepository.save(account);
 
         return ResponseEntity.noContent().build();
-    }
-
-    @ExceptionHandler(IllegalStateException.class)
-    public ResponseEntity<ErrorResponse> handleIllegalState(IllegalStateException ex) {
-        ErrorResponse error = ErrorResponse.generalError(403, "forbidden", ex.getMessage());
-        return new ResponseEntity<>(error, HttpStatus.FORBIDDEN);
     }
 }

@@ -4,6 +4,7 @@ import com.svalero.RosasTattoo.domain.AvailabilityWindow;
 import com.svalero.RosasTattoo.domain.Professional;
 import com.svalero.RosasTattoo.dto.AvailabilityWindowDto;
 import com.svalero.RosasTattoo.dto.AvailabilityWindowInDto;
+import com.svalero.RosasTattoo.exception.AvailabilityWindowNotFoundException;
 import com.svalero.RosasTattoo.exception.ProfessionalNotFoundException;
 import com.svalero.RosasTattoo.repository.AvailabilityWindowRepository;
 import com.svalero.RosasTattoo.repository.ProfessionalRepository;
@@ -30,7 +31,7 @@ public class AvailabilityWindowService {
 
     public AvailabilityWindowDto create(long professionalId, AvailabilityWindowInDto inDto) throws ProfessionalNotFoundException {
         if (inDto.getEndDateTime().isBefore(inDto.getStartDateTime()) || inDto.getEndDateTime().isEqual(inDto.getStartDateTime())) {
-            throw new IllegalArgumentException("endDateTime must be after startDateTime");
+            throw new IllegalArgumentException("La fecha/hora final debe ser más tarde que la de inicio.");
         }
 
         Professional professional = professionalRepository.findById(professionalId)
@@ -46,17 +47,17 @@ public class AvailabilityWindowService {
         return toDto(availabilityWindowRepository.save(w));
     }
 
-    public AvailabilityWindowDto toggle(long windowId) {
+    public AvailabilityWindowDto toggle(long windowId) throws AvailabilityWindowNotFoundException {
         AvailabilityWindow w = availabilityWindowRepository.findById(windowId)
-                .orElseThrow(() -> new IllegalArgumentException("AvailabilityWindow not found"));
+                .orElseThrow(() -> new AvailabilityWindowNotFoundException("Availability window not found"));
 
         w.setEnabled(!w.isEnabled());
         return toDto(availabilityWindowRepository.save(w));
     }
 
-    public void delete(long windowId) {
+    public void delete(long windowId) throws AvailabilityWindowNotFoundException {
         AvailabilityWindow w = availabilityWindowRepository.findById(windowId)
-                .orElseThrow(() -> new IllegalArgumentException("AvailabilityWindow not found"));
+                .orElseThrow(() -> new AvailabilityWindowNotFoundException("Availability window not found"));
         availabilityWindowRepository.delete(w);
     }
 

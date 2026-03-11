@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getProfessionals } from "../api/showroomApi";
 import type { ProfessionalDto } from "../types/professional";
+import "../styles/professionals.css";
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL as string;
 
@@ -36,59 +37,83 @@ export default function ProfessionalsPage() {
   }, []);
 
   return (
-    <div style={{ padding: 16 }}>
-      <h1>Profesionales</h1>
+    <main className="professionals-page">
+      <section className="professionals-hero">
+        <p className="professionals-hero__kicker">Nuestro equipo</p>
+        <h1 className="professionals-hero__title">Tatuadores</h1>
+        <p className="professionals-hero__text">
+          Conoce al equipo de 62 Rosas Tattoo, su estilo y algunos de sus trabajos más recientes.
+        </p>
+      </section>
 
-      {error && <div style={{ color: "tomato", marginBottom: 10 }}>{error}</div>}
-      {loading && <div style={{ opacity: 0.85, marginBottom: 10 }}>Cargando…</div>}
+      {error && <div className="professionals-feedback professionals-feedback--error">{error}</div>}
+      {loading && <div className="professionals-feedback">Cargando profesionales…</div>}
 
-      <div style={{ display: "grid", gap: 16 }}>
-        {items.map((p) => (
-          <div
-            key={p.id}
-            role="button"
-            onClick={() => nav(`/professionals/${p.id}`)}
-            style={{
-              border: "1px solid #333",
-              padding: 12,
-              borderRadius: 10,
-              cursor: "pointer",
-            }}
-          >
-            <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
-              <img
-                src={withBase(p.profilePhoto)}
-                alt={p.professionalName}
-                style={{
-                  width: 100,
-                  height: 100,
-                  objectFit: "cover",
-                  borderRadius: 10,
-                  border: "1px solid #333",
-                  flexShrink: 0,
-                }}
-                onError={(e) => {
-                  (e.currentTarget as HTMLImageElement).style.display = "none";
-                }}
-              />
+      {!loading && items.length === 0 ? (
+        <div className="professionals-empty">No hay profesionales disponibles ahora mismo.</div>
+      ) : (
+        <section className="professionals-grid">
+          {items.map((p) => (
+            <article
+              key={p.id}
+              className="professional-card"
+              role="button"
+              tabIndex={0}
+              onClick={() => nav(`/professionals/${p.id}`)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  nav(`/professionals/${p.id}`);
+                }
+              }}
+            >
+              <div className="professional-card__imageWrap">
+                {p.profilePhoto?.trim() ? (
+                  <img
+                    src={withBase(p.profilePhoto)}
+                    alt={p.professionalName}
+                    className="professional-card__image"
+                    onError={(e) => {
+                      (e.currentTarget as HTMLImageElement).style.display = "none";
+                    }}
+                  />
+                ) : (
+                  <div className="professional-card__imagePlaceholder">62</div>
+                )}
 
-              <div style={{ flex: 1 }}>
-                <h3 style={{ margin: 0 }}>{p.professionalName}</h3>
+                <span
+                  className={`professional-card__status ${
+                    p.booksOpened ? "professional-card__status--open" : "professional-card__status--closed"
+                  }`}
+                >
+                  {p.booksOpened ? "Agenda abierta" : "Agenda cerrada"}
+                </span>
+              </div>
 
-                <div style={{ marginTop: 6, opacity: 0.9 }}>
-                  <b>Estilo:</b> {p.style}
-                </div>
+              <div className="professional-card__content">
+                <h2 className="professional-card__name">{p.professionalName}</h2>
 
-                <div style={{ marginTop: 6, opacity: 0.85 }}>
-                  <b>Agenda:</b> {p.booksOpened ? "Abierta" : "Cerrada"}
+                <p className="professional-card__style">
+                  <span>Especialidad</span>
+                  {p.style}
+                </p>
+
+                <p className="professional-card__description">
+                  {p.description?.trim()
+                    ? p.description.length > 150
+                      ? `${p.description.slice(0, 150)}…`
+                      : p.description
+                    : "Descubre más sobre este profesional y su trabajo."}
+                </p>
+
+                <div className="professional-card__footer">
+                  <span className="professional-card__link">Ver perfil</span>
                 </div>
               </div>
-            </div>
-          </div>
-        ))}
-
-        {!loading && items.length === 0 && <p style={{ opacity: 0.8 }}>No hay profesionales.</p>}
-      </div>
-    </div>
+            </article>
+          ))}
+        </section>
+      )}
+    </main>
   );
 }

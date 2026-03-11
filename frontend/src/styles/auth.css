@@ -1,0 +1,102 @@
+/* ===== Auth (Login / Register) ===== */
+
+.authWrap {
+  min-height: calc(100vh - 72px);
+  display: grid;
+  place-items: center;
+  padding: 24px 0 36px;
+}
+
+.authCard {
+  width: 100%;
+  max-width: 520px;
+  padding: 18px;
+}
+
+.authHeader {
+  display: grid;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+
+.authTitle {
+  margin: 0;
+  font-size: 26px;
+  letter-spacing: 0.2px;
+}
+
+.authSubtitle {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.authForm {
+  display: grid;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.authActions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  margin-top: 6px;
+}
+
+.authMsg {
+  margin: 10px 0 0;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 90, 90, 0.35);
+  background: rgba(255, 90, 90, 0.08);
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.authFooter {
+  margin-top: 12px;
+  color: var(--muted);
+}
+
+.authFooter a {
+  color: var(--gold);
+  font-weight: 700;
+}
+
+.authFooter a:hover {
+  color: rgba(181,161,108,.85);
+}
+
+/* Register: grid for name/surname/email/phone */
+.row2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+@media (max-width: 560px) {
+  .row2 {
+    grid-template-columns: 1fr;
+  }
+}
+
+.checkboxRow {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.checkboxRow input {
+  accent-color: var(--gold);
+}
+
+.hint {
+  font-size: 12px;
+  color: var(--muted);
+}

@@ -1,16 +1,10 @@
 package com.svalero.RosasTattoo.service;
 
-import com.svalero.RosasTattoo.domain.Appointment;
-import com.svalero.RosasTattoo.domain.Client;
-import com.svalero.RosasTattoo.domain.Professional;
-import com.svalero.RosasTattoo.domain.UserAccount;
+import com.svalero.RosasTattoo.domain.*;
 import com.svalero.RosasTattoo.domain.enums.AppointmentState;
 import com.svalero.RosasTattoo.domain.enums.AppointmentType;
 import com.svalero.RosasTattoo.domain.enums.TattooSize;
-import com.svalero.RosasTattoo.dto.AppointmentDto;
-import com.svalero.RosasTattoo.dto.AppointmentInDto;
-import com.svalero.RosasTattoo.dto.AvailabilityResponseDto;
-import com.svalero.RosasTattoo.dto.AvailabilitySlotDto;
+import com.svalero.RosasTattoo.dto.*;
 import com.svalero.RosasTattoo.exception.AppointmentConflictException;
 import com.svalero.RosasTattoo.exception.AppointmentNotFoundException;
 import com.svalero.RosasTattoo.exception.ClientNotFoundException;
@@ -29,6 +23,9 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+import java.time.LocalDate;
 
 @Service
 public class AppointmentService {
@@ -42,7 +39,7 @@ public class AppointmentService {
     @Autowired
     private UserAccountRepository userAccountRepository;
     @Autowired
-    private ReviewRepository reviewRepository;
+    private TattooRepository tattooRepository;
     @Autowired
     private AvailabilityWindowRepository availabilityWindowRepository;
     @Autowired
@@ -127,13 +124,31 @@ public class AppointmentService {
     private AppointmentDto toDto(Appointment appointment) {
         AppointmentDto dto = modelMapper.map(appointment, AppointmentDto.class);
 
-        dto.setHasReview(reviewRepository.existsByAppointment_Id(appointment.getId()));
+        Client client = appointment.getClient();
+        if (client != null) {
+            dto.setClientName(client.getClientName());
+            dto.setClientSurname(client.getClientSurname());
+            dto.setClientFullName((client.getClientName() + " " + client.getClientSurname()).trim());
+        }
 
-        Client c = appointment.getClient();
-        if (c != null) {
-            dto.setClientName(c.getClientName());
-            dto.setClientSurname(c.getClientSurname());
-            dto.setClientFullName((c.getClientName() + " " + c.getClientSurname()).trim());
+        if (appointment.getClient() != null
+                && appointment.getProfessional() != null
+                && appointment.getStartDateTime() != null) {
+
+            Optional<Tattoo> tattoo = tattooRepository.findByClient_IdAndProfessional_IdAndTattooDate(
+                    appointment.getClient().getId(),
+                    appointment.getProfessional().getId(),
+                    appointment.getStartDateTime().toLocalDate()
+            );
+
+            if (tattoo.isPresent()) {
+                dto.setShowroomTattooCreated(true);
+                dto.setShowroomTattooId(tattoo.get().getId());
+            } else {
+                dto.setShowroomTattooCreated(false);
+            }
+        } else {
+            dto.setShowroomTattooCreated(false);
         }
 
         return dto;
@@ -602,6 +617,150 @@ public class AppointmentService {
         }
 
         return new AvailabilityResponseDto(slots, hasPublishedWindows, hasBlocksInRange, blockReasons);
+    }
+
+    private boolean hasAnyAvailableSlotForDay(
+            LocalDate day,
+            List<AvailabilityWindow> windows,
+            List<UnavailabilityBlock> blocks,
+            List<Appointment> appointments,
+            int duration,
+            int step
+    ) {
+        LocalDateTime dayStart = day.atTime(12, 0);
+        LocalDateTime dayEnd = day.atTime(20, 0);
+
+        for (AvailabilityWindow w : windows) {
+            LocalDateTime segStart = max(dayStart, w.getStartDateTime());
+            LocalDateTime segEnd = min(dayEnd, w.getEndDateTime());
+
+            if (!segStart.isBefore(segEnd)) {
+                continue;
+            }
+
+            LocalDateTime slotStart = segStart;
+
+            while (slotStart.plusMinutes(duration).isBefore(segEnd)
+                    || slotStart.plusMinutes(duration).isEqual(segEnd)) {
+
+                final LocalDateTime currentSlotStart = slotStart;
+                final LocalDateTime currentSlotEnd = currentSlotStart.plusMinutes(duration);
+
+                boolean blocked = blocks.stream().anyMatch(b ->
+                        b.isEnabled()
+                                && b.getEndDateTime().isAfter(currentSlotStart)
+                                && b.getStartDateTime().isBefore(currentSlotEnd)
+                );
+
+                if (!blocked) {
+                    boolean overlaps = appointments.stream().anyMatch(a -> {
+                        LocalDateTime apptStart = a.getStartDateTime();
+                        LocalDateTime apptEnd = a.getStartDateTime().plusMinutes(a.getDurationMinutes());
+                        return apptStart.isBefore(currentSlotEnd) && apptEnd.isAfter(currentSlotStart);
+                    });
+
+                    if (!overlaps) {
+                        return true;
+                    }
+                }
+
+                slotStart = slotStart.plusMinutes(step);
+            }
+        }
+
+        return false;
+    }
+
+    public MonthlyAvailabilitySummaryDto getMonthlyAvailabilitySummary(long professionalId,
+                                                                       LocalDate month,
+                                                                       Integer durationMinutes,
+                                                                       Integer stepMinutes) {
+
+        int duration = (durationMinutes == null || durationMinutes <= 0) ? 60 : durationMinutes;
+        int step = (stepMinutes == null || stepMinutes <= 0) ? 30 : stepMinutes;
+
+        LocalDate firstDay = month.withDayOfMonth(1);
+        LocalDate lastDay = month.withDayOfMonth(month.lengthOfMonth());
+
+        LocalDateTime rangeStart = firstDay.atTime(12, 0);
+        LocalDateTime rangeEnd = lastDay.atTime(20, 0);
+
+        var windows = availabilityWindowRepository.findActiveIntersecting(professionalId, rangeStart, rangeEnd);
+        var blocks = unavailabilityBlockRepository.findActiveIntersecting(professionalId, rangeStart, rangeEnd);
+        var appointments = appointmentRepository.findActiveIntersecting(professionalId, rangeStart, rangeEnd);
+
+        List<MonthlyAvailabilityDayDto> result = new ArrayList<>();
+
+        LocalDate today = LocalDate.now();
+        LocalDate current = firstDay;
+
+        while (!current.isAfter(lastDay)) {
+            DayOfWeek dow = current.getDayOfWeek();
+            boolean weekend = dow == DayOfWeek.SATURDAY || dow == DayOfWeek.SUNDAY;
+            boolean past = current.isBefore(today);
+
+            if (weekend) {
+                result.add(new MonthlyAvailabilityDayDto(current, "WEEKEND", true, past, null));
+                current = current.plusDays(1);
+                continue;
+            }
+
+            LocalDateTime dayStart = current.atTime(12, 0);
+            LocalDateTime dayEnd = current.atTime(20, 0);
+
+            var dayWindows = windows.stream()
+                    .filter(w -> w.getEndDateTime().isAfter(dayStart) && w.getStartDateTime().isBefore(dayEnd))
+                    .toList();
+
+            boolean hasPublishedWindows = !dayWindows.isEmpty();
+
+            if (!hasPublishedWindows) {
+                result.add(new MonthlyAvailabilityDayDto(current, "NO_WINDOWS", false, past, "Este profesional todavía no ha abierto agenda para este día."));
+                current = current.plusDays(1);
+                continue;
+            }
+
+            var dayBlocks = blocks.stream()
+                    .filter(b -> b.isEnabled())
+                    .filter(b -> b.getEndDateTime().isAfter(dayStart) && b.getStartDateTime().isBefore(dayEnd))
+                    .toList();
+
+            var dayAppointments = appointments.stream()
+                    .filter(a -> {
+                        LocalDateTime apptEnd = a.getStartDateTime().plusMinutes(a.getDurationMinutes());
+                        return a.getStartDateTime().isBefore(dayEnd) && apptEnd.isAfter(dayStart);
+                    })
+                    .toList();
+
+            boolean hasAvailability = hasAnyAvailableSlotForDay(
+                    current,
+                    dayWindows,
+                    dayBlocks,
+                    dayAppointments,
+                    duration,
+                    step
+            );
+
+            if (hasAvailability) {
+                result.add(new MonthlyAvailabilityDayDto(current, "AVAILABLE", false, past, "Hay huecos disponibles este día."));
+            } else if (!dayBlocks.isEmpty()) {
+                String reason = dayBlocks.stream()
+                        .map(UnavailabilityBlock::getReason)
+                        .filter(Objects::nonNull)
+                        .filter(s -> !s.isBlank())
+                        .distinct()
+                        .reduce((a, b) -> a + " · " + b)
+                        .orElse("Día bloqueado por indisponibilidad.");
+
+                result.add(new MonthlyAvailabilityDayDto(current, "BLOCKED", false, past, reason));
+            } else {
+                result.add(new MonthlyAvailabilityDayDto(current, "FULL", false, past, "No quedan huecos libres para este día."));
+            }
+
+            current = current.plusDays(1);
+        }
+
+        return new MonthlyAvailabilitySummaryDto(firstDay, result);
     }
 
     private LocalDateTime max(LocalDateTime a, LocalDateTime b) {

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
+import "../styles/auth.css";
 
 export default function RegisterPage() {
   const { register } = useAuth();
@@ -43,41 +44,105 @@ export default function RegisterPage() {
   };
 
   return (
-    <div style={{ padding: 16, maxWidth: 520 }}>
-      <h1>Registro</h1>
+    <div className="container authWrap">
+      <div className="card authCard">
+        <div className="authHeader">
+          <h1 className="authTitle">Registro</h1>
+          <p className="authSubtitle">
+            Crea tu cuenta para reservar citas.
+          </p>
+        </div>
 
-      {msg && <div style={{ margin: "8px 0", color: "tomato" }}>{msg}</div>}
+        {msg && <div className="authMsg">{msg}</div>}
 
-      <form onSubmit={onSubmit} style={{ display: "grid", gap: 10 }}>
-        <input placeholder="Nombre" value={clientName} onChange={(e) => setClientName(e.target.value)} />
-        <input placeholder="Apellidos" value={clientSurname} onChange={(e) => setClientSurname(e.target.value)} />
-        <input placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} />
-        <input placeholder="Teléfono (opcional)" value={phone} onChange={(e) => setPhone(e.target.value)} />
+        <form onSubmit={onSubmit} className="authForm">
+          <div className="row2">
+            <input
+              className="input"
+              placeholder="Nombre"
+              value={clientName}
+              onChange={(e) => setClientName(e.target.value)}
+            />
+            <input
+              className="input"
+              placeholder="Apellidos"
+              value={clientSurname}
+              onChange={(e) => setClientSurname(e.target.value)}
+            />
+          </div>
 
-        <label style={{ display: "grid", gap: 6 }}>
-          Fecha de nacimiento (opcional)
-          <input type="date" value={birthDate} onChange={(e) => setBirthDate(e.target.value)} />
-        </label>
+          <div className="row2">
+            <input
+              className="input"
+              placeholder="Email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              autoComplete="email"
+            />
+            <input
+              className="input"
+              placeholder="Teléfono (opcional)"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              autoComplete="tel"
+            />
+          </div>
 
-        <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
-          <input type="checkbox" checked={showPhoto} onChange={(e) => setShowPhoto(e.target.checked)} />
-          Permito que mis tatuajes se enseñen en la web
-        </label>
+          <div className="field">
+            <div className="fieldTitle">Fecha de nacimiento (opcional)</div>
+            <input
+              className="input"
+              type="date"
+              value={birthDate}
+              onChange={(e) => setBirthDate(e.target.value)}
+            />
+            <div className="hint">
+              Esto solo se usa para tu ficha de cliente (no es obligatorio).
+            </div>
+          </div>
 
-        <input placeholder="Contraseña" type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
-        <input
-          placeholder="Repite contraseña"
-          type="password"
-          value={confirm}
-          onChange={(e) => setConfirm(e.target.value)}
-        />
+          <label className="checkboxRow">
+            <input
+              type="checkbox"
+              checked={showPhoto}
+              onChange={(e) => setShowPhoto(e.target.checked)}
+            />
+            <span>Permito que mis tatuajes se enseñen en la web</span>
+          </label>
 
-        <button type="submit">Crear cuenta</button>
-      </form>
+          <div className="row2">
+            <input
+              className="input"
+              placeholder="Contraseña"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              autoComplete="new-password"
+            />
+            <input
+              className="input"
+              placeholder="Repite contraseña"
+              type="password"
+              value={confirm}
+              onChange={(e) => setConfirm(e.target.value)}
+              autoComplete="new-password"
+            />
+          </div>
 
-      <p style={{ marginTop: 12 }}>
-        ¿Ya tienes cuenta? <Link to="/login">Inicia sesión</Link>
-      </p>
+          <div className="authActions">
+            <button type="submit" className="btn btn-primary">
+              Crear cuenta
+            </button>
+            <Link to="/login" className="btn btn-ghost">
+              Ya tengo cuenta
+            </Link>
+          </div>
+        </form>
+
+        <p className="authFooter">
+          ¿Ya tienes cuenta? <Link to="/login">Inicia sesión</Link>
+        </p>
+      </div>
     </div>
   );
 }

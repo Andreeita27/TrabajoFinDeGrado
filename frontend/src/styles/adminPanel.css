@@ -1,0 +1,179 @@
+.admin-panel-page {
+  width: min(1200px, calc(100% - 2rem));
+  margin: 0 auto;
+  padding: 1.9rem 0 4rem;
+}
+
+.admin-panel-hero {
+  text-align: center;
+  max-width: 860px;
+  margin: 0 auto 2rem;
+}
+
+.admin-panel-kicker {
+  margin: 0 0 0.5rem;
+  color: #b5a16c;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.admin-panel-title {
+  margin: 0;
+  font-family: "Playfair Display", serif;
+  font-size: clamp(2.3rem, 5vw, 4rem);
+  line-height: 1.04;
+  color: #ffffff;
+}
+
+.admin-panel-text {
+  margin: 1rem auto 0;
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 1.02rem;
+  line-height: 1.75;
+}
+
+.admin-panel-summary {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin: 0 0 1.5rem;
+}
+
+.admin-panel-chip {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 0.52rem 0.84rem;
+  border: 1px solid rgba(181, 161, 108, 0.18);
+  background: rgba(255, 255, 255, 0.03);
+  color: rgba(255, 255, 255, 0.84);
+  font-size: 0.82rem;
+}
+
+.admin-panel-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.1rem;
+}
+
+.admin-panel-card {
+  position: relative;
+  overflow: hidden;
+  display: block;
+  text-decoration: none;
+  padding: 1.3rem;
+  border-radius: 26px;
+  border: 1px solid rgba(181, 161, 108, 0.18);
+  background:
+    radial-gradient(900px 500px at -10% -20%, rgba(181,161,108,0.1), transparent 45%),
+    linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.015)),
+    rgba(10, 10, 10, 0.9);
+  box-shadow: 0 22px 56px rgba(0, 0, 0, 0.3);
+  transition:
+    transform 0.22s ease,
+    border-color 0.22s ease,
+    box-shadow 0.22s ease,
+    background 0.22s ease;
+}
+
+.admin-panel-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(181, 161, 108, 0.34);
+  box-shadow:
+    0 28px 70px rgba(0, 0, 0, 0.36),
+    0 0 0 1px rgba(181, 161, 108, 0.08) inset;
+}
+
+.admin-panel-card::after {
+  content: "→";
+  position: absolute;
+  right: 1.15rem;
+  bottom: 1rem;
+  font-size: 1.35rem;
+  color: rgba(181, 161, 108, 0.9);
+  transition: transform 0.22s ease;
+}
+
+.admin-panel-card:hover::after {
+  transform: translateX(4px);
+}
+
+.admin-panel-card__eyebrow {
+  margin: 0 0 0.5rem;
+  color: #b5a16c;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.admin-panel-card__title {
+  margin: 0;
+  font-family: "Playfair Display", serif;
+  font-size: 1.7rem;
+  color: #fff;
+}
+
+.admin-panel-card__text {
+  margin: 0.85rem 0 1.2rem;
+  color: rgba(255, 255, 255, 0.76);
+  line-height: 1.72;
+  max-width: 52ch;
+}
+
+.admin-panel-card__tags {
+  display: flex;
+  gap: 0.55rem;
+  flex-wrap: wrap;
+}
+
+.admin-panel-card__tag {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 0.42rem 0.72rem;
+  border: 1px solid rgba(181, 161, 108, 0.16);
+  background: rgba(255, 255, 255, 0.03);
+  color: rgba(255, 255, 255, 0.84);
+  font-size: 0.76rem;
+}
+
+.admin-panel-note {
+  margin-top: 1.4rem;
+  padding: 1rem 1.1rem;
+  border-radius: 18px;
+  border: 1px solid rgba(181, 161, 108, 0.16);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.035), rgba(255,255,255,0.015)),
+    rgba(10, 10, 10, 0.82);
+  color: rgba(255, 255, 255, 0.76);
+  line-height: 1.7;
+}
+
+.admin-panel-note strong {
+  color: #fff;
+}
+
+@media (max-width: 900px) {
+  .admin-panel-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .admin-panel-page {
+    padding-top: 5.1rem;
+  }
+
+  .admin-panel-card {
+    padding: 1.1rem;
+    border-radius: 22px;
+  }
+
+  .admin-panel-card__title {
+    font-size: 1.45rem;
+  }
+}

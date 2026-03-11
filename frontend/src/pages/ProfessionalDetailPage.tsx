@@ -7,6 +7,7 @@ import { uploadPublicImage } from "../api/filesApi";
 import { useAuth } from "../auth/AuthContext";
 import type { ProfessionalDto } from "../types/professional";
 import type { TattooDto } from "../types/tattoo";
+import "../styles/professionalDetail.css";
 
 type FormState = Omit<ProfessionalDto, "id">;
 
@@ -14,9 +15,7 @@ const BASE_URL = import.meta.env.VITE_API_BASE_URL as string;
 
 function withBase(url?: string | null) {
   if (!url) return "";
-  // Si ya es absoluta (http...) la dejo tal cual
   if (/^https?:\/\//i.test(url)) return url;
-  // Si es relativa (/uploads/...), la convierto a absoluta
   return `${BASE_URL}${url}`;
 }
 
@@ -37,21 +36,6 @@ export default function ProfessionalDetailPage() {
   const [ok, setOk] = useState("");
   const [loading, setLoading] = useState(true);
 
-  const formatBirthDate = (iso?: string | null) => {
-    if (!iso) return "—";
-    try {
-      const d = new Date(`${iso}T00:00:00`);
-      if (Number.isNaN(d.getTime())) return iso;
-      const dd = String(d.getDate()).padStart(2, "0");
-      const mm = String(d.getMonth() + 1).padStart(2, "0");
-      const yyyy = String(d.getFullYear());
-      return `${dd}-${mm}-${yyyy}`;
-    } catch {
-      return iso;
-    }
-  };
-
-  // Edición
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
@@ -66,14 +50,29 @@ export default function ProfessionalDetailPage() {
     yearsExperience: 0,
   });
 
+  const formatBirthDate = (iso?: string | null) => {
+    if (!iso) return "—";
+    try {
+      const d = new Date(`${iso}T00:00:00`);
+      if (Number.isNaN(d.getTime())) return iso;
+      const dd = String(d.getDate()).padStart(2, "0");
+      const mm = String(d.getMonth() + 1).padStart(2, "0");
+      const yyyy = String(d.getFullYear());
+      return `${dd}-${mm}-${yyyy}`;
+    } catch {
+      return iso;
+    }
+  };
+
   const validate = (): string | null => {
     if (!form.professionalName.trim()) return "El nombre del profesional es obligatorio.";
     if (!form.style.trim()) return "El estilo es obligatorio.";
     if (!form.birthDate) return "La fecha de nacimiento es obligatoria.";
     if (!form.description.trim()) return "La descripción es obligatoria.";
     if (!form.profilePhoto.trim()) return "Debes subir una foto de perfil.";
-    if (!Number.isFinite(form.yearsExperience) || form.yearsExperience < 0)
+    if (!Number.isFinite(form.yearsExperience) || form.yearsExperience < 0) {
       return "Los años de experiencia deben ser 0 o más.";
+    }
     return null;
   };
 
@@ -166,7 +165,7 @@ export default function ProfessionalDetailPage() {
       setUploadingPhoto(true);
       const url = await uploadPublicImage("professionals", file, token);
       setForm({ ...form, profilePhoto: url });
-      setOk("Foto subida");
+      setOk("Foto subida correctamente");
     } catch (e: any) {
       setError(e instanceof ApiError ? e.message : e?.message || "Error subiendo foto");
     } finally {
@@ -228,235 +227,267 @@ export default function ProfessionalDetailPage() {
 
   if (!professionalId) {
     return (
-      <div style={{ padding: 16 }}>
-        <button onClick={() => nav(-1)}>Volver</button>
-        <p style={{ color: "tomato" }}>ID inválido</p>
-      </div>
+      <main className="professional-detail-page">
+        <div className="professional-detail__topbar">
+          <button className="btn btn-ghost" onClick={() => nav(-1)}>
+            Volver
+          </button>
+        </div>
+        <div className="professional-detail__feedback professional-detail__feedback--error">
+          ID inválido
+        </div>
+      </main>
     );
   }
 
   return (
-    <div style={{ padding: 16 }}>
-      <div style={{ display: "flex", gap: 10, alignItems: "center", marginBottom: 10 }}>
-        <button onClick={() => nav(-1)}>Volver</button>
-        <h1 style={{ margin: 0 }}>Profesional</h1>
+    <main className="professional-detail-page">
+      <div className="professional-detail__topbar">
+        <button className="btn btn-ghost" onClick={() => nav(-1)}>
+          Volver
+        </button>
+
+        {isAdmin && !loading && pro && !editing && (
+          <div className="professional-detail__adminActions">
+            <button className="btn btn-ghost" onClick={onStartEdit} disabled={!token}>
+              Editar
+            </button>
+            <button className="btn btn-primary" onClick={onDelete} disabled={!token}>
+              Eliminar
+            </button>
+          </div>
+        )}
       </div>
 
-      {error && <div style={{ color: "tomato", marginBottom: 10 }}>{error}</div>}
-      {ok && <div style={{ color: "lightgreen", marginBottom: 10 }}>{ok}</div>}
+      {error && (
+        <div className="professional-detail__feedback professional-detail__feedback--error">
+          {error}
+        </div>
+      )}
+      {ok && <div className="professional-detail__feedback professional-detail__feedback--ok">{ok}</div>}
 
       {loading ? (
-        <div style={{ opacity: 0.85 }}>Cargando…</div>
+        <div className="professional-detail__feedback">Cargando profesional…</div>
       ) : !pro ? (
-        <div style={{ opacity: 0.85 }}>No encontrado.</div>
+        <div className="professional-detail__feedback">No encontrado.</div>
       ) : (
         <>
-          {isAdmin && (
-            <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 12 }}>
-              {!editing ? (
-                <>
-                  <button onClick={onStartEdit} disabled={!token}>
-                    Editar
-                  </button>
-                  <button onClick={onDelete} disabled={!token}>
-                    Eliminar
-                  </button>
-                </>
-              ) : null}
-            </div>
-          )}
-
           {isAdmin && editing ? (
-            <div style={{ border: "1px solid #333", borderRadius: 12, padding: 12, marginBottom: 16 }}>
-              <h2 style={{ marginTop: 0 }}>Editar profesional</h2>
+            <section className="professional-edit-card">
+              <div className="professional-edit-card__header">
+                <p className="professional-edit-card__kicker">Panel de edición</p>
+                <h1 className="professional-edit-card__title">Editar profesional</h1>
+              </div>
 
-              <form onSubmit={onSave} style={{ display: "grid", gap: 12, maxWidth: 760 }}>
-                <label style={{ display: "grid", gap: 6 }}>
-                  Nombre profesional
+              <form className="professional-edit-form" onSubmit={onSave}>
+                <label className="professional-edit-form__field">
+                  <span>Nombre profesional</span>
                   <input
                     value={form.professionalName}
                     onChange={(e) => setForm({ ...form, professionalName: e.target.value })}
-                    style={{ width: "100%", padding: 8 }}
                     disabled={saving || uploadingPhoto}
                   />
                 </label>
 
-                <label style={{ display: "grid", gap: 6 }}>
-                  Estilo
+                <label className="professional-edit-form__field">
+                  <span>Estilo</span>
                   <input
                     value={form.style}
                     onChange={(e) => setForm({ ...form, style: e.target.value })}
-                    style={{ width: "100%", padding: 8 }}
                     disabled={saving || uploadingPhoto}
                   />
                 </label>
 
-                <label style={{ display: "grid", gap: 6 }}>
-                  Fecha de nacimiento
+                <label className="professional-edit-form__field">
+                  <span>Fecha de nacimiento</span>
                   <input
                     type="date"
                     value={form.birthDate}
                     onChange={(e) => setForm({ ...form, birthDate: e.target.value })}
-                    style={{ width: "100%", padding: 8 }}
                     disabled={saving || uploadingPhoto}
                   />
                 </label>
 
-                <label style={{ display: "grid", gap: 6 }}>
-                  Años de experiencia
+                <label className="professional-edit-form__field">
+                  <span>Años de experiencia</span>
                   <input
                     type="number"
                     min={0}
                     value={form.yearsExperience}
                     onChange={(e) => setForm({ ...form, yearsExperience: Number(e.target.value) })}
-                    style={{ width: "100%", padding: 8 }}
                     disabled={saving || uploadingPhoto}
                   />
                 </label>
 
-                <label style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <label className="professional-edit-form__checkbox">
                   <input
                     type="checkbox"
                     checked={form.booksOpened}
                     onChange={(e) => setForm({ ...form, booksOpened: e.target.checked })}
                     disabled={saving || uploadingPhoto}
                   />
-                  Agenda abierta
+                  <span>Agenda abierta</span>
                 </label>
 
-                <label style={{ display: "grid", gap: 6 }}>
-                  Descripción
+                <label className="professional-edit-form__field professional-edit-form__field--full">
+                  <span>Descripción</span>
                   <textarea
+                    rows={5}
                     value={form.description}
                     onChange={(e) => setForm({ ...form, description: e.target.value })}
-                    rows={4}
-                    style={{ width: "100%", padding: 8 }}
                     disabled={saving || uploadingPhoto}
                   />
                 </label>
 
-                <label style={{ display: "grid", gap: 6 }}>
-                  Foto de perfil
-                  <input
-                    type="file"
-                    accept="image/*"
-                    disabled={saving || uploadingPhoto}
-                    onChange={async (e) => {
-                      const f = e.target.files?.[0];
-                      if (!f) return;
-                      await onPickProfilePhoto(f);
-                      e.currentTarget.value = "";
-                    }}
-                    style={{ width: "100%", padding: 8 }}
-                  />
+                <label className="professional-edit-form__field professional-edit-form__field--full">
+                  <span>Foto de perfil</span>
+
+                  <label className="file-upload">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      disabled={saving || uploadingPhoto}
+                      onChange={async (e) => {
+                        const f = e.target.files?.[0];
+                        if (!f) return;
+                        await onPickProfilePhoto(f);
+                        e.currentTarget.value = "";
+                      }}
+                    />
+
+                    <span className="file-upload__button">
+                      {uploadingPhoto ? "Subiendo..." : "Seleccionar imagen"}
+                    </span>
+                  </label>
                 </label>
 
                 {form.profilePhoto.trim() && (
-                  <img
-                    src={withBase(form.profilePhoto)}
-                    alt="preview"
-                    style={{
-                      width: 180,
-                      height: 180,
-                      objectFit: "cover",
-                      border: "1px solid #333",
-                      borderRadius: 12,
-                    }}
-                    onError={(e) => {
-                      (e.currentTarget as HTMLImageElement).style.display = "none";
-                    }}
-                  />
+                  <div className="professional-edit-form__previewWrap">
+                    <img
+                      src={withBase(form.profilePhoto)}
+                      alt="Vista previa"
+                      className="professional-edit-form__preview"
+                      onError={(e) => {
+                        (e.currentTarget as HTMLImageElement).style.display = "none";
+                      }}
+                    />
+                  </div>
                 )}
 
-                <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                  <button type="submit" disabled={saving || uploadingPhoto || !token}>
+                <div className="professional-edit-form__actions">
+                  <button type="submit" className="btn btn-primary" disabled={saving || uploadingPhoto || !token}>
                     {saving ? "Guardando..." : "Guardar cambios"}
                   </button>
-                  <button type="button" onClick={onCancelEdit} disabled={saving || uploadingPhoto}>
+                  <button
+                    type="button"
+                    className="btn btn-ghost"
+                    onClick={onCancelEdit}
+                    disabled={saving || uploadingPhoto}
+                  >
                     Cancelar
                   </button>
                 </div>
               </form>
-            </div>
+            </section>
           ) : (
-            <div style={{ border: "1px solid #333", borderRadius: 12, padding: 12 }}>
-              <div style={{ display: "flex", gap: 14, alignItems: "flex-start", flexWrap: "wrap" }}>
-                {pro.profilePhoto?.trim() && (
+            <section className="professional-detail-card">
+              <div className="professional-detail-card__imageCol">
+                {pro.profilePhoto?.trim() ? (
                   <img
                     src={withBase(pro.profilePhoto)}
                     alt={pro.professionalName}
-                    style={{
-                      width: 240,
-                      height: 240,
-                      objectFit: "cover",
-                      borderRadius: 12,
-                      border: "1px solid #333",
-                    }}
+                    className="professional-detail-card__image"
                   />
+                ) : (
+                  <div className="professional-detail-card__imagePlaceholder">62</div>
                 )}
+              </div>
 
-                <div style={{ flex: 1, minWidth: 280 }}>
-                  <h2 style={{ marginTop: 0, marginBottom: 6 }}>{pro.professionalName}</h2>
+              <div className="professional-detail-card__content">
+                <p className="professional-detail-card__kicker">Perfil profesional</p>
+                <h1 className="professional-detail-card__title">{pro.professionalName}</h1>
 
-                  <div style={{ opacity: 0.9, marginBottom: 10 }}>
-                    <b>Estilo:</b> {pro.style}
+                <div className="professional-detail-card__meta">
+                  <span className="professional-detail-card__badge">{pro.style}</span>
+                  <span
+                    className={`professional-detail-card__badge ${
+                      pro.booksOpened
+                        ? "professional-detail-card__badge--open"
+                        : "professional-detail-card__badge--closed"
+                    }`}
+                  >
+                    {pro.booksOpened ? "Agenda abierta" : "Agenda cerrada"}
+                  </span>
+                </div>
+
+                <p className="professional-detail-card__description">{pro.description}</p>
+
+                <div className="professional-detail-card__facts">
+                  <div className="professional-detail-card__fact">
+                    <span>Experiencia</span>
+                    <strong>{pro.yearsExperience} años</strong>
                   </div>
 
-                  <div style={{ opacity: 0.9, whiteSpace: "pre-wrap" }}>{pro.description}</div>
-
-                  <div style={{ marginTop: 14, display: "grid", gap: 6, opacity: 0.9 }}>
-                    <div>
-                      <b>Años de experiencia:</b> {pro.yearsExperience}
-                    </div>
-                    <div>
-                      <b>Agenda:</b> {pro.booksOpened ? "Abierta" : "Cerrada"}
-                    </div>
-                    <div>
-                      <b>Fecha de nacimiento:</b> {formatBirthDate(pro.birthDate)}
-                    </div>
+                  <div className="professional-detail-card__fact">
+                    <span>Fecha de nacimiento</span>
+                    <strong>{formatBirthDate(pro.birthDate)}</strong>
                   </div>
                 </div>
+
+                <div className="professional-detail-card__cta">
+                  <button className="btn btn-primary" onClick={() => nav("/calendar")}>
+                    Reservar cita
+                  </button>
+                </div>
               </div>
-            </div>
+            </section>
           )}
 
-          <div style={{ marginTop: 16, border: "1px solid #333", borderRadius: 12, padding: 12 }}>
-            <h3 style={{ marginTop: 0 }}>Últimos trabajos</h3>
+          <section className="professional-works">
+            <div className="professional-works__header">
+              <p className="professional-works__kicker">Showroom</p>
+              <h2 className="professional-works__title">Últimos trabajos</h2>
+            </div>
 
             {latest.length === 0 ? (
-              <div style={{ opacity: 0.85 }}>Todavía no hay trabajos publicados.</div>
+              <div className="professional-detail__feedback">
+                Todavía no hay trabajos publicados.
+              </div>
             ) : (
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 12 }}>
+              <div className="professional-works__grid">
                 {latest.map((t) => (
-                  <div
+                  <article
                     key={t.id}
+                    className="professional-work-card"
                     role="button"
+                    tabIndex={0}
                     onClick={() => nav(`/showroom/${t.id}`)}
-                    style={{
-                      border: "1px solid #333",
-                      borderRadius: 12,
-                      padding: 10,
-                      cursor: "pointer",
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        nav(`/showroom/${t.id}`);
+                      }
                     }}
                   >
                     <img
                       src={withBase(t.imageUrl)}
-                      alt={t.tattooDescription}
-                      style={{ width: "100%", height: 160, objectFit: "cover", borderRadius: 10 }}
+                      alt={t.tattooDescription || t.style}
+                      className="professional-work-card__image"
                     />
-                    <div style={{ marginTop: 8 }}>
-                      <div style={{ fontWeight: 700 }}>{t.style}</div>
-                      <div style={{ opacity: 0.8, fontSize: 12 }}>
+
+                    <div className="professional-work-card__content">
+                      <h3 className="professional-work-card__style">{t.style}</h3>
+                      <p className="professional-work-card__text">
                         {t.tattooDescription?.trim() ? t.tattooDescription : "Tattoo"}
-                      </div>
+                      </p>
                     </div>
-                  </div>
+                  </article>
                 ))}
               </div>
             )}
-          </div>
+          </section>
         </>
       )}
-    </div>
+    </main>
   );
 }

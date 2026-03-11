@@ -1,12 +1,15 @@
-import { useEffect, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { getTattooById } from "../api/showroomApi";
 import type { TattooDto } from "../types/tattoo";
 import { useAuth } from "../auth/AuthContext";
 import { deleteTattoo } from "../api/tattoosApi";
 import { ApiError } from "../api/apiFetch";
 
+import "../styles/tattooDetail.css";
+
 const BASE_URL = import.meta.env.VITE_API_BASE_URL as string;
+const SHOWROOM_RETURN_FLAG_KEY = "showroom:restoreOnBack";
 
 function withBase(url?: string | null) {
   if (!url) return "";
@@ -14,16 +17,36 @@ function withBase(url?: string | null) {
   return `${BASE_URL}${url}`;
 }
 
+function fmtDate(d?: string | null) {
+  if (!d) return "—";
+  try {
+    return new Date(`${d}T00:00:00`).toLocaleDateString();
+  } catch {
+    return d;
+  }
+}
+
 export default function TattooDetailPage() {
   const { id } = useParams();
-  const tattooId = Number(id);
+  const tattooId = useMemo(() => Number(id), [id]);
 
   const nav = useNavigate();
+  const location = useLocation();
   const { role, token } = useAuth();
   const isAdmin = role === "ADMIN";
 
   const [tattoo, setTattoo] = useState<TattooDto | null>(null);
   const [error, setError] = useState("");
+
+  const returnTo =
+    typeof location.state?.returnTo === "string" && location.state.returnTo.trim()
+      ? location.state.returnTo
+      : "/showroom";
+
+  const goBackToShowroom = () => {
+    sessionStorage.setItem(SHOWROOM_RETURN_FLAG_KEY, "true");
+    nav(returnTo);
+  };
 
   useEffect(() => {
     setError("");
@@ -48,7 +71,10 @@ export default function TattooDetailPage() {
     if (!isAdmin) return;
 
     if (!token) {
-      nav("/login", { replace: true, state: { from: `/showroom/${tattooId}` } });
+      nav("/login", {
+        replace: true,
+        state: { from: `/showroom/${tattooId}` },
+      });
       return;
     }
 
@@ -58,7 +84,8 @@ export default function TattooDetailPage() {
     setError("");
     try {
       await deleteTattoo(token, tattooId);
-      nav("/showroom", { replace: true });
+      sessionStorage.setItem(SHOWROOM_RETURN_FLAG_KEY, "true");
+      nav(returnTo, { replace: true });
     } catch (err: any) {
       if (err instanceof ApiError && (err.status === 401 || err.status === 403)) {
         nav("/login", { replace: true });
@@ -70,63 +97,106 @@ export default function TattooDetailPage() {
 
   if (error) {
     return (
-      <div style={{ padding: 16 }}>
-        <p style={{ color: "tomato" }}>{error}</p>
-        <Link to="/showroom">← Volver al showroom</Link>
+      <div className="container tdetail">
+        <p className="panelError">{error}</p>
+        <button type="button" className="tdBack tdBackBtn" onClick={goBackToShowroom}>
+          ← Volver al showroom
+        </button>
       </div>
     );
   }
 
   if (!tattoo) {
-    return <div style={{ padding: 16 }}>Cargando tattoo…</div>;
+    return (
+      <div className="container tdetail">
+        <div className="tdLoading">Cargando tattoo…</div>
+      </div>
+    );
   }
 
+  const title = tattoo.tattooDescription || "Tattoo";
+  const dateText = fmtDate(tattoo.tattooDate);
+  const proName = tattoo.professionalName ?? "Estudio 62 Rosas";
+
   return (
-    <div style={{ padding: 16 }}>
-      <Link to="/showroom">← Volver al showroom</Link>
+    <div className="container tdetail">
+      <button type="button" className="tdBack tdBackBtn" onClick={goBackToShowroom}>
+        ← Volver al showroom
+      </button>
 
-      <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "start" }}>
-        <h1 style={{ marginTop: 12, marginBottom: 6 }}>{tattoo.tattooDescription}</h1>
+      <header className="tdHeader revealItem">
+        <div className="tdEyebrow">Showroom</div>
 
-        {isAdmin && (
-          <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
-            <button type="button" onClick={onEdit}>
-              Editar
-            </button>
-            <button type="button" onClick={onDelete}>
-              Eliminar
-            </button>
+        <div className="tdHeaderRow">
+          <div>
+            <h1 className="tdTitle">{title}</h1>
           </div>
-        )}
-      </div>
-
-      <img
-        src={withBase(tattoo.imageUrl)}
-        alt={tattoo.tattooDescription}
-        style={{ width: 320, maxWidth: "100%", margin: "12px 0" }}
-      />
-
-      <div style={{ display: "grid", gap: 8 }}>
-        <div>
-          <strong>Estilo:</strong> {tattoo.style}
         </div>
 
-        <div>
-          <strong>Fecha:</strong>{" "}
-          {tattoo.tattooDate ? new Date(`${tattoo.tattooDate}T00:00:00`).toLocaleDateString() : "—"}
+        <div className="tdChips">
+          {tattoo.style && <span className="tdChip">{tattoo.style}</span>}
+          {tattoo.professionalName && <span className="tdChip">{tattoo.professionalName}</span>}
         </div>
+      </header>
 
-        <div>
-          <strong>Profesional:</strong> {tattoo.professionalName ?? "Estudio 62 Rosas"}
-        </div>
-        <div>
-          <strong>Sesiones:</strong> {tattoo.sessions}
-        </div>
-        <div>
-          <strong>Cover Up:</strong> {tattoo.coverUp ? "Sí" : "No"}
-        </div>
-        <div>
-          <strong>Color:</strong> {tattoo.color ? "Sí" : "No"}
+      <div className="tdGrid">
+        <section className="tdCard tdMediaCard revealItem" style={{ ["--d" as any]: "60ms" }}>
+          <div className="tdMedia">
+            <img src={withBase(tattoo.imageUrl)} alt={title} />
+            <div className="tdShade" />
+            {!!tattoo.style && <div className="tdBadge">{tattoo.style}</div>}
+          </div>
+        </section>
+
+        <div className="tdInfoWrapper revealItem" style={{ ["--d" as any]: "120ms" }}>
+          {isAdmin && (
+            <div className="tdInfoActions">
+              <button type="button" className="btn btn-ghost" onClick={onEdit}>
+                Editar
+              </button>
+              <button type="button" className="btn btn-primary" onClick={onDelete}>
+                Eliminar
+              </button>
+            </div>
+          )}
+
+          <section className="tdCard tdInfoCard">
+            <div className="tdInfoHeader">
+              <h2 className="tdSectionTitle">Detalles</h2>
+            </div>
+
+            <div className="tdKv">
+              <div className="tdKvRow">
+                <span className="tdKvKey">Estilo</span>
+                <span className="tdKvVal">{tattoo.style || "—"}</span>
+              </div>
+
+              <div className="tdKvRow">
+                <span className="tdKvKey">Profesional</span>
+                <span className="tdKvVal">{proName}</span>
+              </div>
+
+              <div className="tdKvRow">
+                <span className="tdKvKey">Fecha</span>
+                <span className="tdKvVal">{dateText}</span>
+              </div>
+
+              <div className="tdKvRow">
+                <span className="tdKvKey">Sesiones</span>
+                <span className="tdKvVal">{tattoo.sessions}</span>
+              </div>
+
+              <div className="tdKvRow">
+                <span className="tdKvKey">Cover Up</span>
+                <span className="tdKvVal">{tattoo.coverUp ? "Sí" : "No"}</span>
+              </div>
+
+              <div className="tdKvRow">
+                <span className="tdKvKey">Color</span>
+                <span className="tdKvVal">{tattoo.color ? "Sí" : "No"}</span>
+              </div>
+            </div>
+          </section>
         </div>
       </div>
     </div>

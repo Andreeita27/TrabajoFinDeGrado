@@ -28,6 +28,8 @@ export type AppointmentDto = {
   clientName?: string;
   clientSurname?: string;
   clientFullName?: string;
+  showroomTattooCreated: boolean;
+  showroomTattooId?: number;
 };
 
 export type AppointmentInDto = {

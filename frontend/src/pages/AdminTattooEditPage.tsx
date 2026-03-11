@@ -5,6 +5,17 @@ import { getTattoo, updateTattoo } from "../api/tattoosApi";
 import { uploadPublicImage } from "../api/filesApi";
 import { useAuth } from "../auth/AuthContext";
 import type { TattooInDto, TattooDto } from "../types/tattoo";
+import "../styles/adminTattooEdit.css";
+
+function withBase(url?: string | null) {
+  if (!url) return "";
+  if (/^https?:\/\//i.test(url)) return url;
+  return `${import.meta.env.VITE_API_BASE_URL}${url}`;
+}
+
+function formatBoolean(value?: boolean) {
+  return value ? "Sí" : "No";
+}
 
 export default function AdminTattooEditPage() {
   const { token, role } = useAuth();
@@ -80,7 +91,7 @@ export default function AdminTattooEditPage() {
       setUploadingImage(true);
       const url = await uploadPublicImage("tattoos", file, token);
       setImageUrl(url);
-      setOk("Imagen subida");
+      setOk("Imagen subida correctamente.");
     } catch (e: any) {
       setError(e instanceof ApiError ? e.message : e?.message || "Error subiendo imagen");
     } finally {
@@ -88,7 +99,7 @@ export default function AdminTattooEditPage() {
     }
   };
 
-  const onSubmit = async (e: React.FormEvent) => {
+  const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!token || role !== "ADMIN" || !tattooId || !original) return;
 
@@ -99,7 +110,9 @@ export default function AdminTattooEditPage() {
     if (!tattooDescription.trim()) return setError("La descripción es obligatoria.");
     if (!tattooDate) return setError("La fecha es obligatoria.");
     if (!imageUrl.trim()) return setError("Debes subir una imagen.");
-    if (!Number.isFinite(sessions) || sessions < 1) return setError("Las sesiones deben ser 1 o más.");
+    if (!Number.isFinite(sessions) || sessions < 1) {
+      return setError("Las sesiones deben ser 1 o más.");
+    }
 
     const payload: TattooInDto = {
       clientId: original.clientId,
@@ -116,7 +129,7 @@ export default function AdminTattooEditPage() {
     try {
       setLoading(true);
       await updateTattoo(token, tattooId, payload);
-      setOk("Cambios guardados");
+      setOk("Cambios guardados correctamente.");
 
       setTimeout(() => nav(backTo, { replace: true }), 300);
     } catch (e: any) {
@@ -138,134 +151,230 @@ export default function AdminTattooEditPage() {
 
   if (!tattooId) {
     return (
-      <div style={{ padding: 16 }}>
-        <h1>Editar tattoo</h1>
-        <p style={{ color: "tomato" }}>ID inválido</p>
+      <div className="admin-tattoo-edit-page">
+        <header className="admin-tattoo-edit-hero">
+          <p className="admin-tattoo-edit-kicker">Panel de administración</p>
+          <h1 className="admin-tattoo-edit-title">Editar tattoo</h1>
+        </header>
+
+        <div className="admin-tattoo-edit-feedback admin-tattoo-edit-feedback--error">
+          ID inválido.
+        </div>
       </div>
     );
   }
 
-  const previewUrl = imageUrl ? `${import.meta.env.VITE_API_BASE_URL}${imageUrl}` : "";
+  const previewUrl = withBase(imageUrl);
 
   return (
-    <div style={{ padding: 16, maxWidth: 560 }}>
-      <h1>Editar tattoo</h1>
+    <div className="admin-tattoo-edit-page">
+      <button
+        type="button"
+        onClick={() => nav(backTo)}
+        className="admin-tattoo-edit-back"
+      >
+        ← Volver
+      </button>
 
-      {error && <div style={{ color: "tomato", marginBottom: 12 }}>{error}</div>}
-      {ok && <div style={{ color: "lightgreen", marginBottom: 12 }}>{ok}</div>}
+      <header className="admin-tattoo-edit-hero">
+        <p className="admin-tattoo-edit-kicker">Panel de administración</p>
+        <h1 className="admin-tattoo-edit-title">Editar tattoo</h1>
+        <p className="admin-tattoo-edit-text">
+          Actualiza la información del tattoo, sustituye la imagen pública si lo
+          necesitas y revisa rápidamente los datos asociados al cliente y al profesional.
+        </p>
+      </header>
 
-      {!original && <p>Cargando…</p>}
+      {error && (
+        <div className="admin-tattoo-edit-feedback admin-tattoo-edit-feedback--error">
+          {error}
+        </div>
+      )}
 
-      {original && (
-        <>
-          <div style={{ marginBottom: 12, color: "#666" }}>
-            <strong>Cliente:</strong> {original?.clientName || "(sin nombre)"} &nbsp;|&nbsp;
-            <strong>Profesional:</strong> {original?.professionalName || "(sin profesional)"}
-          </div>
+      {ok && (
+        <div className="admin-tattoo-edit-feedback admin-tattoo-edit-feedback--success">
+          {ok}
+        </div>
+      )}
 
-          <form onSubmit={onSubmit} style={{ display: "grid", gap: 12 }}>
-            <label>
-              Estilo
-              <input
-                value={style}
-                onChange={(e) => setStyle(e.target.value)}
-                style={{ display: "block", width: "100%", padding: 8, marginTop: 6 }}
-                disabled={loading || uploadingImage}
-              />
-            </label>
+      {!original ? (
+        <div className="admin-tattoo-edit-panel">
+          <p className="admin-tattoo-edit-loading">Cargando tattoo…</p>
+        </div>
+      ) : (
+        <div className="admin-tattoo-edit-grid">
+          <section className="admin-tattoo-edit-panel">
+            <h2 className="admin-tattoo-edit-panel__title">Datos del tattoo</h2>
+            <p className="admin-tattoo-edit-panel__text">
+              Modifica el contenido que se mostrará en el showroom público.
+            </p>
 
-            <label>
-              Descripción
-              <textarea
-                value={tattooDescription}
-                onChange={(e) => setTattooDescription(e.target.value)}
-                rows={4}
-                style={{ display: "block", width: "100%", padding: 8, marginTop: 6 }}
-                disabled={loading || uploadingImage}
-              />
-            </label>
+            <div className="admin-tattoo-edit-info" style={{ marginBottom: "1rem" }}>
+              <div className="admin-tattoo-edit-info-row">
+                <span className="admin-tattoo-edit-info-key">Cliente</span>
+                <span className="admin-tattoo-edit-info-val">
+                  {original.clientName || "(sin nombre)"}
+                </span>
+              </div>
 
-            <label>
-              Fecha
-              <input
-                type="date"
-                value={tattooDate}
-                onChange={(e) => setTattooDate(e.target.value)}
-                style={{ display: "block", width: "100%", padding: 8, marginTop: 6 }}
-                disabled={loading || uploadingImage}
-              />
-            </label>
+              <div className="admin-tattoo-edit-info-row">
+                <span className="admin-tattoo-edit-info-key">Profesional</span>
+                <span className="admin-tattoo-edit-info-val">
+                  {original.professionalName || "(sin profesional)"}
+                </span>
+              </div>
 
-            <label>
-              Sesiones
-              <input
-                type="number"
-                min={1}
-                value={sessions}
-                onChange={(e) => setSessions(Number(e.target.value))}
-                style={{ display: "block", width: "100%", padding: 8, marginTop: 6 }}
-                disabled={loading || uploadingImage}
-              />
-            </label>
+              <div className="admin-tattoo-edit-info-row">
+                <span className="admin-tattoo-edit-info-key">Cover up actual</span>
+                <span className="admin-tattoo-edit-info-val">
+                  {formatBoolean(original.coverUp)}
+                </span>
+              </div>
 
-            <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
-              <input
-                type="checkbox"
-                checked={coverUp}
-                onChange={(e) => setCoverUp(e.target.checked)}
-                disabled={loading || uploadingImage}
-              />
-              ¿Cover up?
-            </label>
+              <div className="admin-tattoo-edit-info-row">
+                <span className="admin-tattoo-edit-info-key">Color actual</span>
+                <span className="admin-tattoo-edit-info-val">
+                  {formatBoolean(original.color)}
+                </span>
+              </div>
+            </div>
 
-            <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
-              <input
-                type="checkbox"
-                checked={color}
-                onChange={(e) => setColor(e.target.checked)}
-                disabled={loading || uploadingImage}
-              />
-              ¿A color?
-            </label>
-
-            <label>
-              Imagen del tattoo
-              <input
-                type="file"
-                accept="image/*"
-                disabled={loading || uploadingImage}
-                onChange={async (e) => {
-                  const f = e.target.files?.[0];
-                  if (!f) return;
-                  await onPickImage(f);
-                  e.currentTarget.value = "";
-                }}
-                style={{ display: "block", width: "100%", padding: 8, marginTop: 6 }}
-              />
-            </label>
-
-            {imageUrl && (
-              <div style={{ display: "grid", gap: 8 }}>
-                <div style={{ fontSize: 12, opacity: 0.8 }}>{imageUrl}</div>
-                <img
-                  src={previewUrl}
-                  alt="Preview tattoo"
-                  style={{ maxWidth: 320, borderRadius: 8, border: "1px solid #444" }}
+            <form onSubmit={onSubmit} className="admin-tattoo-edit-form">
+              <label className="admin-tattoo-edit-field">
+                <span className="admin-tattoo-edit-label">Estilo</span>
+                <input
+                  className="input"
+                  value={style}
+                  onChange={(e) => setStyle(e.target.value)}
+                  disabled={loading || uploadingImage}
                 />
+              </label>
+
+              <label className="admin-tattoo-edit-field">
+                <span className="admin-tattoo-edit-label">Descripción</span>
+                <textarea
+                  value={tattooDescription}
+                  onChange={(e) => setTattooDescription(e.target.value)}
+                  rows={5}
+                  disabled={loading || uploadingImage}
+                />
+              </label>
+
+              <label className="admin-tattoo-edit-field">
+                <span className="admin-tattoo-edit-label">Fecha</span>
+                <input
+                  className="input"
+                  type="date"
+                  value={tattooDate}
+                  onChange={(e) => setTattooDate(e.target.value)}
+                  disabled={loading || uploadingImage}
+                />
+              </label>
+
+              <label className="admin-tattoo-edit-field">
+                <span className="admin-tattoo-edit-label">Sesiones</span>
+                <input
+                  className="input"
+                  type="number"
+                  min={1}
+                  value={sessions}
+                  onChange={(e) => setSessions(Number(e.target.value))}
+                  disabled={loading || uploadingImage}
+                />
+              </label>
+
+              <div className="admin-tattoo-edit-checks">
+                <label className="admin-tattoo-edit-check">
+                  <input
+                    type="checkbox"
+                    checked={coverUp}
+                    onChange={(e) => setCoverUp(e.target.checked)}
+                    disabled={loading || uploadingImage}
+                  />
+                  <span>¿Es un cover up?</span>
+                </label>
+
+                <label className="admin-tattoo-edit-check">
+                  <input
+                    type="checkbox"
+                    checked={color}
+                    onChange={(e) => setColor(e.target.checked)}
+                    disabled={loading || uploadingImage}
+                  />
+                  <span>¿Es a color?</span>
+                </label>
+              </div>
+
+              <div className="admin-tattoo-edit-upload">
+                <label className="admin-tattoo-edit-field">
+                  <span className="admin-tattoo-edit-label">Imagen del tattoo</span>
+
+                  <label className="file-upload">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      disabled={loading || uploadingImage}
+                      onChange={async (e) => {
+                        const f = e.target.files?.[0];
+                        if (!f) return;
+                        await onPickImage(f);
+                        e.currentTarget.value = "";
+                      }}
+                    />
+
+                    <span className="file-upload__button">
+                      {uploadingImage ? "Subiendo..." : "Seleccionar imagen"}
+                    </span>
+                  </label>
+                </label>
+
+                <p className="admin-tattoo-edit-upload-note">
+                  Sube una nueva imagen si quieres reemplazar la actual del showroom.
+                </p>
+              </div>
+
+              <div className="admin-tattoo-edit-actions">
+                <button
+                  type="submit"
+                  disabled={loading || uploadingImage}
+                  className="admin-tattoo-edit-btn admin-tattoo-edit-btn--primary"
+                >
+                  {loading ? "Guardando..." : "Guardar cambios"}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => nav(backTo)}
+                  disabled={loading || uploadingImage}
+                  className="admin-tattoo-edit-btn admin-tattoo-edit-btn--ghost"
+                >
+                  Cancelar
+                </button>
+              </div>
+            </form>
+          </section>
+
+          <section className="admin-tattoo-edit-panel">
+            <h2 className="admin-tattoo-edit-panel__title">Vista previa</h2>
+            <p className="admin-tattoo-edit-panel__text">
+              Comprueba la imagen que se mostrará al público antes de guardar.
+            </p>
+
+            {imageUrl ? (
+              <div className="admin-tattoo-edit-preview-wrap">
+                <div className="admin-tattoo-edit-preview-url">{imageUrl}</div>
+
+                <div className="admin-tattoo-edit-preview">
+                  <img src={previewUrl} alt="Vista previa del tattoo" />
+                </div>
+              </div>
+            ) : (
+              <div className="admin-tattoo-edit-empty">
+                Todavía no hay una imagen seleccionada para este tattoo.
               </div>
             )}
-
-            <div style={{ display: "flex", gap: 8 }}>
-              <button type="submit" disabled={loading || uploadingImage}>
-                {loading ? "Guardando..." : "Guardar cambios"}
-              </button>
-
-              <button type="button" onClick={() => nav(backTo)} disabled={loading || uploadingImage}>
-                Cancelar
-              </button>
-            </div>
-          </form>
-        </>
+          </section>
+        </div>
       )}
     </div>
   );

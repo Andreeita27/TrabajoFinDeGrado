@@ -1,0 +1,351 @@
+.admin-availability-page {
+  width: min(1240px, calc(100% - 2rem));
+  margin: 0 auto;
+  padding: 1.9rem 0 4rem;
+}
+
+.admin-availability-hero {
+  text-align: center;
+  max-width: 860px;
+  margin: 0 auto 2rem;
+}
+
+.admin-availability-kicker {
+  margin: 0 0 0.5rem;
+  color: #b5a16c;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.admin-availability-title {
+  margin: 0;
+  font-family: "Playfair Display", serif;
+  font-size: clamp(2.2rem, 5vw, 3.8rem);
+  line-height: 1.05;
+  color: #ffffff;
+}
+
+.admin-availability-text {
+  margin: 1rem auto 0;
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 1.02rem;
+  line-height: 1.75;
+}
+
+.admin-availability-feedback {
+  margin: 0 auto 1.25rem;
+  max-width: 1240px;
+  padding: 0.95rem 1rem;
+  border-radius: 18px;
+  border: 1px solid rgba(181, 161, 108, 0.22);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02)),
+    rgba(10, 10, 10, 0.88);
+  color: rgba(255, 255, 255, 0.88);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.22);
+}
+
+.admin-availability-feedback--error {
+  color: #ffd8d8;
+  border-color: rgba(255, 120, 120, 0.3);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.015)),
+    rgba(50, 10, 10, 0.45);
+}
+
+.admin-availability-feedback--success {
+  color: #e9f8df;
+  border-color: rgba(126, 208, 126, 0.28);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.015)),
+    rgba(17, 44, 17, 0.45);
+}
+
+.admin-availability-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.2rem;
+  margin-bottom: 1.25rem;
+}
+
+.admin-availability-panel {
+  padding: 1.2rem;
+  border-radius: 24px;
+  border: 1px solid rgba(181, 161, 108, 0.2);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.015)),
+    rgba(10, 10, 10, 0.9);
+  box-shadow: 0 22px 56px rgba(0, 0, 0, 0.3);
+}
+
+.admin-availability-panel__title {
+  margin: 0;
+  font-family: "Playfair Display", serif;
+  font-size: 1.7rem;
+  color: #fff;
+}
+
+.admin-availability-panel__text {
+  margin: 0.45rem 0 1rem;
+  color: rgba(255, 255, 255, 0.72);
+  line-height: 1.7;
+}
+
+.admin-availability-form {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.admin-availability-field {
+  display: grid;
+  gap: 0.42rem;
+}
+
+.admin-availability-label {
+  font-size: 0.74rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(181, 161, 108, 0.88);
+  font-weight: 700;
+}
+
+.admin-availability-actions {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.admin-availability-btn {
+  border: 1px solid transparent;
+  border-radius: 12px;
+  padding: 0.82rem 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    transform 0.2s ease,
+    border-color 0.2s ease,
+    background 0.2s ease,
+    color 0.2s ease;
+}
+
+.admin-availability-btn:hover {
+  transform: translateY(-2px);
+}
+
+.admin-availability-btn:disabled {
+  opacity: 0.58;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.admin-availability-btn--primary {
+  background: #b5a16c;
+  color: #0b0b0b;
+}
+
+.admin-availability-btn--primary:hover {
+  background: #a38f5e;
+}
+
+.admin-availability-btn--ghost {
+  background: transparent;
+  color: #fff;
+  border-color: rgba(181, 161, 108, 0.22);
+}
+
+.admin-availability-btn--ghost:hover {
+  color: #b5a16c;
+  border-color: rgba(181, 161, 108, 0.45);
+}
+
+.admin-availability-btn--danger {
+  background: transparent;
+  color: #ffd8d8;
+  border-color: rgba(191, 92, 92, 0.28);
+}
+
+.admin-availability-btn--danger:hover {
+  border-color: rgba(191, 92, 92, 0.46);
+  background: rgba(191, 92, 92, 0.08);
+}
+
+.admin-availability-summary {
+  display: flex;
+  gap: 0.7rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+
+.admin-availability-chip {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 0.5rem 0.82rem;
+  border: 1px solid rgba(181, 161, 108, 0.18);
+  background: rgba(255,255,255,0.03);
+  color: rgba(255,255,255,0.84);
+  font-size: 0.82rem;
+}
+
+.admin-availability-lists {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.2rem;
+}
+
+.admin-availability-list-panel {
+  padding: 1.2rem;
+  border-radius: 24px;
+  border: 1px solid rgba(181, 161, 108, 0.2);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.015)),
+    rgba(10, 10, 10, 0.9);
+  box-shadow: 0 22px 56px rgba(0, 0, 0, 0.3);
+}
+
+.admin-availability-list-title {
+  margin: 0;
+  font-family: "Playfair Display", serif;
+  font-size: 1.55rem;
+  color: #fff;
+}
+
+.admin-availability-list-text {
+  margin: 0.4rem 0 1rem;
+  color: rgba(255, 255, 255, 0.72);
+  line-height: 1.7;
+}
+
+.admin-availability-list {
+  display: grid;
+  gap: 1rem;
+}
+
+.admin-availability-card {
+  padding: 1rem;
+  border-radius: 20px;
+  border: 1px solid rgba(181, 161, 108, 0.16);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.015)),
+    rgba(14, 14, 14, 0.92);
+  box-shadow: 0 18px 42px rgba(0,0,0,0.22);
+}
+
+.admin-availability-card__top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.admin-availability-card__title {
+  margin: 0;
+  font-family: "Playfair Display", serif;
+  font-size: 1.22rem;
+  color: #fff;
+}
+
+.admin-availability-card__meta {
+  margin: 0.55rem 0 0;
+  color: rgba(255,255,255,0.78);
+  line-height: 1.75;
+}
+
+.admin-availability-card__meta strong {
+  color: #fff;
+}
+
+.admin-availability-badges {
+  display: flex;
+  gap: 0.55rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.admin-availability-badge {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 0.45rem 0.78rem;
+  border: 1px solid rgba(181, 161, 108, 0.25);
+  background: rgba(181, 161, 108, 0.12);
+  color: #f2e6c2;
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.admin-availability-badge--enabled {
+  border-color: rgba(92, 163, 115, 0.3);
+  background: rgba(92, 163, 115, 0.14);
+  color: #dff5e5;
+}
+
+.admin-availability-badge--disabled {
+  border-color: rgba(125, 125, 125, 0.3);
+  background: rgba(125, 125, 125, 0.14);
+  color: #ececec;
+}
+
+.admin-availability-card__reason {
+  margin-top: 0.85rem;
+  padding: 0.9rem 1rem;
+  border-radius: 16px;
+  border: 1px solid rgba(181, 161, 108, 0.12);
+  background: rgba(255,255,255,0.03);
+}
+
+.admin-availability-card__reason-label {
+  margin: 0 0 0.4rem;
+  font-size: 0.74rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(181, 161, 108, 0.88);
+  font-weight: 700;
+}
+
+.admin-availability-card__reason-text {
+  margin: 0;
+  color: rgba(255,255,255,0.84);
+  line-height: 1.75;
+  white-space: pre-wrap;
+}
+
+.admin-availability-card__actions {
+  display: flex;
+  gap: 0.65rem;
+  flex-wrap: wrap;
+  margin-top: 1rem;
+}
+
+.admin-availability-empty {
+  padding: 1.1rem;
+  border-radius: 18px;
+  border: 1px solid rgba(181, 161, 108, 0.16);
+  background: rgba(255,255,255,0.03);
+  color: rgba(255,255,255,0.76);
+}
+
+@media (max-width: 980px) {
+  .admin-availability-grid,
+  .admin-availability-lists {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .admin-availability-page {
+    padding-top: 5.1rem;
+  }
+
+  .admin-availability-panel,
+  .admin-availability-list-panel {
+    padding: 1rem;
+    border-radius: 20px;
+  }
+}

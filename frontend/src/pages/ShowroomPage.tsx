@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { ApiError } from "../api/apiFetch";
 import { useAuth } from "../auth/AuthContext";
 
@@ -7,13 +7,23 @@ import { getTattoos, getProfessionals } from "../api/showroomApi";
 import type { TattooDto } from "../types/tattoo";
 import type { ProfessionalDto } from "../types/professional";
 
-import { getDesigns, getAdminDesigns, createDesign, toggleDesign, deleteDesign } from "../api/designsApi";
+import {
+  getDesigns,
+  getAdminDesigns,
+  createDesign,
+  toggleDesign,
+  deleteDesign,
+} from "../api/designsApi";
 import type { DesignDto } from "../types/design";
 import { uploadPublicImage } from "../api/filesApi";
+
+import "../styles/showroom.css";
 
 type TabKey = "DESIGNS" | "TATTOOS";
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL as string;
+const SHOWROOM_SCROLL_KEY = "showroom:scrollY";
+const SHOWROOM_RETURN_FLAG_KEY = "showroom:restoreOnBack";
 
 function withBase(url?: string | null) {
   if (!url) return "";
@@ -21,21 +31,39 @@ function withBase(url?: string | null) {
   return `${BASE_URL}${url}`;
 }
 
+function parseBooleanParam(value: string | null): boolean | undefined {
+  if (value === "true") return true;
+  if (value === "false") return false;
+  return undefined;
+}
+
 export default function ShowroomPage() {
   const nav = useNavigate();
+  const location = useLocation();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { role, token } = useAuth();
   const isAdmin = role === "ADMIN";
 
-  const [tab, setTab] = useState<TabKey>("TATTOOS");
+  const initialTab = (searchParams.get("tab") as TabKey) || "TATTOOS";
+
+  const [tab, setTab] = useState<TabKey>(
+    initialTab === "DESIGNS" ? "DESIGNS" : "TATTOOS"
+  );
 
   // Tattoos
   const [tattoos, setTattoos] = useState<TattooDto[]>([]);
   const [tattoosError, setTattoosError] = useState("");
 
-  const [style, setStyle] = useState("");
-  const [coverUp, setCoverUp] = useState<boolean | undefined>(undefined);
-  const [color, setColor] = useState<boolean | undefined>(undefined);
-  const [tattooProfessionalId, setTattooProfessionalId] = useState<string>("");
+  const [style, setStyle] = useState(() => searchParams.get("style") ?? "");
+  const [coverUp, setCoverUp] = useState<boolean | undefined>(() =>
+    parseBooleanParam(searchParams.get("coverUp"))
+  );
+  const [color, setColor] = useState<boolean | undefined>(() =>
+    parseBooleanParam(searchParams.get("color"))
+  );
+  const [tattooProfessionalId, setTattooProfessionalId] = useState<string>(
+    () => searchParams.get("professionalId") ?? ""
+  );
 
   // Designs
   const [designs, setDesigns] = useState<DesignDto[]>([]);
@@ -47,9 +75,9 @@ export default function ShowroomPage() {
   const [designProfessionalId, setDesignProfessionalId] = useState<string>("");
   const [designTitle, setDesignTitle] = useState("");
   const [designImageUrl, setDesignImageUrl] = useState("");
-  const [designFilterProfessionalId, setDesignFilterProfessionalId] = useState<string>("");
+  const [designFilterProfessionalId, setDesignFilterProfessionalId] =
+    useState<string>(() => searchParams.get("designProfessionalId") ?? "");
 
-  //mostrar/ocultar formulario de añadir diseño
   const [showAddDesign, setShowAddDesign] = useState(false);
 
   const resetAddDesignForm = () => {
@@ -65,9 +93,23 @@ export default function ShowroomPage() {
         style: style || undefined,
         coverUp,
         color,
-        professionalId: tattooProfessionalId ? Number(tattooProfessionalId) : undefined,
+        professionalId: tattooProfessionalId
+          ? Number(tattooProfessionalId)
+          : undefined,
       });
-      setTattoos(res);
+
+      const sorted = [...res].sort((a, b) => {
+        const ta = a.tattooDate
+          ? new Date(`${a.tattooDate}T00:00:00`).getTime()
+          : 0;
+        const tb = b.tattooDate
+          ? new Date(`${b.tattooDate}T00:00:00`).getTime()
+          : 0;
+        if (tb !== ta) return tb - ta;
+        return (b.id ?? 0) - (a.id ?? 0);
+      });
+
+      setTattoos(sorted);
     } catch (e: any) {
       setTattoosError(e?.message || "Error cargando tatuajes");
     }
@@ -101,7 +143,6 @@ export default function ShowroomPage() {
       .catch(() => setPros([]));
   }, [isAdmin]);
 
-  // Si deja de ser admin, oculto formulario por si acaso
   useEffect(() => {
     if (!isAdmin) {
       setShowAddDesign(false);
@@ -113,6 +154,107 @@ export default function ShowroomPage() {
     if (tab !== "DESIGNS") setDesignFilterProfessionalId("");
   }, [tab]);
 
+  // Estado -> URL
+  useEffect(() => {
+    const nextParams = new URLSearchParams();
+
+    nextParams.set("tab", tab);
+
+    if (style.trim()) nextParams.set("style", style.trim());
+    if (typeof coverUp === "boolean") {
+      nextParams.set("coverUp", String(coverUp));
+    }
+    if (typeof color === "boolean") {
+      nextParams.set("color", String(color));
+    }
+    if (tattooProfessionalId) {
+      nextParams.set("professionalId", tattooProfessionalId);
+    }
+    if (designFilterProfessionalId) {
+      nextParams.set("designProfessionalId", designFilterProfessionalId);
+    }
+
+    const current = searchParams.toString();
+    const next = nextParams.toString();
+
+    if (current !== next) {
+      setSearchParams(nextParams, { replace: true });
+    }
+  }, [
+    tab,
+    style,
+    coverUp,
+    color,
+    tattooProfessionalId,
+    designFilterProfessionalId,
+    searchParams,
+    setSearchParams,
+  ]);
+
+  // URL -> estado
+  useEffect(() => {
+    const tabFromUrl = searchParams.get("tab");
+    const nextTab: TabKey = tabFromUrl === "DESIGNS" ? "DESIGNS" : "TATTOOS";
+    if (tab !== nextTab) setTab(nextTab);
+
+    const styleFromUrl = searchParams.get("style") ?? "";
+    if (style !== styleFromUrl) setStyle(styleFromUrl);
+
+    const coverUpFromUrl = parseBooleanParam(searchParams.get("coverUp"));
+    if (coverUp !== coverUpFromUrl) setCoverUp(coverUpFromUrl);
+
+    const colorFromUrl = parseBooleanParam(searchParams.get("color"));
+    if (color !== colorFromUrl) setColor(colorFromUrl);
+
+    const tattooProfessionalIdFromUrl = searchParams.get("professionalId") ?? "";
+    if (tattooProfessionalId !== tattooProfessionalIdFromUrl) {
+      setTattooProfessionalId(tattooProfessionalIdFromUrl);
+    }
+
+    const designProfessionalIdFromUrl =
+      searchParams.get("designProfessionalId") ?? "";
+    if (designFilterProfessionalId !== designProfessionalIdFromUrl) {
+      setDesignFilterProfessionalId(designProfessionalIdFromUrl);
+    }
+  }, [searchParams]);
+
+  // Guardar scroll mientras estás en Showroom
+  useEffect(() => {
+    const saveScroll = () => {
+      sessionStorage.setItem(SHOWROOM_SCROLL_KEY, String(window.scrollY));
+    };
+
+    window.addEventListener("scroll", saveScroll, { passive: true });
+    return () => window.removeEventListener("scroll", saveScroll);
+  }, []);
+
+  // Restaurar scroll solo si vuelves con el botón propio de la web
+  useEffect(() => {
+    const mustRestore =
+      sessionStorage.getItem(SHOWROOM_RETURN_FLAG_KEY) === "true";
+
+    if (!mustRestore) return;
+
+    const saved = sessionStorage.getItem(SHOWROOM_SCROLL_KEY);
+    if (!saved) {
+      sessionStorage.removeItem(SHOWROOM_RETURN_FLAG_KEY);
+      return;
+    }
+
+    const y = Number(saved);
+    if (!Number.isFinite(y)) {
+      sessionStorage.removeItem(SHOWROOM_RETURN_FLAG_KEY);
+      return;
+    }
+
+    const id = window.setTimeout(() => {
+      window.scrollTo({ top: y, left: 0, behavior: "auto" });
+      sessionStorage.removeItem(SHOWROOM_RETURN_FLAG_KEY);
+    }, 100);
+
+    return () => window.clearTimeout(id);
+  }, [tattoos.length, tab]);
+
   const filteredDesigns = useMemo(() => {
     if (!designFilterProfessionalId) return designs;
 
@@ -122,12 +264,22 @@ export default function ShowroomPage() {
 
       const pro = pros.find((p) => p.id === pid);
       const name = pro?.professionalName?.trim().toLowerCase();
-      return name ? String(d.professionalName ?? "").trim().toLowerCase() === name : true;
+
+      return name
+        ? String(d.professionalName ?? "").trim().toLowerCase() === name
+        : true;
     });
   }, [designs, designFilterProfessionalId, pros]);
 
-  const activeDesigns = useMemo(() => filteredDesigns.filter((d) => d.active), [filteredDesigns]);
-  const inactiveDesigns = useMemo(() => filteredDesigns.filter((d) => !d.active), [filteredDesigns]);
+  const activeDesigns = useMemo(
+    () => filteredDesigns.filter((d) => d.active),
+    [filteredDesigns]
+  );
+
+  const inactiveDesigns = useMemo(
+    () => filteredDesigns.filter((d) => !d.active),
+    [filteredDesigns]
+  );
 
   const onPickDesignImage = async (file: File) => {
     if (!isAdmin || !token) {
@@ -141,7 +293,9 @@ export default function ShowroomPage() {
       const url = await uploadPublicImage("designs", file, token);
       setDesignImageUrl(url);
     } catch (e: any) {
-      setDesignError(e instanceof ApiError ? e.message : e?.message || "Error subiendo imagen");
+      setDesignError(
+        e instanceof ApiError ? e.message : e?.message || "Error subiendo imagen"
+      );
     } finally {
       setUploadingDesignImage(false);
     }
@@ -152,10 +306,12 @@ export default function ShowroomPage() {
       setDesignError("Inicia sesión como admin.");
       return;
     }
+
     if (!designProfessionalId) {
       setDesignError("Selecciona un tatuador.");
       return;
     }
+
     if (!designImageUrl.trim()) {
       setDesignError("Debes subir una imagen.");
       return;
@@ -164,6 +320,7 @@ export default function ShowroomPage() {
     setDesignError("");
     try {
       setDesignSaving(true);
+
       await createDesign(token, {
         professionalId: Number(designProfessionalId),
         imageUrl: designImageUrl.trim(),
@@ -173,7 +330,6 @@ export default function ShowroomPage() {
 
       resetAddDesignForm();
       setShowAddDesign(false);
-
       await loadDesigns();
     } catch (e: any) {
       if (e instanceof ApiError && (e.status === 401 || e.status === 403)) {
@@ -221,22 +377,35 @@ export default function ShowroomPage() {
     }
   };
 
-  return (
-    <div style={{ padding: 16 }}>
-      <h1>Showroom</h1>
+  const goToTattooDetail = (tattooId: number) => {
+    sessionStorage.setItem(SHOWROOM_SCROLL_KEY, String(window.scrollY));
 
-      <div style={{ display: "flex", gap: 8, margin: "12px 0 18px" }}>
+    nav(`/showroom/${tattooId}`, {
+      state: {
+        returnTo: `${location.pathname}${location.search}`,
+      },
+    });
+  };
+
+  return (
+    <div className="container showroom">
+      <header className="showroomHeader">
+        <div className="showroomHeader__top">
+          <div>
+            <div className="showroomEyebrow">Showroom</div>
+            <h1 className="showroomTitle">Trabajos y diseños</h1>
+            <p className="showroomSubtitle">
+              Explora tatuajes realizados y diseños disponibles del estudio.
+            </p>
+          </div>
+        </div>
+      </header>
+
+      <div className="tabsRow">
         <button
           type="button"
           onClick={() => setTab("TATTOOS")}
-          style={{
-            padding: "8px 12px",
-            border: "1px solid #333",
-            borderRadius: 8,
-            background: tab === "TATTOOS" ? "#222" : "transparent",
-            color: "inherit",
-            cursor: "pointer",
-          }}
+          className={`tabBtn ${tab === "TATTOOS" ? "tabBtn--active" : ""}`}
         >
           Tatuajes realizados
         </button>
@@ -244,55 +413,122 @@ export default function ShowroomPage() {
         <button
           type="button"
           onClick={() => setTab("DESIGNS")}
-          style={{
-            padding: "8px 12px",
-            border: "1px solid #333",
-            borderRadius: 8,
-            background: tab === "DESIGNS" ? "#222" : "transparent",
-            color: "inherit",
-            cursor: "pointer",
-          }}
+          className={`tabBtn ${tab === "DESIGNS" ? "tabBtn--active" : ""}`}
         >
           Diseños disponibles
         </button>
       </div>
 
+      {tab === "TATTOOS" && (
+        <div className="filtersCard">
+          <div className="filtersGrid">
+            <label className="field">
+              <span className="fieldTitle">Estilo</span>
+              <input
+                className="input"
+                placeholder="Ej: Neotradicional..."
+                value={style}
+                onChange={(e) => setStyle(e.target.value)}
+              />
+            </label>
+
+            <label className="field">
+              <span className="fieldTitle">Tatuador</span>
+              <select
+                className="input"
+                value={tattooProfessionalId}
+                onChange={(e) => setTattooProfessionalId(e.target.value)}
+              >
+                <option value="">Todos</option>
+                {pros.map((p) => (
+                  <option key={p.id} value={String(p.id)}>
+                    {p.professionalName}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label className="field">
+              <span className="fieldTitle">Cover up</span>
+              <select
+                className="input"
+                value={typeof coverUp === "boolean" ? String(coverUp) : ""}
+                onChange={(e) =>
+                  setCoverUp(
+                    e.target.value === ""
+                      ? undefined
+                      : e.target.value === "true"
+                  )
+                }
+              >
+                <option value="">Todos</option>
+                <option value="true">Sí</option>
+                <option value="false">No</option>
+              </select>
+            </label>
+
+            <label className="field">
+              <span className="fieldTitle">Color</span>
+              <select
+                className="input"
+                value={typeof color === "boolean" ? String(color) : ""}
+                onChange={(e) =>
+                  setColor(
+                    e.target.value === "" ? undefined : e.target.value === "true"
+                  )
+                }
+              >
+                <option value="">Todos</option>
+                <option value="true">Color</option>
+                <option value="false">Blanco y negro</option>
+              </select>
+            </label>
+          </div>
+        </div>
+      )}
+
       {tab === "DESIGNS" && (
         <section>
-          <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "center" }}>
+          <div className="sectionTop">
             <div>
-              <h2 style={{ margin: 0 }}>Diseños disponibles</h2>
-              <p style={{ opacity: 0.85, marginTop: 6 }}>
-                Ideas que el estudio tiene preparadas para tatuar. Si te interesa uno, dínoslo y lo adaptamos a ti.
+              <h2 className="sectionTitle">Diseños disponibles</h2>
+              <p className="sectionText">
+                Ideas preparadas para tatuar. Si te interesa uno, te lo adaptamos a ti.
               </p>
-            </div>
 
-            <div style={{ margin: "10px 0 16px", display: "flex", gap: 12, flexWrap: "wrap", alignItems: "end" }}>
-              <label style={{ display: "grid", gap: 6 }}>
-                Tatuador
-                <select
-                  value={designFilterProfessionalId}
-                  onChange={(e) => setDesignFilterProfessionalId(e.target.value)}
-                >
-                  <option value="">Todos</option>
-                  {pros.map((p) => (
-                    <option key={p.id} value={String(p.id)}>
-                      {p.professionalName}
-                    </option>
-                  ))}
-                </select>
-              </label>
+              <div className="filtersRow">
+                <div className="field">
+                  <div className="fieldTitle">Tatuador</div>
+                  <select
+                    className="input"
+                    value={designFilterProfessionalId}
+                    onChange={(e) => setDesignFilterProfessionalId(e.target.value)}
+                  >
+                    <option value="">Todos</option>
+                    {pros.map((p) => (
+                      <option key={p.id} value={String(p.id)}>
+                        {p.professionalName}
+                      </option>
+                    ))}
+                  </select>
+                </div>
 
-              {designFilterProfessionalId && (
-                <button type="button" onClick={() => setDesignFilterProfessionalId("")}>
-                  Quitar filtro
-                </button>
-              )}
+                {designFilterProfessionalId && (
+                  <button
+                    type="button"
+                    className="btn btn-ghost smallBtn"
+                    onClick={() => setDesignFilterProfessionalId("")}
+                  >
+                    Quitar filtro
+                  </button>
+                )}
+              </div>
             </div>
 
             {isAdmin && (
               <button
                 type="button"
+                className="btn btn-primary"
                 onClick={() => {
                   setDesignError("");
                   setShowAddDesign((v) => {
@@ -307,16 +543,20 @@ export default function ShowroomPage() {
             )}
           </div>
 
-          {designError && <div style={{ color: "tomato", marginBottom: 10 }}>{designError}</div>}
+          {designError && <div className="panelError">{designError}</div>}
 
           {isAdmin && showAddDesign && (
-            <div style={{ border: "1px solid #333", borderRadius: 10, padding: 12, margin: "12px 0 16px" }}>
-              <div style={{ fontWeight: 700, marginBottom: 10 }}>Nuevo diseño</div>
+            <div className="card panel">
+              <div className="panelTitle">Nuevo diseño</div>
 
-              <div style={{ display: "grid", gridTemplateColumns: "240px 1fr 1fr auto auto", gap: 10, alignItems: "end" }}>
-                <label style={{ display: "grid", gap: 6 }}>
-                  Tatuador
-                  <select value={designProfessionalId} onChange={(e) => setDesignProfessionalId(e.target.value)}>
+              <div className="addGrid">
+                <div className="field">
+                  <div className="fieldTitle">Tatuador</div>
+                  <select
+                    className="input"
+                    value={designProfessionalId}
+                    onChange={(e) => setDesignProfessionalId(e.target.value)}
+                  >
                     <option value="">Selecciona…</option>
                     {pros.map((p) => (
                       <option key={p.id} value={String(p.id)}>
@@ -324,21 +564,23 @@ export default function ShowroomPage() {
                       </option>
                     ))}
                   </select>
-                </label>
+                </div>
 
-                <label style={{ display: "grid", gap: 6 }}>
-                  Título (opcional)
+                <div className="field">
+                  <div className="fieldTitle">Título (opcional)</div>
                   <input
+                    className="input"
                     value={designTitle}
                     onChange={(e) => setDesignTitle(e.target.value)}
                     placeholder="Ej: Flash neo-trad rose"
                     disabled={designSaving || uploadingDesignImage}
                   />
-                </label>
+                </div>
 
-                <label style={{ display: "grid", gap: 6 }}>
-                  Imagen
+                <div className="field">
+                  <div className="fieldTitle">Imagen</div>
                   <input
+                    className="input"
                     type="file"
                     accept="image/*"
                     disabled={designSaving || uploadingDesignImage}
@@ -349,14 +591,19 @@ export default function ShowroomPage() {
                       e.currentTarget.value = "";
                     }}
                   />
-                </label>
+                </div>
 
-                <button onClick={onCreateDesign} disabled={designSaving || uploadingDesignImage}>
+                <button
+                  className="btn btn-primary"
+                  onClick={onCreateDesign}
+                  disabled={designSaving || uploadingDesignImage}
+                >
                   {designSaving ? "Añadiendo..." : "Guardar"}
                 </button>
 
                 <button
                   type="button"
+                  className="btn btn-ghost"
                   onClick={() => {
                     setDesignError("");
                     setShowAddDesign(false);
@@ -369,12 +616,12 @@ export default function ShowroomPage() {
               </div>
 
               {designImageUrl.trim() && (
-                <div style={{ marginTop: 12, display: "grid", gap: 8 }}>
-                  <div style={{ fontSize: 12, opacity: 0.8 }}>{designImageUrl}</div>
+                <div className="previewWrap">
+                  <div className="previewUrl">{designImageUrl}</div>
                   <img
                     src={withBase(designImageUrl)}
                     alt="Preview diseño"
-                    style={{ width: "100%", maxWidth: 520, height: 220, objectFit: "cover", borderRadius: 8, border: "1px solid #333" }}
+                    className="previewImg"
                   />
                 </div>
               )}
@@ -382,80 +629,101 @@ export default function ShowroomPage() {
           )}
 
           {activeDesigns.length === 0 ? (
-            <p style={{ opacity: 0.8 }}>No hay diseños disponibles ahora mismo.</p>
+            <p className="emptyText">No hay diseños disponibles ahora mismo.</p>
           ) : (
-            <div style={{ display: "grid", gap: 14 }}>
-              {activeDesigns.map((d) => (
-                <div
+            <div className="galleryGrid">
+              {activeDesigns.map((d, i) => (
+                <article
                   key={d.id}
-                  style={{
-                    border: "1px solid #333",
-                    borderRadius: 10,
-                    padding: 12,
-                    display: "grid",
-                    gap: 10,
-                  }}
+                  className="galleryCard revealItem"
+                  style={{ ["--d" as any]: `${i * 60}ms` }}
                 >
-                  <div style={{ display: "flex", justifyContent: "space-between", gap: 10 }}>
-                    <div>
-                      <div style={{ fontWeight: 700 }}>{d.title?.trim() ? d.title : "Diseño"}</div>
-                      <div style={{ opacity: 0.8 }}>{d.professionalName ?? "Estudio 62 Rosas"}</div>
+                  <div className="galleryMedia">
+                    <img
+                      src={withBase(d.imageUrl)}
+                      alt={d.title ?? "Diseño disponible"}
+                      loading="lazy"
+                    />
+                    <div className="galleryShade" />
+                  </div>
+
+                  <div className="galleryBody">
+                    <div className="galleryTitle">
+                      {d.title?.trim() ? d.title : "Diseño"}
+                    </div>
+                    <div className="galleryMeta">
+                      {d.professionalName ?? "Estudio 62 Rosas"}
                     </div>
 
                     {isAdmin && (
-                      <div style={{ display: "flex", gap: 8, alignItems: "start" }}>
-                        <button type="button" onClick={() => onToggleDesign(d.id)}>
+                      <div className="galleryActions">
+                        <button
+                          type="button"
+                          className="btn btn-ghost smallBtn"
+                          onClick={() => onToggleDesign(d.id)}
+                        >
                           Retirar
                         </button>
-                        <button type="button" onClick={() => onDeleteDesign(d.id)}>
+                        <button
+                          type="button"
+                          className="btn btn-primary smallBtn"
+                          onClick={() => onDeleteDesign(d.id)}
+                        >
                           Eliminar
                         </button>
                       </div>
                     )}
                   </div>
-
-                  <img
-                    src={withBase(d.imageUrl)}
-                    alt={d.title ?? "Diseño disponible"}
-                    style={{ width: "100%", height: 260, objectFit: "cover", borderRadius: 8 }}
-                  />
-                </div>
+                </article>
               ))}
             </div>
           )}
 
           {isAdmin && inactiveDesigns.length > 0 && (
-            <div style={{ marginTop: 18, paddingTop: 12, borderTop: "1px solid #333" }}>
+            <div className="inactiveBox">
               <h3>Retirados</h3>
-              <div style={{ display: "grid", gap: 12 }}>
-                {inactiveDesigns.map((d) => (
-                  <div
+              <div className="galleryGrid">
+                {inactiveDesigns.map((d, i) => (
+                  <article
                     key={d.id}
-                    style={{
-                      border: "1px dashed #444",
-                      borderRadius: 10,
-                      padding: 12,
-                      display: "flex",
-                      justifyContent: "space-between",
-                      gap: 10,
-                      alignItems: "center",
-                      opacity: 0.9,
-                    }}
+                    className="galleryCard galleryCard--inactive revealItem"
+                    style={{ ["--d" as any]: `${i * 60}ms` }}
                   >
-                    <div>
-                      <div style={{ fontWeight: 700 }}>{d.title?.trim() ? d.title : "Diseño"}</div>
-                      <div style={{ opacity: 0.8 }}>{d.professionalName ?? "Estudio 62 Rosas"}</div>
+                    <div className="galleryMedia">
+                      <img
+                        src={withBase(d.imageUrl)}
+                        alt={d.title ?? "Diseño"}
+                        loading="lazy"
+                      />
+                      <div className="galleryShade" />
                     </div>
 
-                    <div style={{ display: "flex", gap: 8 }}>
-                      <button type="button" onClick={() => onToggleDesign(d.id)}>
-                        Activar
-                      </button>
-                      <button type="button" onClick={() => onDeleteDesign(d.id)}>
-                        Eliminar
-                      </button>
+                    <div className="galleryBody">
+                      <div className="galleryTitle">
+                        {d.title?.trim() ? d.title : "Diseño"}
+                      </div>
+                      <div className="galleryMeta">
+                        {d.professionalName ?? "Estudio 62 Rosas"}
+                      </div>
+
+                      <div className="galleryActions">
+                        <button
+                          type="button"
+                          className="btn btn-ghost smallBtn"
+                          onClick={() => onToggleDesign(d.id)}
+                        >
+                          Activar
+                        </button>
+                        <button
+                          type="button"
+                          className="btn btn-primary smallBtn"
+                          onClick={() => onDeleteDesign(d.id)}
+                        >
+                          Eliminar
+                        </button>
+                      </div>
                     </div>
-                  </div>
+                  </article>
                 ))}
               </div>
             </div>
@@ -465,86 +733,44 @@ export default function ShowroomPage() {
 
       {tab === "TATTOOS" && (
         <section>
-          <h2>Tatuajes realizados</h2>
+          {tattoosError && <div className="panelError">{tattoosError}</div>}
 
-          <div style={{ marginBottom: 16, display: "flex", gap: 12, flexWrap: "wrap", alignItems: "end" }}>
-            <label style={{ display: "grid", gap: 6 }}>
-              Estilo
-              <input placeholder="Filtrar por estilo" value={style} onChange={(e) => setStyle(e.target.value)} />
-            </label>
-
-            <label style={{ display: "grid", gap: 6 }}>
-              Tatuador
-              <select value={tattooProfessionalId} onChange={(e) => setTattooProfessionalId(e.target.value)}>
-                <option value="">Todos</option>
-                {pros.map((p) => (
-                  <option key={p.id} value={String(p.id)}>
-                    {p.professionalName}
-                  </option>
-                ))}
-              </select>
-            </label>
-
-            <label style={{ display: "grid", gap: 6 }}>
-              Cover up
-              <select
-                value={typeof coverUp === "boolean" ? String(coverUp) : ""}
-                onChange={(e) => setCoverUp(e.target.value === "" ? undefined : e.target.value === "true")}
-              >
-                <option value="">Todos</option>
-                <option value="true">Sí</option>
-                <option value="false">No</option>
-              </select>
-            </label>
-
-            <label style={{ display: "grid", gap: 6 }}>
-              Color
-              <select
-                value={typeof color === "boolean" ? String(color) : ""}
-                onChange={(e) => setColor(e.target.value === "" ? undefined : e.target.value === "true")}
-              >
-                <option value="">Todos</option>
-                <option value="true">Color</option>
-                <option value="false">Blanco y negro</option>
-              </select>
-            </label>
-          </div>
-
-          {tattoosError && <div style={{ color: "tomato" }}>{tattoosError}</div>}
-
-          <div style={{ display: "grid", gap: 20 }}>
-            {tattoos.map((t) => (
-              <div
-                key={t.id}
-                onClick={() => nav(`/showroom/${t.id}`)}
-                role="button"
-                style={{
-                  border: "1px solid #333",
-                  padding: 12,
-                  borderRadius: 10,
-                  cursor: "pointer",
-                }}
-              >
-                <img
-                  src={withBase(t.imageUrl)}
-                  alt={t.tattooDescription}
-                  style={{
-                    width: "100%",
-                    height: 220,
-                    objectFit: "cover",
-                    borderRadius: 8,
+          {!tattoosError && tattoos.length === 0 ? (
+            <p className="emptyText">No hay tatuajes con esos filtros.</p>
+          ) : (
+            <div className="galleryGrid">
+              {tattoos.map((t, i) => (
+                <article
+                  key={t.id}
+                  className="galleryCard galleryCard--clickable revealItem"
+                  style={{ ["--d" as any]: `${i * 50}ms` }}
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => goToTattooDetail(t.id)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") goToTattooDetail(t.id);
                   }}
-                />
+                >
+                  <div className="galleryMedia">
+                    <img
+                      src={withBase(t.imageUrl)}
+                      alt={t.tattooDescription}
+                      loading="lazy"
+                    />
+                    <div className="galleryShade" />
+                    <div className="galleryBadge">Ver detalle</div>
+                  </div>
 
-                <div style={{ marginTop: 10 }}>
-                  <h3 style={{ margin: 0 }}>{t.style}</h3>
-                  <p style={{ color: "#888", marginTop: 6 }}>{t.professionalName ?? "Estudio 62 Rosas"}</p>
-                </div>
-              </div>
-            ))}
-
-            {!tattoosError && tattoos.length === 0 && <p style={{ opacity: 0.8 }}>No hay tatuajes con esos filtros.</p>}
-          </div>
+                  <div className="galleryBody">
+                    <div className="galleryTitle">{t.style || "Tatuaje"}</div>
+                    <div className="galleryMeta">
+                      {t.professionalName ?? "Estudio 62 Rosas"}
+                    </div>
+                  </div>
+                </article>
+              ))}
+            </div>
+          )}
         </section>
       )}
     </div>

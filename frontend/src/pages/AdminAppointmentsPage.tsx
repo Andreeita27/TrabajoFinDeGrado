@@ -15,6 +15,7 @@ import type { ClientDto } from "../types/client";
 import { searchClients } from "../api/clientsApi";
 import { getAvailability } from "../api/availabilityApi";
 import type { AvailabilitySlotDto } from "../types/availability";
+import "../styles/adminAppointments.css";
 
 type DepositFilter = "ALL" | "PAID" | "UNPAID";
 
@@ -34,6 +35,62 @@ function formatSlotLabel(iso: string) {
   }
 }
 
+function formatState(state?: string) {
+  switch (state) {
+    case "PENDING":
+      return "Pendiente";
+    case "CONFIRMED":
+      return "Confirmada";
+    case "COMPLETED":
+      return "Completada";
+    case "CANCELLED":
+      return "Cancelada";
+    case "NO_SHOW":
+      return "No asistió";
+    default:
+      return state ?? "-";
+  }
+}
+
+function formatType(type?: string) {
+  switch (type) {
+    case "TATTOO":
+      return "Sesión";
+    case "CONSULTATION":
+      return "Consulta";
+    default:
+      return type ?? "-";
+  }
+}
+
+function getStateBadgeClass(state?: string) {
+  switch (state) {
+    case "PENDING":
+      return "admin-appts-badge admin-appts-badge--pending";
+    case "CONFIRMED":
+      return "admin-appts-badge admin-appts-badge--confirmed";
+    case "COMPLETED":
+      return "admin-appts-badge admin-appts-badge--completed";
+    case "CANCELLED":
+      return "admin-appts-badge admin-appts-badge--cancelled";
+    case "NO_SHOW":
+      return "admin-appts-badge admin-appts-badge--no-show";
+    default:
+      return "admin-appts-badge";
+  }
+}
+
+function formatDateTime(value: string) {
+  try {
+    return new Date(value).toLocaleString("es-ES", {
+      dateStyle: "full",
+      timeStyle: "short",
+    });
+  } catch {
+    return value;
+  }
+}
+
 export default function AdminAppointmentsPage() {
   const { token, role } = useAuth();
   const nav = useNavigate();
@@ -41,19 +98,17 @@ export default function AdminAppointmentsPage() {
   const [items, setItems] = useState<AppointmentDto[]>([]);
   const [error, setError] = useState("");
 
-  // Filtros
   const [stateFilter, setStateFilter] = useState<AppointmentState | "ALL">("ALL");
   const [typeFilter, setTypeFilter] = useState<"ALL" | "TATTOO" | "CONSULTATION">("ALL");
   const [depositFilter, setDepositFilter] = useState<DepositFilter>("ALL");
   const [professionalName, setProfessionalName] = useState<string>("");
 
-  const [clientName, setClientName] = useState<string>(""); // este sigue siendo el filtro que mando al backend
-  const [clientQuery, setClientQuery] = useState<string>(""); // lo que escribe el admin
+  const [clientName, setClientName] = useState<string>("");
+  const [clientQuery, setClientQuery] = useState<string>("");
   const [clientOptions, setClientOptions] = useState<ClientDto[]>([]);
   const [clientOpen, setClientOpen] = useState(false);
   const [clientLoading, setClientLoading] = useState(false);
 
-  // Rango fechas
   const [dateFrom, setDateFrom] = useState<string>("");
   const [dateTo, setDateTo] = useState<string>("");
 
@@ -113,7 +168,6 @@ export default function AdminAppointmentsPage() {
     return () => window.clearTimeout(t);
   }, [stateFilter, depositFilter, professionalName, clientName, dateFrom, dateTo]);
 
-  // Autocomplete clientes
   useEffect(() => {
     if (!token) return;
 
@@ -141,7 +195,6 @@ export default function AdminAppointmentsPage() {
     return () => window.clearTimeout(t);
   }, [clientQuery, token]);
 
-  // Cerrar desplegable al click fuera
   const clientWrapRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
     const onDown = (e: MouseEvent) => {
@@ -154,10 +207,10 @@ export default function AdminAppointmentsPage() {
 
   const onSelectClient = (c: ClientDto) => {
     const full = `${c.clientName ?? ""} ${c.clientSurname ?? ""}`.trim();
-    setClientQuery(full); //deja el texto bonito en el input
-    setClientName(full); //esto es lo que filtra realmente
-    setClientOpen(false); //cierra desplegable al seleccionar
-    setClientOptions([]); //limpia lista para que no se quede abierta
+    setClientQuery(full);
+    setClientName(full);
+    setClientOpen(false);
+    setClientOptions([]);
   };
 
   const onClearFilters = () => {
@@ -200,7 +253,7 @@ export default function AdminAppointmentsPage() {
   const onMarkCompleted = async (id: number) => {
     if (!token) return;
 
-    const ok = window.confirm("¿Marcar esta cita como COMPLETADA?");
+    const ok = window.confirm("¿Marcar esta cita como completada?");
     if (!ok) return;
 
     setError("");
@@ -215,7 +268,7 @@ export default function AdminAppointmentsPage() {
   const onMarkNoShow = async (id: number) => {
     if (!token) return;
 
-    const ok = window.confirm("¿Marcar esta cita como NO-SHOW?");
+    const ok = window.confirm("¿Marcar esta cita como no asistida?");
     if (!ok) return;
 
     setError("");
@@ -223,7 +276,7 @@ export default function AdminAppointmentsPage() {
       await markNoShow(token, id);
       await load();
     } catch (e: any) {
-      setError(e?.message || "Error marcando como no-show");
+      setError(e?.message || "Error marcando como no asistida");
     }
   };
 
@@ -246,7 +299,6 @@ export default function AdminAppointmentsPage() {
     setRescheduleSaving(false);
   };
 
-  // Cargar slots cuando el admin elige día
   useEffect(() => {
     if (!token) return;
     if (!rescheduleId) return;
@@ -319,283 +371,379 @@ export default function AdminAppointmentsPage() {
   }, [items, typeFilter, depositFilter]);
 
   return (
-    <div style={{ padding: 16 }}>
-      <h1>Todas las citas</h1>
+    <div className="admin-appts-page">
+      <header className="admin-appts-hero">
+        <p className="admin-appts-kicker">Panel de administración</p>
+        <h1 className="admin-appts-title">Gestión de citas</h1>
+        <p className="admin-appts-text">
+          Consulta todas las reservas del estudio, filtra por cliente o profesional
+          y gestiona cambios de estado, señal y reprogramaciones desde un mismo panel.
+        </p>
+      </header>
 
-      {error && <div style={{ color: "tomato", marginBottom: 10 }}>{error}</div>}
+      {error && (
+        <div className="admin-appts-feedback admin-appts-feedback--error">
+          {error}
+        </div>
+      )}
 
-      {/* Filtros */}
-      <div
-        style={{
-          margin: "10px 0 16px",
-          display: "flex",
-          gap: 12,
-          alignItems: "end",
-        }}
-      >
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 12, alignItems: "end" }}>
-          <label style={{ display: "grid", gap: 6, minWidth: 220 }}>
-            Tipo:
-            <select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value as any)}>
+      <section className="admin-appts-filters">
+        <div className="admin-appts-filters__head">
+          <div>
+            <h2 className="admin-appts-section-title">Filtrar citas</h2>
+            <p className="admin-appts-section-text">
+              Usa los filtros para localizar rápido una reserva concreta.
+            </p>
+          </div>
+
+          <div className="admin-appts-actions">
+            <button
+              type="button"
+              onClick={onClearFilters}
+              className="admin-appts-btn admin-appts-btn--ghost"
+            >
+              Limpiar filtros
+            </button>
+          </div>
+        </div>
+
+        <div className="admin-appts-grid">
+          <label className="admin-appts-field">
+            <span className="admin-appts-label">Tipo</span>
+            <select
+              value={typeFilter}
+              onChange={(e) => setTypeFilter(e.target.value as "ALL" | "TATTOO" | "CONSULTATION")}
+            >
               <option value="ALL">Todas</option>
               <option value="TATTOO">Sesión</option>
               <option value="CONSULTATION">Consulta</option>
             </select>
           </label>
-        </div>
-        <label style={{ display: "grid", gap: 6 }}>
-          Estado
-          <select value={stateFilter} onChange={(e) => setStateFilter(e.target.value as any)}>
-            <option value="ALL">Todas</option>
-            <option value="PENDING">Pendiente</option>
-            <option value="CONFIRMED">Confirmada</option>
-            <option value="COMPLETED">Completada</option>
-            <option value="CANCELLED">Cancelada</option>
-            <option value="NO_SHOW">No apareció</option>
-          </select>
-        </label>
 
-        <label style={{ display: "grid", gap: 6 }}>
-          Señal
-          <select value={depositFilter} onChange={(e) => setDepositFilter(e.target.value as any)}>
-            <option value="ALL">Todas</option>
-            <option value="PAID">Pagada</option>
-            <option value="UNPAID">No pagada</option>
-          </select>
-        </label>
+          <label className="admin-appts-field">
+            <span className="admin-appts-label">Estado</span>
+            <select
+              value={stateFilter}
+              onChange={(e) => setStateFilter(e.target.value as AppointmentState | "ALL")}
+            >
+              <option value="ALL">Todas</option>
+              <option value="PENDING">Pendiente</option>
+              <option value="CONFIRMED">Confirmada</option>
+              <option value="COMPLETED">Completada</option>
+              <option value="CANCELLED">Cancelada</option>
+              <option value="NO_SHOW">No asistió</option>
+            </select>
+          </label>
 
-        <label style={{ display: "grid", gap: 6 }}>
-          Profesional
-          <input value={professionalName} onChange={(e) => setProfessionalName(e.target.value)} placeholder="Ej: Titi" />
-        </label>
+          <label className="admin-appts-field">
+            <span className="admin-appts-label">Señal</span>
+            <select
+              value={depositFilter}
+              onChange={(e) => setDepositFilter(e.target.value as DepositFilter)}
+            >
+              <option value="ALL">Todas</option>
+              <option value="PAID">Pagada</option>
+              <option value="UNPAID">No pagada</option>
+            </select>
+          </label>
 
-        <div ref={clientWrapRef} style={{ display: "grid", gap: 6, position: "relative" }}>
-          <label style={{ display: "grid", gap: 6 }}>
-            Cliente
+          <label className="admin-appts-field">
+            <span className="admin-appts-label">Profesional</span>
             <input
-              value={clientQuery}
-              onChange={(e) => {
-                const v = e.target.value;
-                setClientQuery(v);
-                setClientName(v);
-                setClientOpen(true);
-              }}
-              onFocus={() => {
-                if (clientQuery.trim()) setClientOpen(true);
-              }}
-              placeholder="Ej: Andrea / Fernández"
+              className="input"
+              value={professionalName}
+              onChange={(e) => setProfessionalName(e.target.value)}
+              placeholder="Ej: Titi"
             />
           </label>
 
-          {clientOpen && clientQuery.trim() && (
-            <div
-              style={{
-                position: "absolute",
-                top: "100%",
-                left: 0,
-                right: 0,
-                marginTop: 6,
-                border: "1px solid #333",
-                borderRadius: 8,
-                background: "#111",
-                zIndex: 20,
-                maxHeight: 220,
-                overflow: "auto",
-              }}
-            >
-              {clientLoading && <div style={{ padding: 10, opacity: 0.8 }}>Buscando…</div>}
+          <div
+            ref={clientWrapRef}
+            className="admin-appts-field admin-appts-field--wide admin-appts-client-wrap"
+          >
+            <label className="admin-appts-field">
+              <span className="admin-appts-label">Cliente</span>
+              <input
+                className="input"
+                value={clientQuery}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  setClientQuery(v);
+                  setClientName(v);
+                  setClientOpen(true);
+                }}
+                onFocus={() => {
+                  if (clientQuery.trim()) setClientOpen(true);
+                }}
+                placeholder="Ej: Andrea / Fernández"
+              />
+            </label>
 
-              {!clientLoading && clientOptions.length === 0 && (
-                <div style={{ padding: 10, opacity: 0.8 }}>Sin resultados</div>
-              )}
+            {clientOpen && clientQuery.trim() && (
+              <div className="admin-appts-client-dropdown">
+                {clientLoading && (
+                  <div className="admin-appts-client-empty">Buscando…</div>
+                )}
 
-              {!clientLoading &&
-                clientOptions.map((c) => {
-                  const full = `${c.clientName ?? ""} ${c.clientSurname ?? ""}`.trim();
-                  return (
-                    <button
-                      key={c.id}
-                      type="button"
-                      onClick={() => onSelectClient(c)}
-                      style={{
-                        width: "100%",
-                        textAlign: "left",
-                        padding: 10,
-                        border: "none",
-                        background: "transparent",
-                        color: "white",
-                        cursor: "pointer",
-                        borderBottom: "1px solid #222",
-                      }}
-                    >
-                      <div style={{ fontWeight: 600 }}>{full}</div>
-                      {c.email && <div style={{ opacity: 0.75, fontSize: 12 }}>{c.email}</div>}
-                    </button>
-                  );
-                })}
-            </div>
-          )}
+                {!clientLoading && clientOptions.length === 0 && (
+                  <div className="admin-appts-client-empty">Sin resultados</div>
+                )}
+
+                {!clientLoading &&
+                  clientOptions.map((c) => {
+                    const full = `${c.clientName ?? ""} ${c.clientSurname ?? ""}`.trim();
+                    return (
+                      <button
+                        key={c.id}
+                        type="button"
+                        onClick={() => onSelectClient(c)}
+                        className="admin-appts-client-option"
+                      >
+                        <div className="admin-appts-client-name">{full}</div>
+                        {c.email && (
+                          <div className="admin-appts-client-email">{c.email}</div>
+                        )}
+                      </button>
+                    );
+                  })}
+              </div>
+            )}
+          </div>
+
+          <label className="admin-appts-field">
+            <span className="admin-appts-label">Desde</span>
+            <input
+              className="input"
+              type="datetime-local"
+              value={dateFrom}
+              onChange={(e) => setDateFrom(e.target.value)}
+            />
+          </label>
+
+          <label className="admin-appts-field">
+            <span className="admin-appts-label">Hasta</span>
+            <input
+              className="input"
+              type="datetime-local"
+              value={dateTo}
+              onChange={(e) => setDateTo(e.target.value)}
+            />
+          </label>
         </div>
+      </section>
 
-        <label style={{ display: "grid", gap: 6 }}>
-          Desde
-          <input type="datetime-local" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} />
-        </label>
-
-        <label style={{ display: "grid", gap: 6 }}>
-          Hasta
-          <input type="datetime-local" value={dateTo} onChange={(e) => setDateTo(e.target.value)} />
-        </label>
-
-        <div style={{ display: "flex", gap: 8 }}>
-          <button onClick={onClearFilters}>Limpiar</button>
-        </div>
+      <div className="admin-appts-summary">
+        <span className="admin-appts-chip">
+          {filteredItems.length} cita{filteredItems.length === 1 ? "" : "s"}
+        </span>
+        <span className="admin-appts-chip">
+          {filteredItems.filter((a) => a.state === "PENDING").length} pendientes
+        </span>
+        <span className="admin-appts-chip">
+          {filteredItems.filter((a) => a.state === "CONFIRMED").length} confirmadas
+        </span>
       </div>
 
-      {/* Tabla */}
       {filteredItems.length === 0 ? (
-        <p>No hay citas.</p>
+        <div className="admin-appts-empty">
+          No hay citas que coincidan con los filtros seleccionados.
+        </div>
       ) : (
-        <div style={{ overflowX: "auto" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse" }}>
-            <thead>
-              <tr>
-                <th style={{ textAlign: "left", padding: 8, borderBottom: "1px solid #ddd" }}>Número de cita</th>
-                <th style={{ textAlign: "left", padding: 8, borderBottom: "1px solid #ddd" }}>Fecha</th>
-                <th style={{ textAlign: "left", padding: 8, borderBottom: "1px solid #ddd" }}>Profesional</th>
-                <th style={{ textAlign: "left", padding: 8, borderBottom: "1px solid #ddd" }}>Cliente</th>
-                <th style={{ textAlign: "left", padding: 8, borderBottom: "1px solid #ddd" }}>Estado</th>
-                <th style={{ textAlign: "left", padding: 8, borderBottom: "1px solid #ddd" }}>Señal</th>
-                <th style={{ textAlign: "left", padding: 8, borderBottom: "1px solid #ddd" }}>Acciones</th>
-              </tr>
-            </thead>
+        <div className="admin-appts-list">
+          {filteredItems.map((a) => {
+            const clientText =
+              a.clientFullName ??
+              (`${a.clientName ?? ""} ${a.clientSurname ?? ""}`.trim() || `#${a.clientId}`);
 
-            <tbody>
-              {filteredItems.map((a) => (
-                <tr key={a.id}>
-                  <td style={{ padding: 8, borderBottom: "1px solid #eee" }}>
-                    <b>#{a.id}</b>
-                  </td>
+            return (
+              <article key={a.id} className="admin-appts-card">
+                <div className="admin-appts-card__top">
+                  <div className="admin-appts-card__left">
+                    <p className="admin-appts-id">Cita #{a.id}</p>
+                    <h3 className="admin-appts-date">
+                      {formatDateTime(String(a.startDateTime))}
+                    </h3>
 
-                  <td style={{ padding: 8, borderBottom: "1px solid #eee" }}>
-                    {new Date(a.startDateTime).toLocaleString("es-ES")}
-                  </td>
+                    <p className="admin-appts-meta">
+                      <strong>Tipo:</strong> {formatType(a.appointmentType)}
+                      <br />
+                      <strong>Profesional:</strong> {a.professionalName}
+                      <br />
+                      <strong>Cliente:</strong> {clientText}
+                      <br />
+                      <strong>Duración:</strong> {a.durationMinutes} min
+                    </p>
+                  </div>
 
-                  <td style={{ padding: 8, borderBottom: "1px solid #eee" }}>{a.professionalName}</td>
+                  <div className="admin-appts-side">
+                    <div className="admin-appts-badges">
+                      <span className={getStateBadgeClass(a.state)}>
+                        {formatState(a.state)}
+                      </span>
 
-                  <td style={{ padding: 8, borderBottom: "1px solid #eee" }}>
-                    {a.clientFullName ??
-                      (`${a.clientName ?? ""} ${a.clientSurname ?? ""}`.trim() || `#${a.clientId}`)}
-                  </td>
-
-                  <td style={{ padding: 8, borderBottom: "1px solid #eee" }}>
-                    <b>{a.state}</b>
-                  </td>
-
-                  <td style={{ padding: 8, borderBottom: "1px solid #eee" }}>
-                    {a.appointmentType === "TATTOO" ? (a.depositPaid ? "Sí" : "No") : ""}
-                  </td>
-
-                  <td style={{ padding: 8, borderBottom: "1px solid #eee" }}>
-                    <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                      {a.appointmentType === "TATTOO" && !a.depositPaid && a.state === "PENDING" && (
-                        <button onClick={() => onPayDeposit(a.id)}>Confirmar señal</button>
+                      {a.appointmentType === "TATTOO" && (
+                        <span
+                          className={`admin-appts-badge ${
+                            a.depositPaid
+                              ? "admin-appts-badge--deposit-paid"
+                              : "admin-appts-badge--deposit-unpaid"
+                          }`}
+                        >
+                          {a.depositPaid ? "Señal pagada" : "Señal pendiente"}
+                        </span>
                       )}
+                    </div>
+                  </div>
+                </div>
 
-                      {(a.state === "PENDING" || a.state === "CONFIRMED") && (
-                        <>
-                          <button onClick={() => nav(`/admin/appointments/${a.id}`)}>Ver detalle</button>
-                          <button onClick={() => onCancel(a.id)}>Cancelar</button>
-                          <button onClick={() => openReschedule(a)}>Reprogramar</button>
-                        </>
-                      )}
+                <div className="admin-appts-row-actions">
+                  {a.appointmentType === "TATTOO" &&
+                    !a.depositPaid &&
+                    a.state === "PENDING" && (
+                      <button
+                        type="button"
+                        onClick={() => onPayDeposit(a.id)}
+                        className="admin-appts-btn admin-appts-btn--ghost"
+                      >
+                        Confirmar señal
+                      </button>
+                    )}
 
-                      {a.state === "CONFIRMED" ? (
-                        <>
-                          <button onClick={() => onMarkCompleted(a.id)}>Marcar completada</button>
-                          <button onClick={() => onMarkNoShow(a.id)}>El cliente no ha aparecido</button>
-                        </>
-                      ) : null}
+                  {(a.state === "PENDING" || a.state === "CONFIRMED") && (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => nav(`/admin/appointments/${a.id}`)}
+                        className="admin-appts-btn admin-appts-btn--ghost"
+                      >
+                        Ver detalle
+                      </button>
 
-                      {a.state === "COMPLETED" && (
-                        <button onClick={() => nav(`/admin/appointments/${a.id}/tattoo/new`)}>
-                          Añadir tattoo a Showroom
-                        </button>
+                      <button
+                        type="button"
+                        onClick={() => onCancel(a.id)}
+                        className="admin-appts-btn admin-appts-btn--ghost"
+                      >
+                        Cancelar
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => openReschedule(a)}
+                        className="admin-appts-btn admin-appts-btn--primary"
+                      >
+                        Reprogramar
+                      </button>
+                    </>
+                  )}
+
+                  {a.state === "CONFIRMED" && (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => onMarkCompleted(a.id)}
+                        className="admin-appts-btn admin-appts-btn--ghost"
+                      >
+                        Marcar completada
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => onMarkNoShow(a.id)}
+                        className="admin-appts-btn admin-appts-btn--ghost"
+                      >
+                        El cliente no ha aparecido
+                      </button>
+                    </>
+                  )}
+
+                  {a.state === "COMPLETED" && !a.showroomTattooCreated && (
+                    <button
+                      type="button"
+                      onClick={() => nav(`/admin/appointments/${a.id}/tattoo/new`)}
+                      className="admin-appts-btn admin-appts-btn--primary"
+                    >
+                      Añadir tattoo a Showroom
+                    </button>
+                  )}
+                </div>
+
+                {rescheduleId === a.id && (
+                  <div className="admin-appts-reschedule">
+                    <h4 className="admin-appts-reschedule__title">
+                      Reprogramar cita
+                    </h4>
+
+                    <label className="admin-appts-field" style={{ maxWidth: 260 }}>
+                      <span className="admin-appts-label">Día</span>
+                      <input
+                        className="input"
+                        type="date"
+                        value={rescheduleDay}
+                        onChange={(e) => setRescheduleDay(e.target.value)}
+                        disabled={rescheduleLoading || rescheduleSaving}
+                      />
+                    </label>
+
+                    <div>
+                      {rescheduleLoading ? (
+                        <p className="admin-appts-muted">Cargando slots…</p>
+                      ) : rescheduleSlots.length === 0 ? (
+                        <p className="admin-appts-muted">
+                          {rescheduleDay
+                            ? "No hay slots disponibles ese día."
+                            : "Selecciona un día para ver slots."}
+                        </p>
+                      ) : (
+                        <div className="admin-appts-slots">
+                          {rescheduleSlots.map((s, idx) => {
+                            const start = String((s as any).startDateTime);
+
+                            return (
+                              <label key={idx} className="admin-appts-slot">
+                                <input
+                                  type="radio"
+                                  name={`slot-${a.id}`}
+                                  value={start}
+                                  checked={rescheduleStart === start}
+                                  onChange={() => setRescheduleStart(start)}
+                                  disabled={rescheduleSaving}
+                                />
+                                <span>{formatSlotLabel(start)}</span>
+                              </label>
+                            );
+                          })}
+                        </div>
                       )}
                     </div>
 
-                    {rescheduleId === a.id && (
-                      <div
-                        style={{
-                          marginTop: 10,
-                          padding: 10,
-                          border: "1px solid #333",
-                          borderRadius: 8,
-                          maxWidth: 780,
-                        }}
+                    <div
+                      className="admin-appts-row-actions"
+                      style={{ marginTop: "1rem" }}
+                    >
+                      <button
+                        type="button"
+                        onClick={onSaveReschedule}
+                        disabled={!rescheduleStart || rescheduleLoading || rescheduleSaving}
+                        className="admin-appts-btn admin-appts-btn--primary"
                       >
-                        <div style={{ fontWeight: 600, marginBottom: 8 }}>Reprogramar cita</div>
+                        {rescheduleSaving ? "Guardando..." : "Guardar cambio"}
+                      </button>
 
-                        <label style={{ display: "grid", gap: 6, maxWidth: 260 }}>
-                          Día
-                          <input
-                            type="date"
-                            value={rescheduleDay}
-                            onChange={(e) => setRescheduleDay(e.target.value)}
-                            disabled={rescheduleLoading || rescheduleSaving}
-                          />
-                        </label>
-
-                        <div style={{ marginTop: 10 }}>
-                          {rescheduleLoading ? (
-                            <div style={{ opacity: 0.8 }}>Cargando slots…</div>
-                          ) : rescheduleSlots.length === 0 ? (
-                            <div style={{ opacity: 0.8 }}>
-                              {rescheduleDay ? "No hay slots disponibles ese día." : "Selecciona un día para ver slots."}
-                            </div>
-                          ) : (
-                            <div style={{ display: "grid", gap: 6 }}>
-                              {rescheduleSlots.map((s, idx) => {
-                                const start = String((s as any).startDateTime);
-                                return (
-                                  <label key={idx} style={{ display: "flex", gap: 10, alignItems: "center" }}>
-                                    <input
-                                      type="radio"
-                                      name={`slot-${a.id}`}
-                                      value={start}
-                                      checked={rescheduleStart === start}
-                                      onChange={() => setRescheduleStart(start)}
-                                      disabled={rescheduleSaving}
-                                    />
-                                    {formatSlotLabel(start)}
-                                  </label>
-                                );
-                              })}
-                            </div>
-                          )}
-                        </div>
-
-                        <div style={{ display: "flex", gap: 8, marginTop: 10, flexWrap: "wrap" }}>
-                          <button
-                            onClick={onSaveReschedule}
-                            disabled={!rescheduleStart || rescheduleLoading || rescheduleSaving}
-                          >
-                            {rescheduleSaving ? "Guardando..." : "Guardar cambio"}
-                          </button>
-
-                          <button onClick={closeReschedule} disabled={rescheduleLoading || rescheduleSaving}>
-                            Cancelar
-                          </button>
-                        </div>
-
-                        <div style={{ marginTop: 8, opacity: 0.8, fontSize: 12 }}></div>
-                      </div>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                      <button
+                        type="button"
+                        onClick={closeReschedule}
+                        disabled={rescheduleLoading || rescheduleSaving}
+                        className="admin-appts-btn admin-appts-btn--ghost"
+                      >
+                        Cancelar
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </article>
+            );
+          })}
         </div>
       )}
     </div>

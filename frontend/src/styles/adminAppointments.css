@@ -1,0 +1,457 @@
+.admin-appts-page {
+  width: min(1240px, calc(100% - 2rem));
+  margin: 0 auto;
+  padding: 1.9rem 0 4rem;
+}
+
+.admin-appts-hero {
+  text-align: center;
+  max-width: 860px;
+  margin: 0 auto 2rem;
+}
+
+.admin-appts-kicker {
+  margin: 0 0 0.5rem;
+  color: #b5a16c;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.admin-appts-title {
+  margin: 0;
+  font-family: "Playfair Display", serif;
+  font-size: clamp(2.2rem, 5vw, 3.8rem);
+  line-height: 1.05;
+  color: #ffffff;
+}
+
+.admin-appts-text {
+  margin: 1rem auto 0;
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 1.02rem;
+  line-height: 1.75;
+}
+
+.admin-appts-feedback {
+  margin: 0 auto 1.25rem;
+  max-width: 1240px;
+  padding: 0.95rem 1rem;
+  border-radius: 18px;
+  border: 1px solid rgba(181, 161, 108, 0.22);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02)),
+    rgba(10, 10, 10, 0.88);
+  color: rgba(255, 255, 255, 0.88);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.22);
+}
+
+.admin-appts-feedback--error {
+  color: #ffd8d8;
+  border-color: rgba(255, 120, 120, 0.3);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.015)),
+    rgba(50, 10, 10, 0.45);
+}
+
+.admin-appts-filters {
+  padding: 1.2rem;
+  border-radius: 24px;
+  border: 1px solid rgba(181, 161, 108, 0.2);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.015)),
+    rgba(10, 10, 10, 0.9);
+  box-shadow: 0 22px 56px rgba(0, 0, 0, 0.3);
+  margin-bottom: 1.25rem;
+}
+
+.admin-appts-filters__head {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+
+.admin-appts-section-title {
+  margin: 0;
+  font-family: "Playfair Display", serif;
+  font-size: 1.65rem;
+  color: #fff;
+}
+
+.admin-appts-section-text {
+  margin: 0.35rem 0 0;
+  color: rgba(255, 255, 255, 0.72);
+  line-height: 1.7;
+}
+
+.admin-appts-grid {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 0.9rem;
+}
+
+.admin-appts-field {
+  display: grid;
+  gap: 0.42rem;
+  min-width: 0;
+}
+
+.admin-appts-field--wide {
+  grid-column: span 2;
+}
+
+.admin-appts-label {
+  font-size: 0.74rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(181, 161, 108, 0.88);
+  font-weight: 700;
+}
+
+.admin-appts-client-wrap {
+  position: relative;
+}
+
+.admin-appts-client-dropdown {
+  position: absolute;
+  top: calc(100% + 0.4rem);
+  left: 0;
+  right: 0;
+  z-index: 20;
+  border: 1px solid rgba(181, 161, 108, 0.16);
+  border-radius: 16px;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.015)),
+    rgba(10,10,10,0.98);
+  box-shadow: 0 18px 40px rgba(0,0,0,0.28);
+  max-height: 240px;
+  overflow: auto;
+}
+
+.admin-appts-client-option,
+.admin-appts-client-empty {
+  width: 100%;
+  text-align: left;
+  padding: 0.9rem 0.95rem;
+  background: transparent;
+  color: white;
+  border: none;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+
+.admin-appts-client-option {
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.admin-appts-client-option:hover {
+  background: rgba(181, 161, 108, 0.1);
+  color: #f3e7c7;
+}
+
+.admin-appts-client-name {
+  font-weight: 700;
+}
+
+.admin-appts-client-email {
+  opacity: 0.72;
+  font-size: 0.82rem;
+  margin-top: 0.2rem;
+}
+
+.admin-appts-actions {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.admin-appts-btn {
+  border: 1px solid transparent;
+  border-radius: 12px;
+  padding: 0.82rem 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    transform 0.2s ease,
+    border-color 0.2s ease,
+    background 0.2s ease,
+    color 0.2s ease;
+}
+
+.admin-appts-btn:hover {
+  transform: translateY(-2px);
+}
+
+.admin-appts-btn:disabled {
+  opacity: 0.58;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.admin-appts-btn--primary {
+  background: #b5a16c;
+  color: #0b0b0b;
+}
+
+.admin-appts-btn--primary:hover {
+  background: #a38f5e;
+}
+
+.admin-appts-btn--ghost {
+  background: transparent;
+  color: #fff;
+  border-color: rgba(181, 161, 108, 0.22);
+}
+
+.admin-appts-btn--ghost:hover {
+  color: #b5a16c;
+  border-color: rgba(181, 161, 108, 0.45);
+}
+
+.admin-appts-summary {
+  display: flex;
+  gap: 0.7rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+
+.admin-appts-chip {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 0.5rem 0.82rem;
+  border: 1px solid rgba(181, 161, 108, 0.18);
+  background: rgba(255,255,255,0.03);
+  color: rgba(255,255,255,0.84);
+  font-size: 0.82rem;
+}
+
+.admin-appts-list {
+  display: grid;
+  gap: 1rem;
+}
+
+.admin-appts-card {
+  padding: 1.15rem;
+  border-radius: 24px;
+  border: 1px solid rgba(181, 161, 108, 0.18);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.015)),
+    rgba(12, 12, 12, 0.92);
+  box-shadow: 0 20px 48px rgba(0,0,0,0.25);
+}
+
+.admin-appts-card__top {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+.admin-appts-card__left {
+  min-width: 0;
+}
+
+.admin-appts-id {
+  margin: 0 0 0.3rem;
+  color: #b5a16c;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-size: 0.78rem;
+}
+
+.admin-appts-date {
+  margin: 0;
+  font-family: "Playfair Display", serif;
+  font-size: 1.55rem;
+  color: #fff;
+}
+
+.admin-appts-meta {
+  margin: 0.65rem 0 0;
+  color: rgba(255,255,255,0.78);
+  line-height: 1.75;
+}
+
+.admin-appts-meta strong {
+  color: #fff;
+}
+
+.admin-appts-side {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  align-items: flex-end;
+}
+
+.admin-appts-badges {
+  display: flex;
+  gap: 0.55rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.admin-appts-badge {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 0.45rem 0.78rem;
+  border: 1px solid rgba(181, 161, 108, 0.25);
+  background: rgba(181, 161, 108, 0.12);
+  color: #f2e6c2;
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.admin-appts-badge--pending {
+  border-color: rgba(181, 161, 108, 0.25);
+  background: rgba(181, 161, 108, 0.12);
+  color: #f2e6c2;
+}
+
+.admin-appts-badge--confirmed {
+  border-color: rgba(92, 163, 115, 0.3);
+  background: rgba(92, 163, 115, 0.14);
+  color: #dff5e5;
+}
+
+.admin-appts-badge--cancelled {
+  border-color: rgba(191, 92, 92, 0.3);
+  background: rgba(191, 92, 92, 0.14);
+  color: #ffe0e0;
+}
+
+.admin-appts-badge--completed {
+  border-color: rgba(125, 125, 125, 0.3);
+  background: rgba(125, 125, 125, 0.14);
+  color: #ececec;
+}
+
+.admin-appts-badge--no-show {
+  border-color: rgba(140, 110, 170, 0.3);
+  background: rgba(140, 110, 170, 0.14);
+  color: #efe6ff;
+}
+
+.admin-appts-badge--deposit-paid {
+  border-color: rgba(92, 163, 115, 0.28);
+  background: rgba(92, 163, 115, 0.12);
+  color: #dff5e5;
+}
+
+.admin-appts-badge--deposit-unpaid {
+  border-color: rgba(181, 161, 108, 0.24);
+  background: rgba(181, 161, 108, 0.1);
+  color: #f1e4bf;
+}
+
+.admin-appts-row-actions {
+  display: flex;
+  gap: 0.65rem;
+  flex-wrap: wrap;
+  margin-top: 1rem;
+}
+
+.admin-appts-empty {
+  padding: 1.15rem 1.1rem;
+  border-radius: 18px;
+  border: 1px solid rgba(181, 161, 108, 0.16);
+  background: rgba(255, 255, 255, 0.03);
+  color: rgba(255, 255, 255, 0.76);
+}
+
+.admin-appts-reschedule {
+  margin-top: 1rem;
+  padding: 1rem;
+  border-radius: 18px;
+  border: 1px solid rgba(181, 161, 108, 0.16);
+  background: rgba(255,255,255,0.03);
+}
+
+.admin-appts-reschedule__title {
+  margin: 0 0 0.8rem;
+  font-family: "Playfair Display", serif;
+  font-size: 1.35rem;
+  color: #fff;
+}
+
+.admin-appts-muted {
+  color: rgba(255,255,255,0.7);
+  line-height: 1.65;
+}
+
+.admin-appts-slots {
+  display: grid;
+  gap: 0.55rem;
+  margin-top: 0.9rem;
+}
+
+.admin-appts-slot {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  padding: 0.85rem 0.95rem;
+  border-radius: 14px;
+  border: 1px solid rgba(181, 161, 108, 0.14);
+  background: rgba(0,0,0,0.18);
+  color: rgba(255,255,255,0.86);
+}
+
+.admin-appts-slot input {
+  accent-color: #b5a16c;
+}
+
+@media (max-width: 1100px) {
+  .admin-appts-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .admin-appts-field--wide {
+    grid-column: span 3;
+  }
+}
+
+@media (max-width: 768px) {
+  .admin-appts-page {
+    padding-top: 5.1rem;
+  }
+
+  .admin-appts-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-appts-field--wide {
+    grid-column: span 1;
+  }
+
+  .admin-appts-filters {
+    padding: 1rem;
+    border-radius: 20px;
+  }
+
+  .admin-appts-card {
+    padding: 1rem;
+    border-radius: 20px;
+  }
+
+  .admin-appts-date {
+    font-size: 1.25rem;
+  }
+
+  .admin-appts-side {
+    align-items: flex-start;
+  }
+
+  .admin-appts-badges {
+    justify-content: flex-start;
+  }
+}

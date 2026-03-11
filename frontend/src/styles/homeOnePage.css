@@ -1,0 +1,1127 @@
+/* ===== Home One-Page Fullscreen + Snap + Reveal ===== */
+
+:root{
+  --hp-black: #0b0b0b;
+  --hp-gold: #b5a16c;
+  --hp-white: #f3f1ed;
+}
+
+/* contenedor general */
+.hpPage {
+  /* si el navbar es sticky, esto ayuda a que el snap no lo tape */
+  scroll-snap-type: y mandatory;
+  height: auto;
+  overflow: visible;
+}
+
+/* cada sección ocupa pantalla completa */
+.hpSection {
+  min-height: 100vh;
+  scroll-margin-top: 76px;
+  scroll-snap-align: start;
+  position: relative;
+  display: grid;
+  align-items: center;
+  padding: 80px 0;
+}
+
+/* alterna fondos */
+.hpBgBlack {
+  background: radial-gradient(900px 420px at 15% 15%, rgba(181,161,108,.10), transparent 60%),
+              radial-gradient(700px 380px at 90% 10%, rgba(181,161,108,.08), transparent 55%),
+              var(--hp-black);
+  color: rgba(255,255,255,.92);
+}
+
+.hpBgGold {
+  background: radial-gradient(900px 420px at 15% 15%, rgba(0,0,0,.16), transparent 60%),
+              radial-gradient(700px 380px at 90% 10%, rgba(0,0,0,.12), transparent 55%),
+              var(--hp-gold);
+  color: rgba(0,0,0,.92);
+}
+
+.hpBgWhite {
+  background: radial-gradient(900px 420px at 15% 15%, rgba(181,161,108,.14), transparent 60%),
+              radial-gradient(700px 380px at 90% 10%, rgba(181,161,108,.10), transparent 55%),
+              var(--hp-white);
+  color: rgba(0,0,0,.92);
+}
+
+/* =========================================
+   BOTONES DEL HOME según fondo de sección
+   (solo afecta a los CTAs dentro del Home)
+========================================= */
+
+/* Base: mantén la separación */
+.hpTextCard .btn{
+  border-width: 1px;
+}
+
+/* ---------- FONDO NEGRO (tal cual te funciona) ---------- */
+.hpBgBlack .hpTextCard .btn-ghost{
+  background: transparent;
+  border-color: rgba(181,161,108,.28);
+  color: rgba(255,255,255,.92);
+}
+.hpBgBlack .hpTextCard .btn-ghost:hover{
+  border-color: rgba(181,161,108,.55);
+  color: var(--gold);
+}
+
+/* ---------- FONDO BLANCO ---------- */
+.hpBgWhite .hpTextCard .btn-ghost{
+  background: transparent;
+  border-color: rgba(11,11,11,.18);
+  color: rgba(11,11,11,.86);
+}
+.hpBgWhite .hpTextCard .btn-ghost:hover{
+  border-color: rgba(11,11,11,.30);
+  color: rgba(11,11,11,.95);
+}
+
+/* En blanco, el primario puede quedarse dorado pero con sombra suave */
+.hpBgWhite .hpTextCard .btn-primary{
+  box-shadow: 0 10px 26px rgba(0,0,0,.12);
+}
+
+/* ---------- FONDO ORO ---------- */
+/* Aquí el ghost tiene que “contrastar”: borde oscuro + texto oscuro */
+.hpBgGold .hpTextCard .btn-ghost{
+  background: transparent;
+  border-color: rgba(11,11,11,.28);
+  color: rgba(11,11,11,.86);
+}
+.hpBgGold .hpTextCard .btn-ghost:hover{
+  border-color: rgba(11,11,11,.42);
+  color: rgba(11,11,11,.95);
+}
+
+/* Y el primario en oro: que no se “camufle” con el fondo */
+.hpBgGold .hpTextCard .btn-primary{
+  background: rgba(11,11,11,.92);
+  color: #fff;
+  border-color: rgba(11,11,11,.92);
+}
+.hpBgGold .hpTextCard .btn-primary:hover{
+  background: rgba(11,11,11,.82);
+}
+
+/* layout interno */
+.hpInner {
+  width: min(1500px, 94%);
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1.1fr 1.1fr;
+  gap: 90px;
+  align-items: center;
+}
+
+@media (max-width: 980px) {
+  .hpInner {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+}
+
+/* alternar lado */
+.hpReverse .hpInner {
+  grid-template-columns: 1.05fr 1fr;
+}
+.hpReverse .hpText {
+  order: 2;
+}
+.hpReverse .hpMedia {
+  order: 1;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+@media (max-width: 980px) {
+  .hpReverse .hpText,
+  .hpReverse .hpMedia {
+    order: initial;
+  }
+}
+
+/* caja de texto tipo elegante */
+.hpTextCard {
+  padding: 48px 52px;
+  border-radius: 26px;
+  border: 1px solid rgba(181,161,108,.35);
+  background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.015));
+  box-shadow: 0 30px 70px rgba(0,0,0,.55);
+  backdrop-filter: blur(6px);
+}
+
+.hpBgGold .hpTextCard,
+.hpBgWhite .hpTextCard{
+  border: 1px solid rgba(0,0,0,.12);
+  background: rgba(255,255,255,.42);
+}
+
+.hpKicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  font-size: 20px;
+  opacity: .85;
+}
+
+.hpLine {
+  width: 56px;
+  height: 1px;
+  background: rgba(181,161,108,.75);
+}
+
+.hpTitle {
+  font-size: clamp(44px, 5vw, 68px);
+  font-weight: 900;
+  margin: 0 0 18px;
+  letter-spacing: -0.5px;
+}
+
+.hpBgGold .hpTitle,
+.hpBgWhite .hpTitle{
+  color: rgba(0,0,0,.92);
+}
+
+.hpP {
+  margin: 0;
+  line-height: 1.75;
+  opacity: .9;
+  max-width: 62ch;
+}
+
+.hpBullets {
+  margin: 12px 0 0;
+  padding-left: 18px;
+  display: grid;
+  gap: 6px;
+  opacity: .9;
+}
+
+.hpActions {
+  margin-top: 14px;
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+/* Carrusel */
+.hpCarousel{
+  height: 560px;
+  border-radius: 28px;
+  box-shadow: 0 40px 90px rgba(0,0,0,.65);
+}
+
+.hpBgGold .hpCarousel,
+.hpBgWhite .hpCarousel{
+  border: 1px solid rgba(0,0,0,.12);
+  background: rgba(255,255,255,.35);
+}
+
+.hpCarousel__img{
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: saturate(.98) contrast(1.05);
+  animation: hpFadeIn .55s ease;
+}
+
+.hpCarousel__img--next{
+  opacity: 0;
+}
+
+@keyframes hpFadeIn {
+  from { opacity: 0; transform: scale(1.02); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+.hpCarousel__dots{
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: 12px;
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+}
+
+.hpDot{
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: rgba(255,255,255,.45);
+}
+.hpBgGold .hpDot,
+.hpBgWhite .hpDot{
+  background: rgba(0,0,0,.35);
+}
+.hpDot--on{
+  background: rgba(181,161,108,.95);
+}
+
+/* Placeholder si no hay imágenes */
+.hpCarousel--placeholder{
+  display: grid;
+  place-items: center;
+}
+.hpCarousel__phText{
+  font-weight: 900;
+  letter-spacing: .10em;
+  text-transform: uppercase;
+  opacity: .8;
+}
+
+/* ===== Embedded Map ===== */
+
+.hpMap {
+  position: relative;
+  border-radius: 18px;
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,.12);
+  background: rgba(0,0,0,.25);
+  min-height: 340px;
+}
+
+.hpBgGold .hpMap,
+.hpBgWhite .hpMap{
+  border: 1px solid rgba(0,0,0,.12);
+  background: rgba(255,255,255,.35);
+}
+
+.hpMap iframe{
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  filter: saturate(.95) contrast(1.05);
+}
+
+/* capa de brillo sutil como el resto */
+.hpMap::after{
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(700px 450px at 70% 25%, rgba(181,161,108, 0.12), transparent 55%),
+              linear-gradient(180deg, rgba(0,0,0,.12), rgba(0,0,0,.25));
+  mix-blend-mode: normal;
+  opacity: .55;
+}
+
+/* 1) Entrada más “desde abajo” y con un pelín de blur (da sensación de venir volando) */
+.hpReveal{
+  opacity: 0;
+  transform: translateY(95px);
+  filter: blur(10px);
+  transition:
+    opacity .75s ease,
+    transform 1s cubic-bezier(.16, 1, .3, 1),
+    filter .85s cubic-bezier(.16, 1, .3, 1);
+  will-change: transform, opacity, filter;
+}
+
+/* Cuando entra: sube, se enfoca y queda en su sitio */
+.hpOn .hpReveal{
+  opacity: 1;
+  transform: translateY(0);
+  filter: blur(0);
+}
+
+/* 2) Flotación suave SOLO cuando ya está visible */
+.hpOn .hpTextCard,
+.hpOn .hpCarousel,
+.hpOn .hpMap{
+  animation: hpFloat 6s ease-in-out infinite;
+}
+
+@keyframes hpFloat{
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-10px); }
+}
+
+/* 3) Línea dorada animada bajo el título (sin cambiar colores) */
+.hpTitle{
+  position: relative;
+  padding-bottom: 14px;
+}
+
+.hpTitle::after{
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: 2px;
+  width: 120px;
+  height: 2px;
+  border-radius: 999px;
+  background: linear-gradient(
+    90deg,
+    rgba(181,161,108,0),
+    rgba(181,161,108,.95),
+    rgba(181,161,108,0)
+  );
+  animation: hpLineMove 2.2s ease-in-out infinite;
+  opacity: .9;
+}
+
+/* “se mueve” sin ser cantoso */
+@keyframes hpLineMove{
+  0%   { transform: translateX(0) scaleX(.75); opacity: .55; }
+  50%  { transform: translateX(18px) scaleX(1); opacity: .95; }
+  100% { transform: translateX(0) scaleX(.75); opacity: .55; }
+}
+
+/* 4) Bonus: escalonado para que texto y media no entren EXACTAMENTE a la vez (más “cine”) */
+.hpText.hpReveal{
+  transition-delay: .06s;
+}
+.hpMedia.hpReveal{
+  transition-delay: .14s;
+}
+
+/* 5) Para que la flotación no rompa el translate del carrusel/mapa si lo tuvieras en alguna versión */
+.hpCarousel,
+.hpMap{
+  transform: translateY(0);
+}
+
+/* ============ HERO ============ */
+
+.hpPosterHero{
+  position: relative;
+  min-height: 100vh;
+  overflow: hidden;
+  background: #000;
+}
+
+/* Foto de fondo como textura (MUY sutil) */
+.hpPosterHero::before{
+  content:"";
+  position:absolute;
+  inset:0;
+
+  background: 
+    linear-gradient(rgba(0, 0, 0, 0), rgba(0, 0, 0, 0)),
+    url("/images/fachadaestudio.webp") center/cover no-repeat;
+
+  opacity: .9;        /* antes .18 */
+  filter: blur(1px) saturate(1) contrast(1.05);
+  transform: scale(1.04);
+}
+
+/* Oscurecido elegante */
+.hpPosterHero::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:
+    radial-gradient(900px 520px at 50% 40%, rgba(0,0,0,.35), rgba(0,0,0,.88)),
+    linear-gradient(180deg, rgba(0,0,0,.55), rgba(0,0,0,.90));
+}
+
+/* Marco */
+.hpPosterFrame{
+  position:absolute;
+  inset: 86px 18px 18px; /*marco casi a borde */
+  border: 2px solid rgba(181,161,108,.85);
+  border-radius: 18px;
+  z-index: 2;
+  pointer-events: none;
+}
+
+/* Esquinas (solo 2, elegante) */
+.hpPosterFrame::before,
+.hpPosterFrame::after{
+  content:"";
+  position:absolute;
+  width: 28px;
+  height: 28px;
+  border: 2px solid rgba(181,161,108,.85);
+}
+.hpPosterFrame::before{
+  top:-2px; left:-2px;
+  border-right: none; border-bottom: none;
+  border-top-left-radius: 14px;
+}
+.hpPosterFrame::after{
+  bottom:-2px; right:-2px;
+  border-left: none; border-top: none;
+  border-bottom-right-radius: 14px;
+}
+
+/* Contenido centrado */
+.hpPosterInner{
+  position: relative;
+  z-index: 3;
+  min-height: 100vh;
+  display: grid;
+  grid-template-rows: auto 1fr auto; /* top / center / bottom */
+  padding: 110px 22px 46px; /* espacio navbar + respiración */
+  text-align: center;
+  align-items: center;
+}
+
+.hpPosterCenter{
+  display: grid;
+  place-items: center;
+  gap: 16px;
+
+  transform: translateY(-18px); /*lo subo un poco */
+}
+
+.hpPosterBottom{
+  padding-bottom: 20px;
+}
+
+/* Logo */
+.hpPosterLogoWrap{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+}
+
+.hpPosterLogo{
+  max-width: 160px;
+  width: 18vw;
+  min-width: 120px;
+  height: auto;
+
+  display: block;
+  margin: 0 auto 20px;
+
+  filter:
+    drop-shadow(0 18px 55px rgba(0,0,0,.6))
+    brightness(0) saturate(100%)
+    invert(72%) sepia(25%)
+    saturate(406%)
+    hue-rotate(8deg)
+    brightness(92%)
+    contrast(92%);
+}
+
+/* Centro */
+.hpPosterCenter{
+  display: grid;
+  place-items: center;
+  gap: 14px;
+}
+
+.hpPosterKicker{
+  letter-spacing: .35em;
+  font-size: 3rem;
+  opacity: .85;
+  margin-bottom: 18px;
+  
+}
+
+/* Línea finita dorada */
+.hpPosterDivider{
+  width: min(680px, 78%);
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(181,161,108,.9), transparent);
+  opacity: .9;
+}
+
+/* Título */
+.hpPosterTitle{
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(56px, 7vw, 132px);
+  line-height: .92;
+  letter-spacing: .08em;
+  font-weight: 900;
+  color: rgba(181,161,108,.95);
+  text-transform: uppercase;
+  text-shadow: 0 22px 70px rgba(0,0,0,.65);
+}
+
+.hpPosterTitle2{
+  margin-top: 2px;
+  font-size: clamp(22px, 2.2vw, 40px);
+  letter-spacing: .28em;
+  text-transform: uppercase;
+  color: rgba(181,161,108,.92);
+}
+
+.hpPosterCity{
+  margin-top: 18px;
+  letter-spacing: .4em;
+  font-size: 1.5rem;
+  opacity: .7;
+}
+
+/* CTA abajo (siempre visible) */
+.hpPosterBottom{
+  display:flex;
+  justify-content:center;
+  align-items:end;
+}
+
+.hpPosterCta{
+  padding: 14px 22px;
+  border-radius: 12px;
+  font-weight: 900;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  box-shadow: 0 18px 60px rgba(0,0,0,.55);
+}
+
+/* Responsive */
+@media (max-width: 520px){
+  .hpPosterFrame{ inset: 84px 14px 14px; }
+  .hpPosterLogo{ width: 96px; height: 96px; }
+}
+
+/* =========================
+   RESEÑAS – estilo especial
+   ========================= */
+
+#reseñas .hpCarousel{
+  background: #0f0f0f;
+  border: 1px solid rgba(181,161,108,.35);
+
+  box-shadow:
+    0 25px 80px rgba(0,0,0,.18),
+    0 1px 0 rgba(255,255,255,.05) inset;
+
+  transition: transform .25s ease, box-shadow .25s ease;
+}
+
+/* efecto flotante suave */
+#reseñas .hpCarousel:hover{
+  transform: translateY(-4px);
+
+  box-shadow:
+    0 35px 100px rgba(0,0,0,.25),
+    0 1px 0 rgba(255,255,255,.06) inset;
+}
+
+/* dots más elegantes */
+#reseñas .hpDot{
+  background: rgba(0,0,0,.35);
+}
+
+#reseñas .hpDot--on{
+  background: rgba(181,161,108,.95);
+}
+
+/* ===== Featured professionals (Home) ===== */
+
+.hpProsWrap{
+  width: 100%;
+  max-width: 860px;
+  margin: 0 auto;
+}
+
+.hpProsHeader{
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  margin-bottom: 22px;
+}
+
+.hpProsEyebrow{
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  font-size: 14px;
+  color: rgba(181,161,108,.85);
+}
+
+.hpProsTitle{
+  font-size: clamp(42px, 4.6vw, 62px);
+  font-weight: 900;
+  letter-spacing: -0.8px;
+  color: rgba(255,255,255,.96);
+}
+
+.hpProsOrnament{
+  width: 210px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(181,161,108,.65), transparent);
+  position: relative;
+}
+.hpProsOrnament::after{
+  content:"";
+  position:absolute;
+  left: 50%;
+  top: -6px;
+  transform: translateX(-50%);
+  width: 12px;
+  height: 12px;
+  border-radius: 999px;
+  background: rgba(181,161,108,.85);
+  box-shadow: 0 0 0 6px rgba(181,161,108,.10);
+}
+
+.hpProsGrid{
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 26px;
+  align-items: stretch;
+}
+
+@media (max-width: 980px){
+  .hpProsGrid{
+    grid-template-columns: 1fr;
+  }
+}
+
+.hpProCard{
+  position: relative;
+  padding-top: 82px;
+  border-radius: 22px;
+  border: 1px solid rgba(181,161,108,.22);
+  background:
+    radial-gradient(800px 360px at 15% 0%, rgba(181,161,108,.10), transparent 60%),
+    rgba(8,8,8,.55);
+  box-shadow: 0 30px 70px rgba(0,0,0,.55);
+  overflow: hidden;
+}
+
+.hpProCard--clickable{
+  cursor: pointer;
+}
+
+.hpProCard--clickable:hover{
+  transform: translateY(-4px);
+  transition: transform .25s ease, box-shadow .25s ease, border-color .25s ease;
+  border-color: rgba(181,161,108,.35);
+  box-shadow: 0 34px 90px rgba(0,0,0,.65);
+}
+
+.hpProDiamond{
+  position: absolute;
+  top: -54px;
+  left: 50%;
+  transform: translateX(-50%) rotate(45deg);
+  width: 150px;
+  height: 150px;
+  border-radius: 18px;
+  overflow: hidden;
+  border: 1px solid rgba(181,161,108,.35);
+  background: rgba(0,0,0,.35);
+  box-shadow: 0 24px 70px rgba(0,0,0,.65);
+}
+
+.hpProDiamond img{
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: rotate(-45deg) scale(1.25);
+  filter: saturate(1.02) contrast(1.02);
+}
+
+.hpProBody{
+  padding: 28px 26px 24px;
+  text-align: center;
+}
+
+.hpProName{
+  margin: 0;
+  font-size: 28px;
+  font-weight: 900;
+  letter-spacing: -0.4px;
+  color: rgba(181,161,108,.95);
+}
+
+.hpProRole{
+  margin-top: 6px;
+  color: rgba(255,255,255,.82);
+}
+
+.hpProPills{
+  margin-top: 14px;
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.hpProPill{
+  padding: 9px 12px;
+  border-radius: 999px;
+  font-size: 13px;
+  border: 1px solid rgba(181,161,108,.25);
+  background: rgba(0,0,0,.22);
+  color: rgba(255,255,255,.86);
+}
+
+.hpProActions{
+  margin-top: 18px;
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+}
+
+.hpIconBtn{
+  width: 42px;
+  height: 42px;
+  border-radius: 999px;
+  border: 1px solid rgba(181,161,108,.25);
+  background: rgba(0,0,0,.25);
+  color: rgba(181,161,108,.95);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  transition: transform .18s ease, border-color .22s ease, background .22s ease, box-shadow .22s ease;
+}
+
+.hpIconBtn:hover{
+  transform: translateY(-2px);
+  border-color: rgba(181,161,108,.45);
+  background: rgba(181,161,108,.10);
+  box-shadow: 0 14px 36px rgba(0,0,0,.45);
+}
+
+.hpProsFoot{
+  margin-top: 14px;
+  display: flex;
+  justify-content: center;
+  gap: 14px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.hpProsLink{
+  background: transparent;
+  border: none;
+  color: rgba(255,255,255,.80);
+  cursor: pointer;
+  padding: 8px 6px;
+  text-decoration: underline;
+  text-decoration-color: rgba(181,161,108,.55);
+  text-underline-offset: 6px;
+}
+
+.hpProsLink:hover{
+  color: rgba(181,161,108,.95);
+  text-decoration-color: rgba(181,161,108,.85);
+}
+
+.hpProsHint{
+  opacity: .75;
+  font-size: 13px;
+}
+
+/* Diamond: asegurar que la imagen se ve siempre */
+.hpProDiamond{
+  background: radial-gradient(200px 120px at 30% 20%, rgba(181,161,108,.18), transparent 60%), rgba(0,0,0,.35);
+}
+
+.hpProDiamond img{
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: rotate(-45deg) scale(1.22);
+}
+
+/* Iconos: tamaño real */
+.hpIconSvg{
+  width: 18px;
+  height: 18px;
+  display: block;
+}
+
+.hpIconSvg--arrow{
+  width: 22px;
+  height: 22px;
+}
+
+/* Si el botón está disabled, que se note */
+.hpIconBtn:disabled{
+  opacity: .45;
+  cursor: not-allowed;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+/* Deja que el rombo pueda salir por arriba sin cortarse */
+.hpProCard{
+  overflow: visible; /* antes estaba hidden */
+}
+
+/* Mantén el recorte bonito dentro del cuerpo de la card */
+.hpProBody{
+  position: relative;
+  z-index: 2;
+  border-radius: 22px;
+  overflow: hidden;
+}
+
+/* Para que el rombo quede por encima y no se lo coma nada */
+.hpProDiamond{
+  z-index: 3;
+}
+
+/* ===== Estilos - mosaico visual Home ===== */
+
+.hpStylesMedia{
+  width: 100%;
+  max-width: 760px;
+  margin: 0 auto;
+}
+
+.hpStylesGrid{
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  align-items: stretch;
+}
+
+.hpStyleCard{
+  position: relative;
+  min-height: 260px;
+  border-radius: 26px;
+  overflow: hidden;
+  cursor: pointer;
+  border: 1px solid rgba(0,0,0,.10);
+  background: rgba(255,255,255,.35);
+  box-shadow:
+    0 18px 44px rgba(0,0,0,.14),
+    inset 0 1px 0 rgba(255,255,255,.45);
+  transition:
+    transform .28s ease,
+    box-shadow .28s ease,
+    border-color .28s ease;
+}
+
+.hpStyleCard:hover,
+.hpStyleCard:focus-visible{
+  transform: translateY(-6px);
+  border-color: rgba(181,161,108,.38);
+  box-shadow:
+    0 28px 60px rgba(0,0,0,.18),
+    0 0 0 1px rgba(181,161,108,.08);
+  outline: none;
+}
+
+.hpStyleCard__img{
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform .45s ease, filter .35s ease;
+}
+
+.hpStyleCard:hover .hpStyleCard__img,
+.hpStyleCard:focus-visible .hpStyleCard__img{
+  transform: scale(1.05);
+  filter: saturate(1.03) contrast(1.02);
+}
+
+.hpStyleCard__overlay{
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, rgba(0,0,0,.06) 0%, rgba(0,0,0,.16) 30%, rgba(0,0,0,.72) 100%),
+    linear-gradient(135deg, rgba(181,161,108,.10), transparent 45%);
+}
+
+.hpStyleCard__body{
+  position: relative;
+  z-index: 1;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 18px;
+}
+
+.hpStyleCard__kicker{
+  margin: 0 0 4px;
+  color: rgba(245,232,198,.92);
+  text-transform: uppercase;
+  letter-spacing: .16em;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.hpStyleCard__title{
+  margin: 0;
+  color: #fff;
+  font-size: clamp(24px, 2.2vw, 32px);
+  font-weight: 900;
+  letter-spacing: -.3px;
+  line-height: 1.05;
+}
+
+.hpStyleCard__text{
+  margin: 8px 0 0;
+  color: rgba(255,255,255,.82);
+  line-height: 1.5;
+  font-size: 14px;
+  max-width: 24ch;
+}
+
+.hpStyleCard__link{
+  margin-top: 12px;
+  color: rgba(245,232,198,.96);
+  font-weight: 800;
+  letter-spacing: .02em;
+  transition: transform .22s ease, opacity .22s ease;
+}
+
+.hpStyleCard:hover .hpStyleCard__link,
+.hpStyleCard:focus-visible .hpStyleCard__link{
+  transform: translateX(4px);
+  opacity: .96;
+}
+
+@media (max-width: 980px){
+  .hpStylesGrid{
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+  }
+
+  .hpStyleCard{
+    min-height: 220px;
+  }
+}
+
+@media (max-width: 640px){
+  .hpStylesGrid{
+    grid-template-columns: 1fr;
+  }
+
+  .hpStyleCard{
+    min-height: 240px;
+    border-radius: 22px;
+  }
+
+  .hpStyleCard__body{
+    padding: 16px;
+  }
+}
+
+/* ===== Láser - media Home ===== */
+
+.hpLaserMedia{
+  width: 100%;
+  max-width: 920px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: minmax(280px, 1fr) minmax(260px, .9fr);
+  gap: 22px;
+  align-items: stretch;
+}
+
+.hpLaserErikoCard{
+  align-self: center;
+}
+
+.hpLaserInfoCard{
+  border-radius: 22px;
+  border: 1px solid rgba(0,0,0,.22);
+
+  background:
+    radial-gradient(900px 400px at 10% 0%, rgba(0,0,0,.10), transparent 60%),
+    rgba(0,0,0,.32);
+
+  box-shadow:
+    0 30px 70px rgba(0,0,0,.28),
+    inset 0 1px 0 rgba(255,255,255,.06);
+
+  padding: 26px 22px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.hpLaserInfoCard__kicker{
+  margin: 0 0 6px;
+  color: rgba(255,255,255,.65);
+  text-transform: uppercase;
+  letter-spacing: .16em;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.hpLaserInfoCard__title{
+  margin: 0;
+  color: rgba(255,255,255,.92);
+  font-size: clamp(24px, 2.2vw, 34px);
+  font-weight: 900;
+  letter-spacing: -.3px;
+  line-height: 1.05;
+}
+
+.hpLaserInfoCard__list{
+  margin-top: 18px;
+  display: grid;
+  gap: 12px;
+}
+
+.hpLaserInfoItem{
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 10px;
+  border-radius: 16px;
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(0,0,0,.08);
+  transition: transform .22s ease, background .22s ease, border-color .22s ease;
+}
+
+.hpLaserInfoItem:hover{
+  transform: translateX(2px);
+  background: rgba(255,255,255,.12);
+  border-color: rgba(0,0,0,.14);
+}
+
+.hpLaserInfoItem__line{
+  width: 14px;
+  height: 2px;
+  margin-top: 11px;
+  flex: 0 0 auto;
+  border-radius: 999px;
+  background: rgba(0,0,0,.48);
+}
+
+.hpLaserInfoItem__text{
+  color: rgba(255,255,255,.82);
+  line-height: 1.55;
+}
+
+@media (max-width: 1100px){
+  .hpLaserMedia{
+    grid-template-columns: 1fr;
+    max-width: 700px;
+  }
+}
+
+@media (max-width: 640px){
+  .hpLaserInfoCard{
+    border-radius: 20px;
+    padding: 20px 16px;
+  }
+}
+
+.hpMedia--map {
+  min-height: 420px;
+  display: flex;
+  align-items: stretch;
+}
+
+.hpMedia--map > * {
+  width: 100%;
+  flex: 1;
+  min-height: 420px;
+}
+
+.hpMedia--map iframe {
+  width: 100%;
+  height: 100%;
+  min-height: 420px;
+  border: 0;
+  display: block;
+  border-radius: 24px;
+}

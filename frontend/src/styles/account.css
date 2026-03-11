@@ -1,0 +1,440 @@
+.account-page {
+  width: min(1200px, calc(100% - 2rem));
+  margin: 0 auto;
+  padding: 1.9rem 0 4rem;
+}
+
+.account-hero {
+  text-align: center;
+  max-width: 760px;
+  margin: 0 auto 2.2rem;
+}
+
+.account-hero__kicker {
+  margin: 0 0 0.5rem;
+  color: #b5a16c;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.account-hero__title {
+  margin: 0;
+  font-family: "Playfair Display", serif;
+  font-size: clamp(2.2rem, 5vw, 3.8rem);
+  line-height: 1.05;
+  color: #ffffff;
+}
+
+.account-hero__text {
+  margin: 1rem auto 0;
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 1.02rem;
+  line-height: 1.75;
+}
+
+.account-tabs {
+  display: flex;
+  justify-content: center;
+  gap: 14px;
+  margin: 2rem 0 2rem;
+  flex-wrap: wrap;
+}
+
+.account-tab {
+  position: relative;
+  overflow: hidden;
+  padding: 14px 28px;
+  border-radius: 999px;
+  border: 1px solid rgba(181, 161, 108, 0.35);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02)),
+    rgba(10,10,10,0.9);
+  color: #ffffff;
+  font-size: 1.03rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  transition:
+    transform 0.2s ease,
+    border-color 0.2s ease,
+    background 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.account-tab:hover {
+  transform: translateY(-2px);
+  border-color: rgba(181, 161, 108, 0.6);
+}
+
+.account-tab--active {
+  border-color: #b5a16c;
+  background: rgba(181, 161, 108, 0.18);
+  box-shadow:
+    0 10px 28px rgba(0, 0, 0, 0.35),
+    0 0 0 1px rgba(181, 161, 108, 0.18);
+}
+
+.account-tab::after {
+  content: "";
+  position: absolute;
+  left: 18px;
+  right: 18px;
+  bottom: 6px;
+  height: 2px;
+  border-radius: 2px;
+  background: #b5a16c;
+  transform: scaleX(0);
+  transform-origin: center;
+  transition: transform 0.25s ease;
+}
+
+.account-tab--active::after {
+  transform: scaleX(1);
+}
+
+.account-panel {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 1.3rem;
+  border-radius: 24px;
+  border: 1px solid rgba(181, 161, 108, 0.2);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.015)),
+    rgba(10, 10, 10, 0.88);
+  box-shadow: 0 22px 56px rgba(0, 0, 0, 0.3);
+}
+
+.account-section-title {
+  margin: 0 0 0.35rem;
+  font-family: "Playfair Display", serif;
+  font-size: 2rem;
+  color: #fff;
+}
+
+.account-section-text {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.74);
+  line-height: 1.7;
+}
+
+.account-feedback {
+  margin: 0 auto 1.25rem;
+  max-width: 980px;
+  padding: 0.95rem 1rem;
+  border-radius: 18px;
+  border: 1px solid rgba(181, 161, 108, 0.22);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02)),
+    rgba(10, 10, 10, 0.88);
+  color: rgba(255, 255, 255, 0.88);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.22);
+}
+
+.account-feedback--error {
+  color: #ffd8d8;
+  border-color: rgba(255, 120, 120, 0.3);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.015)),
+    rgba(50, 10, 10, 0.45);
+}
+
+.account-feedback--success {
+  color: #e9f8df;
+  border-color: rgba(126, 208, 126, 0.28);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.015)),
+    rgba(17, 44, 17, 0.45);
+}
+
+.account-empty {
+  padding: 1.15rem 1.1rem;
+  border-radius: 18px;
+  border: 1px solid rgba(181, 161, 108, 0.16);
+  background: rgba(255, 255, 255, 0.03);
+  color: rgba(255, 255, 255, 0.76);
+}
+
+.account-appointments {
+  display: grid;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.account-appointment-card {
+  padding: 1.1rem 1.1rem 1rem;
+  border-radius: 20px;
+  border: 1px solid rgba(181, 161, 108, 0.16);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.015)),
+    rgba(15, 15, 15, 0.9);
+  box-shadow: 0 18px 42px rgba(0, 0, 0, 0.22);
+}
+
+.account-appointment-card__top {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: start;
+  flex-wrap: wrap;
+}
+
+.account-appointment-card__date {
+  margin: 0;
+  font-family: "Playfair Display", serif;
+  font-size: 1.45rem;
+  color: #fff;
+}
+
+.account-appointment-card__meta {
+  margin: 0.45rem 0 0;
+  color: rgba(255, 255, 255, 0.76);
+  line-height: 1.7;
+}
+
+.account-badge {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 0.45rem 0.78rem;
+  border: 1px solid rgba(181, 161, 108, 0.25);
+  background: rgba(181, 161, 108, 0.12);
+  color: #f2e6c2;
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.account-badge--pending {
+  border-color: rgba(181, 161, 108, 0.25);
+  background: rgba(181, 161, 108, 0.12);
+  color: #f2e6c2;
+}
+
+.account-badge--confirmed {
+  border-color: rgba(92, 163, 115, 0.3);
+  background: rgba(92, 163, 115, 0.14);
+  color: #dff5e5;
+}
+
+.account-badge--cancelled {
+  border-color: rgba(191, 92, 92, 0.3);
+  background: rgba(191, 92, 92, 0.14);
+  color: #ffe0e0;
+}
+
+.account-badge--completed {
+  border-color: rgba(125, 125, 125, 0.3);
+  background: rgba(125, 125, 125, 0.14);
+  color: #ececec;
+}
+
+.account-badge--no-show {
+  border-color: rgba(140, 110, 170, 0.3);
+  background: rgba(140, 110, 170, 0.14);
+  color: #efe6ff;
+}
+
+.account-actions {
+  display: flex;
+  gap: 0.65rem;
+  flex-wrap: wrap;
+  margin-top: 1rem;
+}
+
+.account-form-grid {
+  display: grid;
+  gap: 1rem;
+}
+
+.account-field {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.account-field__label {
+  font-size: 0.76rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(181, 161, 108, 0.88);
+  font-weight: 700;
+}
+
+.account-checkbox {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  padding: 0.95rem 1rem;
+  border-radius: 16px;
+  border: 1px solid rgba(181, 161, 108, 0.16);
+  background: rgba(255, 255, 255, 0.03);
+  color: rgba(255, 255, 255, 0.84);
+}
+
+.account-checkbox input {
+  accent-color: #b5a16c;
+}
+
+.account-divider {
+  margin: 1.5rem 0;
+  border: 0;
+  border-top: 1px solid rgba(181, 161, 108, 0.16);
+}
+
+.account-subtitle {
+  margin: 0 0 0.85rem;
+  font-family: "Playfair Display", serif;
+  font-size: 1.55rem;
+  color: #fff;
+}
+
+.account-inline-actions {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.account-reschedule {
+  margin-top: 1rem;
+  padding: 1rem;
+  border-radius: 18px;
+  border: 1px solid rgba(181, 161, 108, 0.16);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.account-slots {
+  display: grid;
+  gap: 0.55rem;
+  margin-top: 0.9rem;
+}
+
+.account-slot {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  padding: 0.85rem 0.95rem;
+  border-radius: 14px;
+  border: 1px solid rgba(181, 161, 108, 0.14);
+  background: rgba(0, 0, 0, 0.18);
+  color: rgba(255, 255, 255, 0.86);
+}
+
+.account-slot input {
+  accent-color: #b5a16c;
+}
+
+.account-muted {
+  color: rgba(255, 255, 255, 0.68);
+  line-height: 1.65;
+}
+
+.account-btn {
+  border: 1px solid transparent;
+  border-radius: 12px;
+  padding: 0.8rem 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    transform 0.2s ease,
+    border-color 0.2s ease,
+    background 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.account-btn:hover {
+  transform: translateY(-2px);
+}
+
+.account-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.account-btn--primary {
+  background: #b5a16c;
+  color: #0b0b0b;
+}
+
+.account-btn--primary:hover {
+  background: #a38f5e;
+}
+
+.account-btn--ghost {
+  background: transparent;
+  color: #fff;
+  border-color: rgba(181, 161, 108, 0.22);
+}
+
+.account-btn--ghost:hover {
+  color: #b5a16c;
+  border-color: rgba(181, 161, 108, 0.45);
+}
+
+@media (max-width: 768px) {
+  .account-page {
+    padding-top: 5.1rem;
+  }
+
+  .account-panel {
+    padding: 1rem;
+    border-radius: 20px;
+  }
+
+  .account-section-title {
+    font-size: 1.7rem;
+  }
+
+  .account-appointment-card__date {
+    font-size: 1.2rem;
+  }
+
+  .account-tab {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+.account-standalone-page {
+  width: min(1240px, calc(100% - 2rem));
+  margin: 0 auto;
+  padding: 2rem 0 4rem;
+}
+
+.account-standalone-shell {
+  border-radius: 32px;
+  border: 1px solid rgba(181, 161, 108, 0.16);
+  background:
+    radial-gradient(1000px 520px at 10% 0%, rgba(181, 161, 108, 0.08), transparent 58%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.015)),
+    rgba(10, 10, 10, 0.92);
+  box-shadow: 0 28px 68px rgba(0, 0, 0, 0.28);
+  padding: 2rem;
+}
+
+.account-standalone__hero {
+  margin-bottom: 1.35rem;
+}
+
+.account-page-kicker {
+  margin: 0 0 0.45rem;
+  color: #b5a16c;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+@media (max-width: 720px) {
+  .account-standalone-page {
+    width: min(100%, calc(100% - 1rem));
+    padding: 1rem 0 3rem;
+  }
+
+  .account-standalone-shell {
+    padding: 1.25rem;
+    border-radius: 24px;
+  }
+}

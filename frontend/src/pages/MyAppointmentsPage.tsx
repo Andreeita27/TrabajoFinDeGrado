@@ -11,6 +11,7 @@ import { getAvailability } from "../api/availabilityApi";
 import { useAuth } from "../auth/AuthContext";
 import type { AppointmentDto } from "../types/appointment";
 import type { AvailabilitySlotDto } from "../types/availability";
+import "../styles/account.css";
 
 type Props = {
   embedded?: boolean;
@@ -32,14 +33,46 @@ function formatSlotLabel(iso: string) {
   }
 }
 
+function formatState(state?: string) {
+  switch (state) {
+    case "PENDING":
+      return "Pendiente";
+    case "CONFIRMED":
+      return "Confirmada";
+    case "CANCELLED":
+      return "Cancelada";
+    case "COMPLETED":
+      return "Completada";
+    case "NO_SHOW":
+      return "No asistió";
+    default:
+      return state ?? "-";
+  }
+}
+
+function getStateBadgeClass(state?: string) {
+  switch (state) {
+    case "PENDING":
+      return "account-badge account-badge--pending";
+    case "CONFIRMED":
+      return "account-badge account-badge--confirmed";
+    case "CANCELLED":
+      return "account-badge account-badge--cancelled";
+    case "COMPLETED":
+      return "account-badge account-badge--completed";
+    case "NO_SHOW":
+      return "account-badge account-badge--no-show";
+    default:
+      return "account-badge";
+  }
+}
+
 export default function MyAppointmentsPage({ embedded = false }: Props) {
   const { token, role } = useAuth();
   const nav = useNavigate();
 
   const [items, setItems] = useState<AppointmentDto[]>([]);
   const [error, setError] = useState("");
-
-  const [reviewSubmitting, setReviewSubmitting] = useState<Record<number, boolean>>({});
 
   const [rescheduleId, setRescheduleId] = useState<number | null>(null);
   const [rescheduleDay, setRescheduleDay] = useState<string>("");
@@ -95,11 +128,6 @@ export default function MyAppointmentsPage({ embedded = false }: Props) {
     }
   };
 
-  const onGoReview = (appointmentId: number) => {
-    setReviewSubmitting((m) => ({ ...m, [appointmentId]: true }));
-    nav(`/reviews/new?appointmentId=${appointmentId}`);
-  };
-
   const closeReschedule = () => {
     setRescheduleId(null);
     setRescheduleDay("");
@@ -119,7 +147,6 @@ export default function MyAppointmentsPage({ embedded = false }: Props) {
     setRescheduleSaving(false);
   };
 
-  // Cargar slots cuando el usuario elige día para reprogramar
   useEffect(() => {
     if (!token) return;
     if (!rescheduleId) return;
@@ -174,131 +201,214 @@ export default function MyAppointmentsPage({ embedded = false }: Props) {
     }
   };
 
-  return (
-    <div style={{ padding: embedded ? 0 : 16 }}>
-      {!embedded && <h1>Mis citas</h1>}
-      {embedded && <h2 style={{ marginTop: 0 }}>Gestionar mis citas</h2>}
+  const content = (
+    <>
+      {!embedded ? (
+        <div className="account-standalone__hero">
+          <p className="account-page-kicker">Zona privada</p>
+          <h1 className="account-section-title">Mis citas</h1>
+          <p className="account-section-text">
+            Consulta el estado de tus reservas, revisa el detalle y gestiona
+            cambios cuando sea posible.
+          </p>
+        </div>
+      ) : (
+        <>
+          <h2 className="account-section-title">Gestionar mis citas</h2>
+          <p className="account-section-text">
+            Consulta el estado de tus reservas, revisa el detalle y gestiona
+            cambios cuando sea posible.
+          </p>
+        </>
+      )}
 
-      {error && <div style={{ color: "tomato", marginBottom: 10 }}>{error}</div>}
+      {error && (
+        <div className="account-feedback account-feedback--error">
+          {error}
+        </div>
+      )}
 
       {items.length === 0 ? (
-        <div>No tienes citas todavía.</div>
+        <div className="account-empty">No tienes citas todavía.</div>
       ) : (
-        <ul style={{ paddingLeft: 18 }}>
-          {items.map((a) => (
-            <li key={a.id} style={{ marginBottom: 14 }}>
-              <div>
-                <b>{formatSlotLabel(String(a.startDateTime))}</b> — {a.professionalName} — {a.state} —{" "}
-                {a.durationMinutes} min
-              </div>
+        <div className="account-appointments">
+          {items.map((a) => {
+            const now = new Date();
+            const start = new Date(String(a.startDateTime));
+            const diffMs = start.getTime() - now.getTime();
+            const diffHours = diffMs / (1000 * 60 * 60);
+            const canModify = diffHours >= 24;
+            const isPendingOrConfirmed =
+              a.state === "PENDING" || a.state === "CONFIRMED";
 
-              <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 6 }}>
-                {role === "CLIENT" && a.state === "COMPLETED" && !a.hasReview && (
-                  <button onClick={() => onGoReview(a.id)} disabled={!!reviewSubmitting[a.id]}>
-                    {reviewSubmitting[a.id] ? "Abriendo..." : "Dejar reseña"}
-                  </button>
-                )}
-
-                {role === "CLIENT" && a.state === "COMPLETED" && a.hasReview && <button disabled>Reseña ya enviada</button>}
-
-                {role === "ADMIN" && !a.depositPaid && a.state === "PENDING" && (
-                  <button onClick={() => onPayDeposit(a.id)}>Confirmar señal</button>
-                )}
-
-                {(a.state === "PENDING" || a.state === "CONFIRMED") && (() => {
-                  const now = new Date();
-                  const start = new Date(String(a.startDateTime));
-                  const diffMs = start.getTime() - now.getTime();
-                  const diffHours = diffMs / (1000 * 60 * 60);
-
-                  const canModify = diffHours >= 24;
-
-                  return (
-                    <>
-                      {canModify && (
-                        <>
-                          <button onClick={() => nav(`/my-appointments/${a.id}`)}>Ver detalle</button>
-                          <button onClick={() => onCancel(a.id)}>Cancelar</button>
-                          <button onClick={() => openReschedule(a)}>Reprogramar</button>
-                        </>
-                      )}
-                    </>
-                  );
-                })()}
-              </div>
-
-              {rescheduleId === a.id && (
-                <div
-                  style={{
-                    marginTop: 10,
-                    padding: 10,
-                    border: "1px solid #333",
-                    borderRadius: 8,
-                    maxWidth: 720,
-                  }}
-                >
-                  <div style={{ fontWeight: 600, marginBottom: 8 }}>Reprogramar cita</div>
-
-                  <label style={{ display: "grid", gap: 6, maxWidth: 260 }}>
-                    Día
-                    <input
-                      type="date"
-                      value={rescheduleDay}
-                      onChange={(e) => setRescheduleDay(e.target.value)}
-                      disabled={rescheduleLoading || rescheduleSaving}
-                    />
-                  </label>
-
-                  <div style={{ marginTop: 10 }}>
-                    {rescheduleLoading ? (
-                      <div style={{ opacity: 0.8 }}>Cargando slots…</div>
-                    ) : rescheduleSlots.length === 0 ? (
-                      <div style={{ opacity: 0.8 }}>
-                        {rescheduleDay ? "No hay slots disponibles ese día." : "Selecciona un día para ver slots."}
-                      </div>
-                    ) : (
-                      <div style={{ display: "grid", gap: 6 }}>
-                        {rescheduleSlots.map((s, idx) => {
-                          const start = String((s as any).startDateTime);
-                          return (
-                            <label key={idx} style={{ display: "flex", gap: 10, alignItems: "center" }}>
-                              <input
-                                type="radio"
-                                name={`slot-${a.id}`}
-                                value={start}
-                                checked={rescheduleStart === start}
-                                onChange={() => setRescheduleStart(start)}
-                                disabled={rescheduleSaving}
-                              />
-                              {formatSlotLabel(start)}
-                            </label>
-                          );
-                        })}
-                      </div>
-                    )}
+            return (
+              <article key={a.id} className="account-appointment-card">
+                <div className="account-appointment-card__top">
+                  <div>
+                    <h3 className="account-appointment-card__date">
+                      {formatSlotLabel(String(a.startDateTime))}
+                    </h3>
+                    <p className="account-appointment-card__meta">
+                      <strong>Profesional:</strong> {a.professionalName}
+                      <br />
+                      <strong>Duración:</strong> {a.durationMinutes} min
+                      <br />
+                      <strong>Estado:</strong> {formatState(a.state)}
+                    </p>
                   </div>
 
-                  <div style={{ display: "flex", gap: 8, marginTop: 10, flexWrap: "wrap" }}>
-                    <button
-                      onClick={onSaveReschedule}
-                      disabled={!rescheduleStart || rescheduleLoading || rescheduleSaving}
-                    >
-                      {rescheduleSaving ? "Guardando..." : "Guardar cambio"}
-                    </button>
-
-                    <button onClick={closeReschedule} disabled={rescheduleLoading || rescheduleSaving}>
-                      Cancelar
-                    </button>
-                  </div>
-
-                  <div style={{ marginTop: 8, opacity: 0.8, fontSize: 12 }}>
+                  <div className={getStateBadgeClass(a.state)}>
+                    {formatState(a.state)}
                   </div>
                 </div>
-              )}
-            </li>
-          ))}
-        </ul>
+
+                <div className="account-actions">
+                  {role === "ADMIN" && !a.depositPaid && a.state === "PENDING" && (
+                    <button
+                      type="button"
+                      onClick={() => onPayDeposit(a.id)}
+                      className="account-btn account-btn--ghost"
+                    >
+                      Confirmar señal
+                    </button>
+                  )}
+
+                  {isPendingOrConfirmed && canModify && (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => nav(`/my-appointments/${a.id}`)}
+                        className="account-btn account-btn--ghost"
+                      >
+                        Ver detalle
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => onCancel(a.id)}
+                        className="account-btn account-btn--ghost"
+                      >
+                        Cancelar
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => openReschedule(a)}
+                        className="account-btn account-btn--primary"
+                      >
+                        Reprogramar
+                      </button>
+                    </>
+                  )}
+
+                  {isPendingOrConfirmed && !canModify && (
+                    <button
+                      type="button"
+                      onClick={() => nav(`/my-appointments/${a.id}`)}
+                      className="account-btn account-btn--ghost"
+                    >
+                      Ver detalle
+                    </button>
+                  )}
+
+                  {!isPendingOrConfirmed && (
+                    <button
+                      type="button"
+                      onClick={() => nav(`/my-appointments/${a.id}`)}
+                      className="account-btn account-btn--ghost"
+                    >
+                      Ver detalle
+                    </button>
+                  )}
+                </div>
+
+                {rescheduleId === a.id && (
+                  <div className="account-reschedule">
+                    <h4 className="account-subtitle" style={{ marginBottom: "0.75rem" }}>
+                      Reprogramar cita
+                    </h4>
+
+                    <label className="account-field" style={{ maxWidth: "260px" }}>
+                      <span className="account-field__label">Día</span>
+                      <input
+                        className="input"
+                        type="date"
+                        value={rescheduleDay}
+                        onChange={(e) => setRescheduleDay(e.target.value)}
+                        disabled={rescheduleLoading || rescheduleSaving}
+                      />
+                    </label>
+
+                    <div>
+                      {rescheduleLoading ? (
+                        <p className="account-muted">Cargando slots…</p>
+                      ) : rescheduleSlots.length === 0 ? (
+                        <p className="account-muted">
+                          {rescheduleDay
+                            ? "No hay slots disponibles ese día."
+                            : "Selecciona un día para ver slots."}
+                        </p>
+                      ) : (
+                        <div className="account-slots">
+                          {rescheduleSlots.map((s, idx) => {
+                            const startValue = String((s as any).startDateTime);
+
+                            return (
+                              <label key={idx} className="account-slot">
+                                <input
+                                  type="radio"
+                                  name={`slot-${a.id}`}
+                                  value={startValue}
+                                  checked={rescheduleStart === startValue}
+                                  onChange={() => setRescheduleStart(startValue)}
+                                  disabled={rescheduleSaving}
+                                />
+                                <span>{formatSlotLabel(startValue)}</span>
+                              </label>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="account-inline-actions" style={{ marginTop: "1rem" }}>
+                      <button
+                        type="button"
+                        onClick={onSaveReschedule}
+                        disabled={!rescheduleStart || rescheduleLoading || rescheduleSaving}
+                        className="account-btn account-btn--primary"
+                      >
+                        {rescheduleSaving ? "Guardando..." : "Guardar cambio"}
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={closeReschedule}
+                        disabled={rescheduleLoading || rescheduleSaving}
+                        className="account-btn account-btn--ghost"
+                      >
+                        Cancelar
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </article>
+            );
+          })}
+        </div>
       )}
-    </div>
+    </>
+  );
+
+  if (embedded) {
+    return <div>{content}</div>;
+  }
+
+  return (
+    <main className="account-standalone-page">
+      <section className="account-standalone-shell">
+        {content}
+      </section>
+    </main>
   );
 }

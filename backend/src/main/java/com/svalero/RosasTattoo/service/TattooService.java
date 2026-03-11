@@ -6,6 +6,7 @@ import com.svalero.RosasTattoo.domain.Tattoo;
 import com.svalero.RosasTattoo.dto.TattooInDto;
 import com.svalero.RosasTattoo.dto.TattooDto;
 import com.svalero.RosasTattoo.exception.ClientNotFoundException;
+import com.svalero.RosasTattoo.exception.DuplicateTattooException;
 import com.svalero.RosasTattoo.exception.ProfessionalNotFoundException;
 import com.svalero.RosasTattoo.exception.TattooNotFoundException;
 import com.svalero.RosasTattoo.repository.ClientRepository;
@@ -72,6 +73,14 @@ public class TattooService {
 
         Professional professional = professionalRepository.findById(tattooInDto.getProfessionalId())
                 .orElseThrow(ProfessionalNotFoundException::new);
+
+        if (tattooRepository.existsByClient_IdAndProfessional_IdAndTattooDate(
+                client.getId(),
+                professional.getId(),
+                tattooInDto.getTattooDate()
+        )) {
+            throw new DuplicateTattooException("Ya existe un tattoo del showroom asociado a esta cita");
+        }
 
         Tattoo tattoo = modelMapper.map(tattooInDto, Tattoo.class);
         tattoo.setClient(client);

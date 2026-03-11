@@ -1,0 +1,131 @@
+:root{
+  --bg: #0b0b0b;
+  --panel: #141414;
+  --panel-2: #1a1a1a;
+  --text: #ffffff;
+  --muted: rgba(255,255,255,.75);
+  --border: rgba(181,161,108,.25);
+  --gold: #b5a16c;
+  --gold-2: #9e8c5a;
+
+  --radius: 14px;
+  --shadow: 0 10px 30px rgba(0,0,0,.35);
+
+  --container: 1100px;
+
+  --font-display: "Playfair Display", serif;
+  --font-body: "Montserrat", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+}
+
+*{ box-sizing: border-box; }
+
+html, body { height: 100%; }
+
+body{
+  margin: 0;
+  background: radial-gradient(1200px 800px at 10% 10%, rgba(181,161,108,.08), transparent 60%),
+              radial-gradient(900px 600px at 90% 0%, rgba(181,161,108,.05), transparent 55%),
+              var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+}
+
+h1, h2, h3{
+  font-family: var(--font-display);
+  letter-spacing: .02em;
+}
+
+button, input, select, textarea, .btn, .navbar, .nav-left a, .nav-right a{
+  font-family: var(--font-body);
+}
+
+.hpPosterKicker, .hpKicker, .hpPosterCity{
+  font-family: var(--font-body);
+  letter-spacing: .35em;
+  text-transform: uppercase;
+}
+
+a{
+  color: inherit;
+  text-decoration: none;
+}
+
+a:hover{
+  color: var(--gold);
+}
+
+.container{
+  max-width: var(--container);
+  margin: 0 auto;
+  padding: 20px 16px;
+}
+
+.card{
+  background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01));
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+.btn{
+  border: 1px solid transparent;
+  border-radius: 10px;
+  padding: 10px 14px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.btn-primary{
+  background: var(--gold);
+  color: #0b0b0b;
+}
+
+.btn-primary:hover{
+  background: var(--gold-2);
+}
+
+.btn-ghost{
+  background: transparent;
+  border-color: var(--border);
+  color: var(--text);
+}
+
+.btn-ghost:hover{
+  border-color: rgba(181,161,108,.5);
+  color: var(--gold);
+}
+
+.input, select, textarea{
+  background: var(--panel);
+  color: var(--text);
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 10px;
+  padding: 10px 12px;
+  outline: none;
+}
+
+.input:focus, select:focus, textarea:focus{
+  border-color: rgba(181,161,108,.55);
+  box-shadow: 0 0 0 3px rgba(181,161,108,.15);
+}
+
+/* ✅ Accesibilidad: foco visible en teclado */
+a:focus-visible,
+button:focus-visible,
+.btn:focus-visible,
+.tabBtn:focus-visible{
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(181,161,108,.22);
+  border-color: rgba(181,161,108,.55);
+  border-radius: 10px;
+}
+
+/* ✅ Respeta “reduce motion” */
+@media (prefers-reduced-motion: reduce){
+  *, *::before, *::after{
+    animation-duration: .001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .001ms !important;
+    scroll-behavior: auto !important;
+  }
+}

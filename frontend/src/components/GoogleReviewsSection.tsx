@@ -45,7 +45,13 @@ export default function GoogleReviewsSection() {
   useEffect(() => {
     getGoogleReviews()
       .then(setData)
-      .catch((e: any) => setError(e?.message || "No se pudieron cargar las reseñas"))
+      .catch((e: unknown) => {
+        if (e instanceof Error) {
+          setError(e.message);
+        } else {
+          setError("No se pudieron cargar las reseñas");
+        }
+      })
       .finally(() => setLoading(false));
   }, []);
 

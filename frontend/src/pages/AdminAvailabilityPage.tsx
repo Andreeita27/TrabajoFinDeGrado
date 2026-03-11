@@ -102,12 +102,17 @@ export default function AdminAvailabilityPage() {
 
       setWindows(win);
       setBlocks(blo);
-    } catch (e: any) {
+    } catch (e: unknown) {
       if (e instanceof ApiError && (e.status === 401 || e.status === 403)) {
         nav("/login", { replace: true });
         return;
       }
-      setError(e?.message || "Error cargando disponibilidad");
+
+      if (e instanceof Error) {
+        setError(e.message);
+      } else {
+        setError("Error cargando disponibilidad");
+      }
     }
   };
 

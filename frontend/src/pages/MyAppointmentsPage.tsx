@@ -87,12 +87,17 @@ export default function MyAppointmentsPage({ embedded = false }: Props) {
     try {
       const data = await getMyAppointments(token);
       setItems(data);
-    } catch (e: any) {
+    } catch (e: unknown) {
       if (e instanceof ApiError && e.status === 401) {
         nav("/login", { replace: true, state: { from: "/my-account" } });
         return;
       }
-      setError(e?.message || "Error cargando citas");
+
+      if (e instanceof Error) {
+        setError(e.message);
+      } else {
+        setError("Error cargando citas");
+      }
     }
   };
 
@@ -177,9 +182,15 @@ export default function MyAppointmentsPage({ embedded = false }: Props) {
       stepMinutes,
     })
       .then((res) => setRescheduleSlots(res.slots))
-      .catch((e: any) => setError(e?.message || "Error cargando disponibilidad"))
+      .catch((e: unknown) => {
+        if (e instanceof Error) {
+          setError(e.message);
+        } else {
+          setError("Error cargando disponibilidad");
+        }
+      })
       .finally(() => setRescheduleLoading(false));
-  }, [token, rescheduleId, rescheduleDay, items]);
+    }, [token, rescheduleId, rescheduleDay, items]);
 
   const onSaveReschedule = async () => {
     if (!token) return;

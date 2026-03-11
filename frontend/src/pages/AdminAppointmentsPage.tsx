@@ -136,13 +136,18 @@ export default function AdminAppointmentsPage() {
       });
 
       setItems(data);
-    } catch (e: any) {
-      if (e instanceof ApiError && (e.status === 401 || e.status === 403)) {
-        nav("/login", { replace: true });
-        return;
+      } catch (e: unknown) {
+        if (e instanceof ApiError && (e.status === 401 || e.status === 403)) {
+          nav("/login", { replace: true });
+          return;
+        }
+
+        if (e instanceof Error) {
+          setError(e.message);
+        } else {
+          setError("Error cargando citas");
+        }
       }
-      setError(e?.message || "Error cargando citas");
-    }
   };
 
   useEffect(() => {
@@ -331,9 +336,20 @@ export default function AdminAppointmentsPage() {
       stepMinutes,
     })
       .then((res) => setRescheduleSlots(res.slots))
-      .catch((e: any) => setError(e?.message || "Error cargando disponibilidad"))
+      .catch((e: unknown) => {
+        if (e instanceof ApiError && (e.status === 401 || e.status === 403)) {
+          nav("/login", { replace: true });
+          return;
+        }
+
+        if (e instanceof Error) {
+          setError(e.message);
+        } else {
+          setError("Error cargando disponibilidad");
+        }
+      })
       .finally(() => setRescheduleLoading(false));
-  }, [token, rescheduleId, rescheduleDay, items]);
+    }, [token, rescheduleId, rescheduleDay, items]);
 
   const onSaveReschedule = async () => {
     if (!token) return;

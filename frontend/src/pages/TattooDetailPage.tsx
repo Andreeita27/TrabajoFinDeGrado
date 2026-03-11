@@ -5,17 +5,12 @@ import type { TattooDto } from "../types/tattoo";
 import { useAuth } from "../auth/AuthContext";
 import { deleteTattoo } from "../api/tattoosApi";
 import { ApiError } from "../api/apiFetch";
+import { withBase } from "../utils/url";
 
 import "../styles/tattooDetail.css";
 
-const BASE_URL = import.meta.env.VITE_API_BASE_URL as string;
 const SHOWROOM_RETURN_FLAG_KEY = "showroom:restoreOnBack";
 
-function withBase(url?: string | null) {
-  if (!url) return "";
-  if (/^https?:\/\//i.test(url)) return url;
-  return `${BASE_URL}${url}`;
-}
 
 function fmtDate(d?: string | null) {
   if (!d) return "—";
@@ -86,12 +81,17 @@ export default function TattooDetailPage() {
       await deleteTattoo(token, tattooId);
       sessionStorage.setItem(SHOWROOM_RETURN_FLAG_KEY, "true");
       nav(returnTo, { replace: true });
-    } catch (err: any) {
+    } catch (err: unknown) {
       if (err instanceof ApiError && (err.status === 401 || err.status === 403)) {
         nav("/login", { replace: true });
         return;
       }
-      setError(err?.message || "Error eliminando tattoo");
+
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError("Error eliminando tattoo");
+      }
     }
   };
 

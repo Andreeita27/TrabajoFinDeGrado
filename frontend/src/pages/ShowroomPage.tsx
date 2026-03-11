@@ -16,20 +16,14 @@ import {
 } from "../api/designsApi";
 import type { DesignDto } from "../types/design";
 import { uploadPublicImage } from "../api/filesApi";
+import { withBase } from "../utils/url";
 
 import "../styles/showroom.css";
 
 type TabKey = "DESIGNS" | "TATTOOS";
 
-const BASE_URL = import.meta.env.VITE_API_BASE_URL as string;
 const SHOWROOM_SCROLL_KEY = "showroom:scrollY";
 const SHOWROOM_RETURN_FLAG_KEY = "showroom:restoreOnBack";
-
-function withBase(url?: string | null) {
-  if (!url) return "";
-  if (/^https?:\/\//i.test(url)) return url;
-  return `${BASE_URL}${url}`;
-}
 
 function parseBooleanParam(value: string | null): boolean | undefined {
   if (value === "true") return true;
@@ -121,12 +115,17 @@ export default function ShowroomPage() {
     try {
       const res = isAdmin ? await getAdminDesigns(token!) : await getDesigns();
       setDesigns(res);
-    } catch (e: any) {
+    } catch (e: unknown) {
       if (e instanceof ApiError && (e.status === 401 || e.status === 403)) {
         if (isAdmin) nav("/login", { replace: true });
         return;
       }
-      setDesignError(e?.message || "Error cargando diseños");
+
+      if (e instanceof Error) {
+        setDesignError(e.message);
+      } else {
+        setDesignError("Error cargando diseños");
+      }
     }
   };
 
@@ -260,7 +259,8 @@ export default function ShowroomPage() {
     if (!designFilterProfessionalId) return designs;
 
     const pid = Number(designFilterProfessionalId);
-    return designs.filter((d: any) => {
+
+    return designs.filter((d: DesignDto) => {
       if (typeof d.professionalId === "number") return d.professionalId === pid;
 
       const pro = pros.find((p) => p.id === pid);
@@ -293,10 +293,14 @@ export default function ShowroomPage() {
       setUploadingDesignImage(true);
       const url = await uploadPublicImage("designs", file, token);
       setDesignImageUrl(url);
-    } catch (e: any) {
-      setDesignError(
-        e instanceof ApiError ? e.message : e?.message || "Error subiendo imagen"
-      );
+    } catch (e: unknown) {
+      if (e instanceof ApiError) {
+        setDesignError(e.message);
+      } else if (e instanceof Error) {
+        setDesignError(e.message);
+      } else {
+        setDesignError("Error subiendo imagen");
+      }
     } finally {
       setUploadingDesignImage(false);
     }
@@ -332,12 +336,17 @@ export default function ShowroomPage() {
       resetAddDesignForm();
       setShowAddDesign(false);
       await loadDesigns();
-    } catch (e: any) {
+    } catch (e: unknown) {
       if (e instanceof ApiError && (e.status === 401 || e.status === 403)) {
         nav("/login", { replace: true });
         return;
       }
-      setDesignError(e?.message || "Error creando diseño");
+
+      if (e instanceof Error) {
+        setDesignError(e.message);
+      } else {
+        setDesignError("Error creando diseño");
+      }
     } finally {
       setDesignSaving(false);
     }
@@ -350,12 +359,17 @@ export default function ShowroomPage() {
     try {
       await toggleDesign(token, id);
       await loadDesigns();
-    } catch (e: any) {
+    } catch (e: unknown) {
       if (e instanceof ApiError && (e.status === 401 || e.status === 403)) {
         nav("/login", { replace: true });
         return;
       }
-      setDesignError(e?.message || "Error cambiando estado del diseño");
+
+      if (e instanceof Error) {
+        setDesignError(e.message);
+      } else {
+        setDesignError("Error cambiando estado del diseño");
+      }
     }
   };
 
@@ -369,12 +383,17 @@ export default function ShowroomPage() {
     try {
       await deleteDesign(token, id);
       await loadDesigns();
-    } catch (e: any) {
+    } catch (e: unknown) {
       if (e instanceof ApiError && (e.status === 401 || e.status === 403)) {
         nav("/login", { replace: true });
         return;
       }
-      setDesignError(e?.message || "Error borrando diseño");
+
+      if (e instanceof Error) {
+        setDesignError(e.message);
+      } else {
+        setDesignError("Error borrando diseño");
+      }
     }
   };
 

@@ -8,16 +8,9 @@ import { useAuth } from "../auth/AuthContext";
 import type { ProfessionalDto } from "../types/professional";
 import type { TattooDto } from "../types/tattoo";
 import "../styles/professionalDetail.css";
+import { withBase } from "../utils/url";
 
 type FormState = Omit<ProfessionalDto, "id">;
-
-const BASE_URL = import.meta.env.VITE_API_BASE_URL as string;
-
-function withBase(url?: string | null) {
-  if (!url) return "";
-  if (/^https?:\/\//i.test(url)) return url;
-  return `${BASE_URL}${url}`;
-}
 
 export default function ProfessionalDetailPage() {
   const nav = useNavigate();
@@ -167,8 +160,14 @@ export default function ProfessionalDetailPage() {
       const url = await uploadPublicImage("professionals", file, token);
       setForm({ ...form, profilePhoto: url });
       setOk("Foto subida correctamente");
-    } catch (e: any) {
-      setError(e instanceof ApiError ? e.message : e?.message || "Error subiendo foto");
+    } catch (e: unknown) {
+      if (e instanceof ApiError) {
+        setError(e.message);
+      } else if (e instanceof Error) {
+        setError(e.message);
+      } else {
+        setError("Error subiendo foto");
+      }
     } finally {
       setUploadingPhoto(false);
     }
@@ -194,12 +193,17 @@ export default function ProfessionalDetailPage() {
       setOk("Profesional actualizado");
       setEditing(false);
       await loadPro();
-    } catch (e: any) {
+    } catch (e: unknown) {
       if (e instanceof ApiError && (e.status === 401 || e.status === 403)) {
         nav("/login", { replace: true });
         return;
       }
-      setError(e?.message || "Error guardando profesional");
+
+      if (e instanceof Error) {
+        setError(e.message);
+      } else {
+        setError("Error guardando profesional");
+      }
     } finally {
       setSaving(false);
     }
@@ -217,12 +221,17 @@ export default function ProfessionalDetailPage() {
     try {
       await deleteProfessional(token, professionalId);
       nav("/professionals", { replace: true });
-    } catch (e: any) {
+    } catch (e: unknown) {
       if (e instanceof ApiError && (e.status === 401 || e.status === 403)) {
         nav("/login", { replace: true });
         return;
       }
-      setError(e?.message || "Error eliminando profesional");
+
+      if (e instanceof Error) {
+        setError(e.message);
+      } else {
+        setError("Error eliminando profesional");
+      }
     }
   };
 

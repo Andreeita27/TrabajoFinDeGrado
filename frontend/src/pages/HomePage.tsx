@@ -9,14 +9,7 @@ import BookingPreviewCard from "../components/BookingPreviewCard";
 
 import { getProfessionals } from "../api/showroomApi";
 import type { ProfessionalDto } from "../types/professional";
-
-const BASE_URL = import.meta.env.VITE_API_BASE_URL as string;
-
-function withBase(url?: string | null) {
-  if (!url) return "";
-  if (/^https?:\/\//i.test(url)) return url;
-  return `${BASE_URL}${url}`;
-}
+import { withBase } from "../utils/url";
 
 const LASER_URL = "https://eliminartatuajeszaragoza.com/";
 const MAP_EMBED = "https://www.google.com/maps?q=62%20Rosas%20Tattoo%20Zaragoza&output=embed";

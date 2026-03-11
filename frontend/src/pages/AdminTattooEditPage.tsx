@@ -60,8 +60,14 @@ export default function AdminTattooEditPage() {
       setSessions(typeof t.sessions === "number" && t.sessions > 0 ? t.sessions : 1);
       setCoverUp(!!t.coverUp);
       setColor(!!t.color);
-    } catch (e: any) {
-      setError(e instanceof ApiError ? e.message : e?.message || "Error cargando tattoo");
+    } catch (e: unknown) {
+      if (e instanceof ApiError) {
+        setError(e.message);
+      } else if (e instanceof Error) {
+        setError(e.message);
+      } else {
+        setError("Error cargando tattoo");
+      }
     }
   };
 
@@ -92,8 +98,14 @@ export default function AdminTattooEditPage() {
       const url = await uploadPublicImage("tattoos", file, token);
       setImageUrl(url);
       setOk("Imagen subida correctamente.");
-    } catch (e: any) {
-      setError(e instanceof ApiError ? e.message : e?.message || "Error subiendo imagen");
+    } catch (e: unknown) {
+      if (e instanceof ApiError) {
+        setError(e.message);
+      } else if (e instanceof Error) {
+        setError(e.message);
+      } else {
+        setError("Error subiendo imagen");
+      }
     } finally {
       setUploadingImage(false);
     }
@@ -132,17 +144,21 @@ export default function AdminTattooEditPage() {
       setOk("Cambios guardados correctamente.");
 
       setTimeout(() => nav(backTo, { replace: true }), 300);
-    } catch (e: any) {
+    } catch (e: unknown) {
       if (e instanceof ApiError) {
-        const body: any = e.body;
+        const body = e.body as { errors?: Record<string, string> } | undefined;
+
         const validationMsg = body?.errors
           ? Object.entries(body.errors)
               .map(([k, v]) => `${k}: ${v}`)
               .join(" | ")
           : "";
+
         setError(validationMsg || e.message || "Error actualizando tattoo");
+      } else if (e instanceof Error) {
+        setError(e.message);
       } else {
-        setError(e?.message || "Error actualizando tattoo");
+        setError("Error actualizando tattoo");
       }
     } finally {
       setLoading(false);

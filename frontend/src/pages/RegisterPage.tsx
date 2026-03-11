@@ -38,8 +38,12 @@ export default function RegisterPage() {
       });
 
       nav("/", { replace: true });
-    } catch (err: any) {
-      setMsg(err?.message || "Error en registro");
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setMsg(err.message);
+      } else {
+        setMsg("Error en registro");
+      }
     }
   };
 

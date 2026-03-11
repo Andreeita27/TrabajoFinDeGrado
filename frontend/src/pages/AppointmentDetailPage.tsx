@@ -112,12 +112,17 @@ export default function AppointmentDetailPage() {
     try {
       const data = await getAppointment(token, appointmentId);
       setItem(data);
-    } catch (e: any) {
+    } catch (e: unknown) {
       if (e instanceof ApiError && e.status === 401) {
         nav("/login", { replace: true, state: { from: loc.pathname } });
         return;
       }
-      setError(e?.message || "Error cargando el detalle de la cita");
+
+      if (e instanceof Error) {
+        setError(e.message);
+      } else {
+        setError("Error cargando el detalle de la cita");
+      }
     } finally {
       setLoading(false);
     }
@@ -145,9 +150,14 @@ export default function AppointmentDetailPage() {
         const url = URL.createObjectURL(blob);
         setRefUrl(url);
       })
-      .catch((e: any) => {
+      .catch((e: unknown) => {
         if (!alive) return;
-        setRefError(e?.message || "No se pudo cargar la imagen de referencia");
+
+        if (e instanceof Error) {
+          setRefError(e.message);
+        } else {
+          setRefError("No se pudo cargar la imagen de referencia");
+        }
       })
       .finally(() => {
         if (alive) setRefLoading(false);
@@ -156,7 +166,7 @@ export default function AppointmentDetailPage() {
     return () => {
       alive = false;
     };
-  }, [token, appointmentId, item?.referenceImageUrl]);
+    }, [token, appointmentId, item?.referenceImageUrl]);
 
   const onUploadReference = async (e: FormEvent) => {
     e.preventDefault();
@@ -184,12 +194,17 @@ export default function AppointmentDetailPage() {
       if (blob && blob.size > 0) {
         setRefUrl(URL.createObjectURL(blob));
       }
-    } catch (e: any) {
+    } catch (e: unknown) {
       if (e instanceof ApiError && (e.status === 401 || e.status === 403)) {
         nav("/login", { replace: true, state: { from: loc.pathname } });
         return;
       }
-      setRefError(e?.message || "Error subiendo imagen de referencia");
+
+      if (e instanceof Error) {
+        setRefError(e.message);
+      } else {
+        setRefError("Error subiendo imagen de referencia");
+      }
     } finally {
       setUploading(false);
       setRefLoading(false);

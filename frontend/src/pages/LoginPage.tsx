@@ -20,8 +20,12 @@ export default function LoginPage() {
     try {
       await login({ email, password });
       nav(from, { replace: true });
-    } catch (err: any) {
-      setMsg(err?.message || "Error en login");
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setMsg(err.message);
+      } else {
+        setMsg("Error en login");
+      }
     }
   };
 

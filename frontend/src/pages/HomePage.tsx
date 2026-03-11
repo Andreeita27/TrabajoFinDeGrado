@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
 import HomeCarousel from "../components/HomeCarousel";
-import "../styles/homeOnePage.css";
+import "../styles/homePage.css";
 import HomeMap from "../components/HomeMap";
 import GoogleReviewsSection from "../components/GoogleReviewsSection";
 import BookingPreviewCard from "../components/BookingPreviewCard";

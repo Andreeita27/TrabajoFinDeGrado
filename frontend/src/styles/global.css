@@ -120,7 +120,7 @@ button:focus-visible,
   border-radius: 10px;
 }
 
-/* ✅ Respeta “reduce motion” */
+/* Respeta “reduce motion” */
 @media (prefers-reduced-motion: reduce){
   *, *::before, *::after{
     animation-duration: .001ms !important;
@@ -128,4 +128,49 @@ button:focus-visible,
     transition-duration: .001ms !important;
     scroll-behavior: auto !important;
   }
+}
+
+/* ===== File upload común ===== */
+.file-upload {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.8rem;
+  flex-wrap: wrap;
+}
+
+.file-upload input[type="file"] {
+  display: none;
+}
+
+.file-upload__button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 46px;
+  padding: 0.75rem 1.1rem;
+  border-radius: 14px;
+  border: 1px solid rgba(181, 161, 108, 0.24);
+  background: rgba(181, 161, 108, 0.12);
+  color: #f7edd0;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    transform 0.2s ease,
+    border-color 0.2s ease,
+    background 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.file-upload__button:hover {
+  transform: translateY(-1px);
+  border-color: rgba(181, 161, 108, 0.38);
+  background: rgba(181, 161, 108, 0.18);
+  box-shadow: 0 12px 26px rgba(0, 0, 0, 0.22);
+}
+
+.file-upload input:disabled + .file-upload__button {
+  opacity: 0.65;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
 }

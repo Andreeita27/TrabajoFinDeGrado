@@ -230,13 +230,13 @@
   }
 }
 
-.revealItem{
+.tdRevealItem{
   animation: tdFadeUp .65s cubic-bezier(.2,.8,.2,1) both;
   animation-delay: var(--d, 0ms);
 }
 
 @media (prefers-reduced-motion: reduce){
-  .revealItem{ animation: none; }
+  .tdRevealItem{ animation: none; }
   .tdMedia img{ transition: none; }
 }
 
@@ -328,18 +328,18 @@
   text-shadow: 0 18px 60px rgba(0,0,0,.55);
 }
 
-/* Botones (si usas btn de tu sistema / bootstrap, esto es compatible) */
-.btn{
+/* Botones */
+.tdDetail .btn{
   transition: transform .18s ease, box-shadow .22s ease, filter .22s ease;
 }
 
-.btn:hover{
+.tdDetail .btn:hover{
   transform: translateY(-1px);
   box-shadow: 0 12px 30px rgba(0,0,0,.35);
   filter: brightness(1.02);
 }
 
-.btn:active{
+.tdDetail .btn:active{
   transform: translateY(0px);
 }
 

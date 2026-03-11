@@ -425,7 +425,7 @@ export default function ShowroomPage() {
             <label className="field">
               <span className="fieldTitle">Estilo</span>
               <input
-                className="input"
+                className="showroomInput"
                 placeholder="Ej: Neotradicional..."
                 value={style}
                 onChange={(e) => setStyle(e.target.value)}
@@ -435,7 +435,7 @@ export default function ShowroomPage() {
             <label className="field">
               <span className="fieldTitle">Tatuador</span>
               <select
-                className="input"
+                className="showroomInput"
                 value={tattooProfessionalId}
                 onChange={(e) => setTattooProfessionalId(e.target.value)}
               >
@@ -451,7 +451,7 @@ export default function ShowroomPage() {
             <label className="field">
               <span className="fieldTitle">Cover up</span>
               <select
-                className="input"
+                className="showroomInput"
                 value={typeof coverUp === "boolean" ? String(coverUp) : ""}
                 onChange={(e) =>
                   setCoverUp(
@@ -470,7 +470,7 @@ export default function ShowroomPage() {
             <label className="field">
               <span className="fieldTitle">Color</span>
               <select
-                className="input"
+                className="showroomInput"
                 value={typeof color === "boolean" ? String(color) : ""}
                 onChange={(e) =>
                   setColor(
@@ -491,7 +491,7 @@ export default function ShowroomPage() {
         <section>
           <div className="sectionTop">
             <div>
-              <h2 className="sectionTitle">Diseños disponibles</h2>
+              <h2 className="showroomSectionTitle">Diseños disponibles</h2>
               <p className="sectionText">
                 Ideas preparadas para tatuar. Si te interesa uno, te lo adaptamos a ti.
               </p>
@@ -500,7 +500,7 @@ export default function ShowroomPage() {
                 <div className="field">
                   <div className="fieldTitle">Tatuador</div>
                   <select
-                    className="input"
+                    className="showroomInput"
                     value={designFilterProfessionalId}
                     onChange={(e) => setDesignFilterProfessionalId(e.target.value)}
                   >
@@ -553,7 +553,7 @@ export default function ShowroomPage() {
                 <div className="field">
                   <div className="fieldTitle">Tatuador</div>
                   <select
-                    className="input"
+                    className="showroomInput"
                     value={designProfessionalId}
                     onChange={(e) => setDesignProfessionalId(e.target.value)}
                   >
@@ -569,7 +569,7 @@ export default function ShowroomPage() {
                 <div className="field">
                   <div className="fieldTitle">Título (opcional)</div>
                   <input
-                    className="input"
+                    className="showroomInput"
                     value={designTitle}
                     onChange={(e) => setDesignTitle(e.target.value)}
                     placeholder="Ej: Flash neo-trad rose"
@@ -580,7 +580,7 @@ export default function ShowroomPage() {
                 <div className="field">
                   <div className="fieldTitle">Imagen</div>
                   <input
-                    className="input"
+                    className="showroomInput"
                     type="file"
                     accept="image/*"
                     disabled={designSaving || uploadingDesignImage}
@@ -631,11 +631,11 @@ export default function ShowroomPage() {
           {activeDesigns.length === 0 ? (
             <p className="emptyText">No hay diseños disponibles ahora mismo.</p>
           ) : (
-            <div className="galleryGrid">
+            <div className="showroomGalleryGrid">
               {activeDesigns.map((d, i) => (
                 <article
                   key={d.id}
-                  className="galleryCard revealItem"
+                  className="galleryCard showroomRevealItem"
                   style={{ ["--d" as any]: `${i * 60}ms` }}
                 >
                   <div className="galleryMedia">
@@ -682,11 +682,11 @@ export default function ShowroomPage() {
           {isAdmin && inactiveDesigns.length > 0 && (
             <div className="inactiveBox">
               <h3>Retirados</h3>
-              <div className="galleryGrid">
+              <div className="showroomGalleryGrid">
                 {inactiveDesigns.map((d, i) => (
                   <article
                     key={d.id}
-                    className="galleryCard galleryCard--inactive revealItem"
+                    className="galleryCard galleryCard--inactive showroomRevealItem"
                     style={{ ["--d" as any]: `${i * 60}ms` }}
                   >
                     <div className="galleryMedia">
@@ -738,11 +738,11 @@ export default function ShowroomPage() {
           {!tattoosError && tattoos.length === 0 ? (
             <p className="emptyText">No hay tatuajes con esos filtros.</p>
           ) : (
-            <div className="galleryGrid">
+            <div className="showroomGalleryGrid">
               {tattoos.map((t, i) => (
                 <article
                   key={t.id}
-                  className="galleryCard galleryCard--clickable revealItem"
+                  className="galleryCard galleryCard--clickable showroomRevealItem"
                   style={{ ["--d" as any]: `${i * 50}ms` }}
                   role="button"
                   tabIndex={0}

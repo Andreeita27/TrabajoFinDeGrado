@@ -1,7 +1,6 @@
 import { apiFetch } from "./apiFetch";
 import type { TattooDto } from "../types/tattoo";
 import type { ProfessionalDto } from "../types/professional";
-import type { ReviewDto } from "../types/review";
 
 export function getTattoos(params?: { style?: string; coverUp?: boolean; color?: boolean, professionalId?: number }) {
   const qs = new URLSearchParams();
@@ -22,16 +21,6 @@ export function getProfessionals(params?: { professionalName?: string; booksOpen
 
   const suffix = qs.toString() ? `?${qs.toString()}` : "";
   return apiFetch<ProfessionalDto[]>(`/professionals${suffix}`);
-}
-
-export function getReviews(params?: { rating?: number; professionalId?: number; wouldRecommend?: boolean }) {
-  const qs = new URLSearchParams();
-  if (typeof params?.rating === "number") qs.set("rating", String(params.rating));
-  if (typeof params?.professionalId === "number") qs.set("professionalId", String(params.professionalId));
-  if (typeof params?.wouldRecommend === "boolean") qs.set("wouldRecommend", String(params.wouldRecommend));
-
-  const suffix = qs.toString() ? `?${qs.toString()}` : "";
-  return apiFetch<ReviewDto[]>(`/reviews${suffix}`);
 }
 
 export function getTattooById(id: number) {

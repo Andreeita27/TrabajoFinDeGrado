@@ -1,6 +1,5 @@
 package com.svalero.RosasTattoo.controller;
 
-import com.svalero.RosasTattoo.domain.Appointment;
 import com.svalero.RosasTattoo.domain.enums.AppointmentState;
 import com.svalero.RosasTattoo.dto.*;
 import com.svalero.RosasTattoo.exception.AppointmentNotFoundException;
@@ -173,17 +172,6 @@ public class AppointmentController {
     @PostMapping("/appointments/{id}/mark-completed")
     public ResponseEntity<AppointmentDto> markCompleted(@PathVariable long id) throws AppointmentNotFoundException {
         return ResponseEntity.ok(appointmentService.markCompleted(id));
-    }
-
-    private boolean isAdmin(Authentication auth) {
-        return auth.getAuthorities().stream()
-                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
-    }
-
-    private boolean isOwner(Appointment appt, Authentication auth) {
-        return appt.getClient() != null
-                && appt.getClient().getEmail() != null
-                && appt.getClient().getEmail().equalsIgnoreCase(auth.getName());
     }
 
     @ExceptionHandler(AppointmentNotFoundException.class)

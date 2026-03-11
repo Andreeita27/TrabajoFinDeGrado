@@ -25,7 +25,7 @@ public class GoogleReviewsController {
     public ResponseEntity<ErrorResponse> handleIllegalStateException(IllegalStateException e) {
         ErrorResponse error = ErrorResponse.generalError(
                 500,
-                "google_reviews_error",
+                "google-reviews-error",
                 e.getMessage()
         );
         return new ResponseEntity<>(error, HttpStatus.INTERNAL_SERVER_ERROR);

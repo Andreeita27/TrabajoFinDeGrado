@@ -22,6 +22,4 @@ public interface ProfessionalRepository extends CrudRepository<Professional, Lon
             @Param("books") Boolean books,
             @Param("years") Integer years
     );
-
-    List<Professional> findByProfessionalName(String professionalName);
 }

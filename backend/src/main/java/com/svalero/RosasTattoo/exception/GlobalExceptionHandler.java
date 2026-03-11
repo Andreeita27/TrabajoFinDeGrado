@@ -16,7 +16,6 @@ public class GlobalExceptionHandler {
             ClientNotFoundException.class,
             ProfessionalNotFoundException.class,
             AppointmentNotFoundException.class,
-            ReviewNotFoundException.class,
             TattooNotFoundException.class
     })
     public ResponseEntity<ErrorResponse> handleNotFound(Exception ex) {

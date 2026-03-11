@@ -64,6 +64,6 @@ public class DesignController {
 
     @ExceptionHandler(IllegalStateException.class)
     public ResponseEntity<ErrorResponse> handleBad(IllegalStateException ex) {
-        return new ResponseEntity<>(ErrorResponse.generalError(400, "bad_request", ex.getMessage()), HttpStatus.BAD_REQUEST);
+        return new ResponseEntity<>(ErrorResponse.generalError(400, "bad-request", ex.getMessage()), HttpStatus.BAD_REQUEST);
     }
 }

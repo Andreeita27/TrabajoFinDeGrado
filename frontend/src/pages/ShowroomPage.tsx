@@ -71,6 +71,7 @@ export default function ShowroomPage() {
   const [designImageUrl, setDesignImageUrl] = useState("");
   const [designFilterProfessionalId, setDesignFilterProfessionalId] =
     useState<string>(() => searchParams.get("designProfessionalId") ?? "");
+  const [designImageName, setDesignImageName] = useState("");
 
   const [showAddDesign, setShowAddDesign] = useState(false);
 
@@ -78,6 +79,7 @@ export default function ShowroomPage() {
     setDesignProfessionalId("");
     setDesignTitle("");
     setDesignImageUrl("");
+    setDesignImageName("");
   };
 
   const loadTattoos = async () => {
@@ -154,7 +156,6 @@ export default function ShowroomPage() {
     if (tab !== "DESIGNS") setDesignFilterProfessionalId("");
   }, [tab]);
 
-  // Estado -> URL
   useEffect(() => {
     const nextParams = new URLSearchParams();
 
@@ -191,7 +192,6 @@ export default function ShowroomPage() {
     setSearchParams,
   ]);
 
-  // URL -> estado
   useEffect(() => {
     const tabFromUrl = searchParams.get("tab");
     const nextTab: TabKey = tabFromUrl === "DESIGNS" ? "DESIGNS" : "TATTOOS";
@@ -218,7 +218,6 @@ export default function ShowroomPage() {
     }
   }, [searchParams]);
 
-  // Guardar scroll mientras estás en Showroom
   useEffect(() => {
     const saveScroll = () => {
       sessionStorage.setItem(SHOWROOM_SCROLL_KEY, String(window.scrollY));
@@ -228,7 +227,6 @@ export default function ShowroomPage() {
     return () => window.removeEventListener("scroll", saveScroll);
   }, []);
 
-  // Restaurar scroll solo si vuelves con el botón propio de la web
   useEffect(() => {
     const mustRestore =
       sessionStorage.getItem(SHOWROOM_RETURN_FLAG_KEY) === "true";
@@ -289,6 +287,8 @@ export default function ShowroomPage() {
     }
 
     setDesignError("");
+    setDesignImageName(file.name);
+
     try {
       setUploadingDesignImage(true);
       const url = await uploadPublicImage("designs", file, token);
@@ -454,54 +454,60 @@ export default function ShowroomPage() {
 
             <label className="field">
               <span className="fieldTitle">Tatuador</span>
-              <select
-                className="showroomInput"
-                value={tattooProfessionalId}
-                onChange={(e) => setTattooProfessionalId(e.target.value)}
-              >
-                <option value="">Todos</option>
-                {pros.map((p) => (
-                  <option key={p.id} value={String(p.id)}>
-                    {p.professionalName}
-                  </option>
-                ))}
-              </select>
+              <div className="showroomSelectWrap">
+                <select
+                  className="showroomInput showroomSelect"
+                  value={tattooProfessionalId}
+                  onChange={(e) => setTattooProfessionalId(e.target.value)}
+                >
+                  <option value="">Todos</option>
+                  {pros.map((p) => (
+                    <option key={p.id} value={String(p.id)}>
+                      {p.professionalName}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </label>
 
             <label className="field">
               <span className="fieldTitle">Cover up</span>
-              <select
-                className="showroomInput"
-                value={typeof coverUp === "boolean" ? String(coverUp) : ""}
-                onChange={(e) =>
-                  setCoverUp(
-                    e.target.value === ""
-                      ? undefined
-                      : e.target.value === "true"
-                  )
-                }
-              >
-                <option value="">Todos</option>
-                <option value="true">Sí</option>
-                <option value="false">No</option>
-              </select>
+              <div className="showroomSelectWrap">
+                <select
+                  className="showroomInput showroomSelect"
+                  value={typeof coverUp === "boolean" ? String(coverUp) : ""}
+                  onChange={(e) =>
+                    setCoverUp(
+                      e.target.value === ""
+                        ? undefined
+                        : e.target.value === "true"
+                    )
+                  }
+                >
+                  <option value="">Todos</option>
+                  <option value="true">Sí</option>
+                  <option value="false">No</option>
+                </select>
+              </div>
             </label>
 
             <label className="field">
               <span className="fieldTitle">Color</span>
-              <select
-                className="showroomInput"
-                value={typeof color === "boolean" ? String(color) : ""}
-                onChange={(e) =>
-                  setColor(
-                    e.target.value === "" ? undefined : e.target.value === "true"
-                  )
-                }
-              >
-                <option value="">Todos</option>
-                <option value="true">Color</option>
-                <option value="false">Blanco y negro</option>
-              </select>
+              <div className="showroomSelectWrap">
+                <select
+                  className="showroomInput showroomSelect"
+                  value={typeof color === "boolean" ? String(color) : ""}
+                  onChange={(e) =>
+                    setColor(
+                      e.target.value === "" ? undefined : e.target.value === "true"
+                    )
+                  }
+                >
+                  <option value="">Todos</option>
+                  <option value="true">Color</option>
+                  <option value="false">Blanco y negro</option>
+                </select>
+              </div>
             </label>
           </div>
         </div>
@@ -516,33 +522,37 @@ export default function ShowroomPage() {
                 Ideas preparadas para tatuar. Si te interesa uno, te lo adaptamos a ti.
               </p>
 
-              <div className="filtersRow">
-                <div className="field">
-                  <div className="fieldTitle">Tatuador</div>
-                  <select
-                    className="showroomInput"
-                    value={designFilterProfessionalId}
-                    onChange={(e) => setDesignFilterProfessionalId(e.target.value)}
-                  >
-                    <option value="">Todos</option>
-                    {pros.map((p) => (
-                      <option key={p.id} value={String(p.id)}>
-                        {p.professionalName}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+              {!showAddDesign && (
+                <div className="filtersRow">
+                  <div className="field showroomFilterField">
+                    <div className="fieldTitle">Tatuador</div>
+                    <div className="showroomSelectWrap">
+                      <select
+                        className="showroomInput showroomSelect"
+                        value={designFilterProfessionalId}
+                        onChange={(e) => setDesignFilterProfessionalId(e.target.value)}
+                      >
+                        <option value="">Todos</option>
+                        {pros.map((p) => (
+                          <option key={p.id} value={String(p.id)}>
+                            {p.professionalName}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
 
-                {designFilterProfessionalId && (
-                  <button
-                    type="button"
-                    className="btn btn-ghost smallBtn"
-                    onClick={() => setDesignFilterProfessionalId("")}
-                  >
-                    Quitar filtro
-                  </button>
-                )}
-              </div>
+                  {designFilterProfessionalId && (
+                    <button
+                      type="button"
+                      className="btn btn-ghost smallBtn"
+                      onClick={() => setDesignFilterProfessionalId("")}
+                    >
+                      Quitar filtro
+                    </button>
+                  )}
+                </div>
+              )}
             </div>
 
             {isAdmin && (
@@ -569,21 +579,23 @@ export default function ShowroomPage() {
             <div className="card panel">
               <div className="panelTitle">Nuevo diseño</div>
 
-              <div className="addGrid">
+              <div className="addGrid addGrid--design">
                 <div className="field">
                   <div className="fieldTitle">Tatuador</div>
-                  <select
-                    className="showroomInput"
-                    value={designProfessionalId}
-                    onChange={(e) => setDesignProfessionalId(e.target.value)}
-                  >
-                    <option value="">Selecciona…</option>
-                    {pros.map((p) => (
-                      <option key={p.id} value={String(p.id)}>
-                        {p.professionalName}
-                      </option>
-                    ))}
-                  </select>
+                  <div className="showroomSelectWrap">
+                    <select
+                      className="showroomInput showroomSelect"
+                      value={designProfessionalId}
+                      onChange={(e) => setDesignProfessionalId(e.target.value)}
+                    >
+                      <option value="">Selecciona…</option>
+                      {pros.map((p) => (
+                        <option key={p.id} value={String(p.id)}>
+                          {p.professionalName}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
 
                 <div className="field">
@@ -597,20 +609,31 @@ export default function ShowroomPage() {
                   />
                 </div>
 
-                <div className="field">
+                <div className="field field--full">
                   <div className="fieldTitle">Imagen</div>
-                  <input
-                    className="showroomInput"
-                    type="file"
-                    accept="image/*"
-                    disabled={designSaving || uploadingDesignImage}
-                    onChange={async (e) => {
-                      const f = e.target.files?.[0];
-                      if (!f) return;
-                      await onPickDesignImage(f);
-                      e.currentTarget.value = "";
-                    }}
-                  />
+
+                  <label className="fileUploadBox">
+                    <input
+                      className="fileUploadInput"
+                      type="file"
+                      accept="image/*"
+                      disabled={designSaving || uploadingDesignImage}
+                      onChange={async (e) => {
+                        const f = e.target.files?.[0];
+                        if (!f) return;
+                        await onPickDesignImage(f);
+                        e.currentTarget.value = "";
+                      }}
+                    />
+
+                    <span className="fileUploadButton">
+                      {uploadingDesignImage ? "Subiendo..." : "Seleccionar imagen"}
+                    </span>
+
+                    <span className="fileUploadName">
+                      {designImageName || "Ningún archivo seleccionado"}
+                    </span>
+                  </label>
                 </div>
 
                 <button
@@ -637,11 +660,10 @@ export default function ShowroomPage() {
 
               {designImageUrl.trim() && (
                 <div className="previewWrap">
-                  <div className="previewUrl">{designImageUrl}</div>
                   <img
                     src={withBase(designImageUrl)}
                     alt="Preview diseño"
-                    className="previewImg"
+                    className="previewImg previewImg--design"
                   />
                 </div>
               )}
@@ -658,7 +680,7 @@ export default function ShowroomPage() {
                   className="galleryCard showroomRevealItem"
                   style={{ ["--d" as any]: `${i * 60}ms` }}
                 >
-                  <div className="galleryMedia">
+                  <div className="galleryMedia galleryMedia--design">
                     <img
                       src={withBase(d.imageUrl)}
                       alt={d.title ?? "Diseño disponible"}
@@ -709,7 +731,7 @@ export default function ShowroomPage() {
                     className="galleryCard galleryCard--inactive showroomRevealItem"
                     style={{ ["--d" as any]: `${i * 60}ms` }}
                   >
-                    <div className="galleryMedia">
+                    <div className="galleryMedia galleryMedia--design">
                       <img
                         src={withBase(d.imageUrl)}
                         alt={d.title ?? "Diseño"}

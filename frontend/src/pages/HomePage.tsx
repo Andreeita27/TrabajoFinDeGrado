@@ -315,10 +315,10 @@ function HomeStylesMosaic() {
       filterValue: "Realismo",
     },
     {
-      title: "Neotribal",
+      title: "NeoGothic",
       subtitle: "Líneas orgánicas y composición moderna",
       image: "/home/neotribal.jpg",
-      filterValue: "Neotribal",
+      filterValue: "NeoGothic",
     },
   ];
 

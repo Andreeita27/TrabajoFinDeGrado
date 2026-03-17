@@ -4,7 +4,7 @@ import { ApiError } from "../api/apiFetch";
 import {
   getAppointment,
   uploadAppointmentReferenceImage,
-  fetchAppointmentReferenceImageBlob,
+  fetchAppointmentReferenceImageUrl,
 } from "../api/appointmentsApi";
 import { useAuth } from "../auth/AuthContext";
 import type { AppointmentDto } from "../types/appointment";
@@ -133,7 +133,6 @@ export default function AppointmentDetailPage() {
   }, [token, appointmentId]);
 
   useEffect(() => {
-    if (refUrl) URL.revokeObjectURL(refUrl);
     setRefUrl("");
     setRefError("");
 
@@ -143,21 +142,15 @@ export default function AppointmentDetailPage() {
     let alive = true;
     setRefLoading(true);
 
-    fetchAppointmentReferenceImageBlob(token, appointmentId)
-      .then((blob) => {
+    fetchAppointmentReferenceImageUrl(token, appointmentId)
+      .then((data) => {
         if (!alive) return;
-        if (!blob || blob.size === 0) return;
-        const url = URL.createObjectURL(blob);
-        setRefUrl(url);
+        if (!data?.referenceImageUrl) return;
+        setRefUrl(data.referenceImageUrl);
       })
-      .catch((e: unknown) => {
+      .catch((e: any) => {
         if (!alive) return;
-
-        if (e instanceof Error) {
-          setRefError(e.message);
-        } else {
-          setRefError("No se pudo cargar la imagen de referencia");
-        }
+        setRefError(e?.message || "No se pudo cargar la imagen de referencia");
       })
       .finally(() => {
         if (alive) setRefLoading(false);
@@ -166,7 +159,7 @@ export default function AppointmentDetailPage() {
     return () => {
       alive = false;
     };
-    }, [token, appointmentId, item?.referenceImageUrl]);
+  }, [token, appointmentId, item?.referenceImageUrl]);
 
   const onUploadReference = async (e: FormEvent) => {
     e.preventDefault();
@@ -182,18 +175,11 @@ export default function AppointmentDetailPage() {
 
     try {
       setUploading(true);
-      await uploadAppointmentReferenceImage(token, appointmentId, file);
+        const uploaded = await uploadAppointmentReferenceImage(token, appointmentId, file);
 
-      await load();
+        await load();
 
-      if (refUrl) URL.revokeObjectURL(refUrl);
-      setRefUrl("");
-
-      setRefLoading(true);
-      const blob = await fetchAppointmentReferenceImageBlob(token, appointmentId);
-      if (blob && blob.size > 0) {
-        setRefUrl(URL.createObjectURL(blob));
-      }
+        setRefUrl(uploaded.referenceImageUrl || "");
     } catch (e: unknown) {
       if (e instanceof ApiError && (e.status === 401 || e.status === 403)) {
         nav("/login", { replace: true, state: { from: loc.pathname } });

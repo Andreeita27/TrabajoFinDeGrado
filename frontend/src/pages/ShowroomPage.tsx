@@ -15,7 +15,7 @@ import {
   deleteDesign,
 } from "../api/designsApi";
 import type { DesignDto } from "../types/design";
-import { uploadPublicImage } from "../api/filesApi";
+import { uploadPublicImage } from "../api/publicFilesApi";
 import { withBase } from "../utils/url";
 
 import "../styles/showroom.css";

@@ -3,7 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { ApiError } from "../api/apiFetch";
 import { getAppointment } from "../api/appointmentsApi";
 import { createTattoo } from "../api/tattoosApi";
-import { uploadPublicImage } from "../api/filesApi";
+import { uploadPublicImage } from "../api/publicFilesApi";
 import { useAuth } from "../auth/AuthContext";
 import type { TattooInDto } from "../types/tattoo";
 import type { AppointmentDto } from "../types/appointment";

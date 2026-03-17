@@ -3,7 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { ApiError } from "../api/apiFetch";
 import { getTattoos } from "../api/showroomApi";
 import { deleteProfessional, getProfessional, updateProfessional } from "../api/professionalsApi";
-import { uploadPublicImage } from "../api/filesApi";
+import { uploadPublicImage } from "../api/publicFilesApi";
 import { useAuth } from "../auth/AuthContext";
 import type { ProfessionalDto } from "../types/professional";
 import type { TattooDto } from "../types/tattoo";
@@ -134,6 +134,8 @@ export default function ProfessionalDetailPage() {
     };
   }, [localProfilePreview]);
 
+  const profilePreviewUrl = localProfilePreview || withBase(form.profilePhoto);
+
   const onStartEdit = () => {
     if (!isAdmin) return;
     setError("");
@@ -210,6 +212,10 @@ export default function ProfessionalDetailPage() {
       setSaving(true);
       const payload: ProfessionalDto = { id: professionalId, ...form };
       await updateProfessional(token, professionalId, payload);
+      if (localProfilePreview) {
+        URL.revokeObjectURL(localProfilePreview);
+      }
+      setLocalProfilePreview("");
       setOk("Profesional actualizado");
       setEditing(false);
       await loadPro();
@@ -372,7 +378,7 @@ export default function ProfessionalDetailPage() {
                 <label className="professional-edit-form__field professional-edit-form__field--full">
                   <span>Foto de perfil</span>
 
-                  <label className="file-upload">
+                  <div className="file-upload">
                     <input
                       type="file"
                       accept="image/*"
@@ -388,18 +394,16 @@ export default function ProfessionalDetailPage() {
                     <span className="file-upload__button">
                       {uploadingPhoto ? "Subiendo..." : "Seleccionar imagen"}
                     </span>
-                  </label>
+                  </div>
                 </label>
 
-                {(localProfilePreview || form.profilePhoto.trim()) && (
+                {profilePreviewUrl && (
                   <div className="professional-edit-form__previewWrap">
                     <img
-                      src={localProfilePreview || withBase(form.profilePhoto)}
+                      key={profilePreviewUrl}
+                      src={profilePreviewUrl}
                       alt="Vista previa"
                       className="professional-edit-form__preview"
-                      onError={(e) => {
-                        (e.currentTarget as HTMLImageElement).style.display = "none";
-                      }}
                     />
                   </div>
                 )}

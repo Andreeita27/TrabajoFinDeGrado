@@ -91,6 +91,7 @@ export default function AppointmentDetailPage() {
   const [loading, setLoading] = useState(false);
 
   const [refUrl, setRefUrl] = useState<string>("");
+  const [localRefPreview, setLocalRefPreview] = useState<string>("");
   const [refLoading, setRefLoading] = useState(false);
   const [refError, setRefError] = useState("");
   const [uploading, setUploading] = useState(false);
@@ -161,6 +162,14 @@ export default function AppointmentDetailPage() {
     };
   }, [token, appointmentId, item?.referenceImageUrl]);
 
+  useEffect(() => {
+    return () => {
+      if (localRefPreview) {
+        URL.revokeObjectURL(localRefPreview);
+      }
+    };
+  }, [localRefPreview]);
+
   const onUploadReference = async (e: FormEvent) => {
     e.preventDefault();
     if (!token || !appointmentId) return;
@@ -175,11 +184,16 @@ export default function AppointmentDetailPage() {
 
     try {
       setUploading(true);
-        const uploaded = await uploadAppointmentReferenceImage(token, appointmentId, file);
+      const uploaded = await uploadAppointmentReferenceImage(token, appointmentId, file);
 
-        await load();
+      await load();
 
-        setRefUrl(uploaded.referenceImageUrl || "");
+      if (localRefPreview) {
+        URL.revokeObjectURL(localRefPreview);
+      }
+      setLocalRefPreview("");
+
+      setRefUrl(uploaded.referenceImageUrl || "");
     } catch (e: unknown) {
       if (e instanceof ApiError && (e.status === 401 || e.status === 403)) {
         nav("/login", { replace: true, state: { from: loc.pathname } });
@@ -341,9 +355,9 @@ export default function AppointmentDetailPage() {
                   <div className="apdEmptyMedia">
                     <div className="apdEmptyBox">Cargando imagen de referencia…</div>
                   </div>
-                ) : refUrl ? (
+                ) : (localRefPreview || refUrl) ? (
                   <>
-                    <img src={refUrl} alt="Imagen de referencia de la cita" />
+                    <img src={localRefPreview || refUrl} alt="Imagen de referencia de la cita" />
                     <div className="apdHeroShade" />
                     <div className="apdHeroBadge">Imagen de referencia</div>
                   </>
@@ -407,6 +421,18 @@ export default function AppointmentDetailPage() {
                       accept="image/*"
                       disabled={uploading || !token}
                       className="apdFileInput"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+
+                        if (localRefPreview) {
+                          URL.revokeObjectURL(localRefPreview);
+                        }
+
+                        const preview = URL.createObjectURL(file);
+                        setLocalRefPreview(preview);
+                        setRefError("");
+                      }}
                     />
 
                     <span className="file-upload__button">

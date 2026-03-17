@@ -32,6 +32,7 @@ export default function ProfessionalDetailPage() {
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [localProfilePreview, setLocalProfilePreview] = useState("");
 
   const [form, setForm] = useState<FormState>({
     professionalName: "",
@@ -125,6 +126,14 @@ export default function ProfessionalDetailPage() {
     loadLatest();
   }, [professionalId]);
 
+  useEffect(() => {
+    return () => {
+      if (localProfilePreview) {
+        URL.revokeObjectURL(localProfilePreview);
+      }
+    };
+  }, [localProfilePreview]);
+
   const onStartEdit = () => {
     if (!isAdmin) return;
     setError("");
@@ -138,6 +147,10 @@ export default function ProfessionalDetailPage() {
     setError("");
     setOk("");
     setEditing(false);
+    if (localProfilePreview) {
+      URL.revokeObjectURL(localProfilePreview);
+    }
+    setLocalProfilePreview("");
     setForm({
       professionalName: pro.professionalName ?? "",
       style: pro.style ?? "",
@@ -155,10 +168,17 @@ export default function ProfessionalDetailPage() {
     setError("");
     setOk("");
 
+    if (localProfilePreview) {
+      URL.revokeObjectURL(localProfilePreview);
+    }
+
+    const preview = URL.createObjectURL(file);
+    setLocalProfilePreview(preview);
+
     try {
       setUploadingPhoto(true);
       const url = await uploadPublicImage("professionals", file, token);
-      setForm({ ...form, profilePhoto: url });
+      setForm((prev) => ({ ...prev, profilePhoto: url }));
       setOk("Foto subida correctamente");
     } catch (e: unknown) {
       if (e instanceof ApiError) {
@@ -371,10 +391,10 @@ export default function ProfessionalDetailPage() {
                   </label>
                 </label>
 
-                {form.profilePhoto.trim() && (
+                {(localProfilePreview || form.profilePhoto.trim()) && (
                   <div className="professional-edit-form__previewWrap">
                     <img
-                      src={withBase(form.profilePhoto)}
+                      src={localProfilePreview || withBase(form.profilePhoto)}
                       alt="Vista previa"
                       className="professional-edit-form__preview"
                       onError={(e) => {

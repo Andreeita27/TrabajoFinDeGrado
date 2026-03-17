@@ -70,6 +70,7 @@ export default function AdminTattooCreatePage() {
   const [tattooDescription, setTattooDescription] = useState("");
   const [tattooDate, setTattooDate] = useState("");
   const [imageUrl, setImageUrl] = useState("");
+  const [localPreview, setLocalPreview] = useState("");
 
   const [sessions, setSessions] = useState<number>(1);
   const [coverUp, setCoverUp] = useState(false);
@@ -111,6 +112,13 @@ export default function AdminTattooCreatePage() {
     setError("");
     setOk("");
 
+    if (localPreview) {
+      URL.revokeObjectURL(localPreview);
+    }
+
+    const preview = URL.createObjectURL(file);
+    setLocalPreview(preview);
+
     try {
       setUploadingImage(true);
       const url = await uploadPublicImage("tattoos", file, token);
@@ -128,6 +136,14 @@ export default function AdminTattooCreatePage() {
       setUploadingImage(false);
     }
   };
+
+  useEffect(() => {
+    return () => {
+      if (localPreview) {
+        URL.revokeObjectURL(localPreview);
+      }
+    };
+  }, [localPreview]);
 
   const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -232,7 +248,7 @@ export default function AdminTattooCreatePage() {
     );
   }
 
-  const previewUrl = withBase(imageUrl);
+  const previewUrl = localPreview || withBase(imageUrl);
   const clientName =
     (appointment as any)?.clientFullName ??
     `${(appointment as any)?.clientName ?? ""} ${(appointment as any)?.clientSurname ?? ""}`.trim();
@@ -454,7 +470,7 @@ export default function AdminTattooCreatePage() {
               Comprueba la imagen antes de guardar el tattoo definitivo.
             </p>
 
-            {imageUrl ? (
+            {previewUrl ? (
               <div className="admin-tattoo-create-preview-wrap">
                 <div className="admin-tattoo-create-preview-url">{imageUrl}</div>
 

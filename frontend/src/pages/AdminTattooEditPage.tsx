@@ -33,6 +33,7 @@ export default function AdminTattooEditPage() {
   const [tattooDescription, setTattooDescription] = useState("");
   const [tattooDate, setTattooDate] = useState("");
   const [imageUrl, setImageUrl] = useState("");
+  const [localPreview, setLocalPreview] = useState("");
 
   const [sessions, setSessions] = useState<number>(1);
   const [coverUp, setCoverUp] = useState(false);
@@ -87,11 +88,26 @@ export default function AdminTattooEditPage() {
     load();
   }, [token, role, tattooId]);
 
+  useEffect(() => {
+    return () => {
+      if (localPreview) {
+        URL.revokeObjectURL(localPreview);
+      }
+    };
+  }, [localPreview]);
+
   const onPickImage = async (file: File) => {
     if (!token) return;
 
     setError("");
     setOk("");
+
+    if (localPreview) {
+      URL.revokeObjectURL(localPreview);
+    }
+
+    const preview = URL.createObjectURL(file);
+    setLocalPreview(preview);
 
     try {
       setUploadingImage(true);
@@ -180,7 +196,7 @@ export default function AdminTattooEditPage() {
     );
   }
 
-  const previewUrl = withBase(imageUrl);
+  const previewUrl = localPreview || withBase(imageUrl);
 
   return (
     <div className="admin-tattoo-edit-page">
@@ -376,7 +392,7 @@ export default function AdminTattooEditPage() {
               Comprueba la imagen que se mostrará al público antes de guardar.
             </p>
 
-            {imageUrl ? (
+            {previewUrl ? (
               <div className="admin-tattoo-edit-preview-wrap">
                 <div className="admin-tattoo-edit-preview-url">{imageUrl}</div>
 

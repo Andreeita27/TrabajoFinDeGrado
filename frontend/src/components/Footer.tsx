@@ -51,7 +51,7 @@ export default function Footer() {
                     />
                   </svg>
                 </span>
-                <span>Martes – Viernes · 12:00–20:00</span>
+                <span>Lunes – Viernes · 12:00–20:00</span>
               </div>
 
               <div className="footer__infoItem">

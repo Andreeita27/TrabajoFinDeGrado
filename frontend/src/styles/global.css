@@ -120,6 +120,11 @@ button:focus-visible,
   border-radius: 10px;
 }
 
+::selection {
+  background-color: #b5a16c;
+  color: #000000; /* texto negro para contraste */
+}
+
 /* Respeta “reduce motion” */
 @media (prefers-reduced-motion: reduce){
   *, *::before, *::after{

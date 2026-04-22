@@ -146,7 +146,7 @@ function HomeResidentProfessionals() {
   const instagramByName = useMemo(() => {
     return {
       "david el titi": "https://instagram.com/davideltiti",
-      "acerete tattoo": "https://instagram.com/acerete.tattoo",
+      "acerete": "https://instagram.com/acerete.tattoo",
     } as Record<string, string>;
   }, []);
 
@@ -623,7 +623,7 @@ export default function HomePage() {
             </p>
 
             <p>
-              Nuestro horario de atención es <strong>de martes a viernes, de 12:00 a 20:00h</strong>.
+              Nuestro horario de atención es <strong>de lunes a viernes, de 12:00 a 20:00h</strong>.
             </p>
           </>
         }

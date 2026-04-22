@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { ApiError } from "../api/apiFetch";
 import { getTattoo, updateTattoo } from "../api/tattoosApi";
-import { uploadPublicImage } from "../api/filesApi";
+import { uploadPublicImage } from "../api/publicFilesApi";
 import { useAuth } from "../auth/AuthContext";
 import type { TattooInDto, TattooDto } from "../types/tattoo";
 import "../styles/adminTattooEdit.css";
@@ -33,6 +33,7 @@ export default function AdminTattooEditPage() {
   const [tattooDescription, setTattooDescription] = useState("");
   const [tattooDate, setTattooDate] = useState("");
   const [imageUrl, setImageUrl] = useState("");
+  const [localPreview, setLocalPreview] = useState("");
 
   const [sessions, setSessions] = useState<number>(1);
   const [coverUp, setCoverUp] = useState(false);
@@ -60,8 +61,14 @@ export default function AdminTattooEditPage() {
       setSessions(typeof t.sessions === "number" && t.sessions > 0 ? t.sessions : 1);
       setCoverUp(!!t.coverUp);
       setColor(!!t.color);
-    } catch (e: any) {
-      setError(e instanceof ApiError ? e.message : e?.message || "Error cargando tattoo");
+    } catch (e: unknown) {
+      if (e instanceof ApiError) {
+        setError(e.message);
+      } else if (e instanceof Error) {
+        setError(e.message);
+      } else {
+        setError("Error cargando tattoo");
+      }
     }
   };
 
@@ -81,19 +88,40 @@ export default function AdminTattooEditPage() {
     load();
   }, [token, role, tattooId]);
 
+  useEffect(() => {
+    return () => {
+      if (localPreview) {
+        URL.revokeObjectURL(localPreview);
+      }
+    };
+  }, [localPreview]);
+
   const onPickImage = async (file: File) => {
     if (!token) return;
 
     setError("");
     setOk("");
 
+    if (localPreview) {
+      URL.revokeObjectURL(localPreview);
+    }
+
+    const preview = URL.createObjectURL(file);
+    setLocalPreview(preview);
+
     try {
       setUploadingImage(true);
       const url = await uploadPublicImage("tattoos", file, token);
       setImageUrl(url);
       setOk("Imagen subida correctamente.");
-    } catch (e: any) {
-      setError(e instanceof ApiError ? e.message : e?.message || "Error subiendo imagen");
+    } catch (e: unknown) {
+      if (e instanceof ApiError) {
+        setError(e.message);
+      } else if (e instanceof Error) {
+        setError(e.message);
+      } else {
+        setError("Error subiendo imagen");
+      }
     } finally {
       setUploadingImage(false);
     }
@@ -132,17 +160,21 @@ export default function AdminTattooEditPage() {
       setOk("Cambios guardados correctamente.");
 
       setTimeout(() => nav(backTo, { replace: true }), 300);
-    } catch (e: any) {
+    } catch (e: unknown) {
       if (e instanceof ApiError) {
-        const body: any = e.body;
+        const body = e.body as { errors?: Record<string, string> } | undefined;
+
         const validationMsg = body?.errors
           ? Object.entries(body.errors)
               .map(([k, v]) => `${k}: ${v}`)
               .join(" | ")
           : "";
+
         setError(validationMsg || e.message || "Error actualizando tattoo");
+      } else if (e instanceof Error) {
+        setError(e.message);
       } else {
-        setError(e?.message || "Error actualizando tattoo");
+        setError("Error actualizando tattoo");
       }
     } finally {
       setLoading(false);
@@ -164,7 +196,7 @@ export default function AdminTattooEditPage() {
     );
   }
 
-  const previewUrl = withBase(imageUrl);
+  const previewUrl = localPreview || withBase(imageUrl);
 
   return (
     <div className="admin-tattoo-edit-page">
@@ -360,7 +392,7 @@ export default function AdminTattooEditPage() {
               Comprueba la imagen que se mostrará al público antes de guardar.
             </p>
 
-            {imageUrl ? (
+            {previewUrl ? (
               <div className="admin-tattoo-edit-preview-wrap">
                 <div className="admin-tattoo-edit-preview-url">{imageUrl}</div>
 

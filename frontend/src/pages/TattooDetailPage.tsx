@@ -5,17 +5,12 @@ import type { TattooDto } from "../types/tattoo";
 import { useAuth } from "../auth/AuthContext";
 import { deleteTattoo } from "../api/tattoosApi";
 import { ApiError } from "../api/apiFetch";
+import { withBase } from "../utils/url";
 
 import "../styles/tattooDetail.css";
 
-const BASE_URL = import.meta.env.VITE_API_BASE_URL as string;
 const SHOWROOM_RETURN_FLAG_KEY = "showroom:restoreOnBack";
 
-function withBase(url?: string | null) {
-  if (!url) return "";
-  if (/^https?:\/\//i.test(url)) return url;
-  return `${BASE_URL}${url}`;
-}
 
 function fmtDate(d?: string | null) {
   if (!d) return "—";
@@ -86,12 +81,17 @@ export default function TattooDetailPage() {
       await deleteTattoo(token, tattooId);
       sessionStorage.setItem(SHOWROOM_RETURN_FLAG_KEY, "true");
       nav(returnTo, { replace: true });
-    } catch (err: any) {
+    } catch (err: unknown) {
       if (err instanceof ApiError && (err.status === 401 || err.status === 403)) {
         nav("/login", { replace: true });
         return;
       }
-      setError(err?.message || "Error eliminando tattoo");
+
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError("Error eliminando tattoo");
+      }
     }
   };
 
@@ -124,7 +124,7 @@ export default function TattooDetailPage() {
         ← Volver al showroom
       </button>
 
-      <header className="tdHeader revealItem">
+      <header className="tdHeader tdRevealItem">
         <div className="tdEyebrow">Showroom</div>
 
         <div className="tdHeaderRow">
@@ -140,7 +140,7 @@ export default function TattooDetailPage() {
       </header>
 
       <div className="tdGrid">
-        <section className="tdCard tdMediaCard revealItem" style={{ ["--d" as any]: "60ms" }}>
+        <section className="tdCard tdMediaCard tdRevealItem" style={{ ["--d" as any]: "60ms" }}>
           <div className="tdMedia">
             <img src={withBase(tattoo.imageUrl)} alt={title} />
             <div className="tdShade" />
@@ -148,7 +148,7 @@ export default function TattooDetailPage() {
           </div>
         </section>
 
-        <div className="tdInfoWrapper revealItem" style={{ ["--d" as any]: "120ms" }}>
+        <div className="tdInfoWrapper tdRevealItem" style={{ ["--d" as any]: "120ms" }}>
           {isAdmin && (
             <div className="tdInfoActions">
               <button type="button" className="btn btn-ghost" onClick={onEdit}>

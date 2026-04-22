@@ -2,6 +2,7 @@ package com.svalero.RosasTattoo.controller;
 
 import com.svalero.RosasTattoo.dto.AvailabilityWindowDto;
 import com.svalero.RosasTattoo.dto.AvailabilityWindowInDto;
+import com.svalero.RosasTattoo.exception.AvailabilityWindowNotFoundException;
 import com.svalero.RosasTattoo.exception.ProfessionalNotFoundException;
 import com.svalero.RosasTattoo.service.AvailabilityWindowService;
 import jakarta.validation.Valid;
@@ -33,13 +34,13 @@ public class AvailabilityWindowController {
 
     @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/availability-windows/{windowId}/toggle")
-    public AvailabilityWindowDto toggle(@PathVariable long windowId) {
+    public AvailabilityWindowDto toggle(@PathVariable long windowId) throws AvailabilityWindowNotFoundException {
         return availabilityWindowService.toggle(windowId);
     }
 
     @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/availability-windows/{windowId}")
-    public void delete(@PathVariable long windowId) {
+    public void delete(@PathVariable long windowId) throws AvailabilityWindowNotFoundException {
         availabilityWindowService.delete(windowId);
     }
 }

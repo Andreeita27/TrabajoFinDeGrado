@@ -136,13 +136,18 @@ export default function AdminAppointmentsPage() {
       });
 
       setItems(data);
-    } catch (e: any) {
-      if (e instanceof ApiError && (e.status === 401 || e.status === 403)) {
-        nav("/login", { replace: true });
-        return;
+      } catch (e: unknown) {
+        if (e instanceof ApiError && (e.status === 401 || e.status === 403)) {
+          nav("/login", { replace: true });
+          return;
+        }
+
+        if (e instanceof Error) {
+          setError(e.message);
+        } else {
+          setError("Error cargando citas");
+        }
       }
-      setError(e?.message || "Error cargando citas");
-    }
   };
 
   useEffect(() => {
@@ -233,8 +238,9 @@ export default function AdminAppointmentsPage() {
     try {
       await confirmDeposit(token, id);
       await load();
-    } catch (e: any) {
-      setError(e?.message || "Error confirmando señal");
+    } catch (e) {
+      const message = e instanceof Error ? e.message : "Error confirmando señal";
+      setError(message);
     }
   };
 
@@ -245,8 +251,9 @@ export default function AdminAppointmentsPage() {
     try {
       await cancelAppointment(token, id);
       await load();
-    } catch (e: any) {
-      setError(e?.message || "Error cancelando cita");
+    } catch (e) {
+      const message = e instanceof Error ? e.message : "Error cancelando cita";
+      setError(message);
     }
   };
 
@@ -260,8 +267,9 @@ export default function AdminAppointmentsPage() {
     try {
       await markCompleted(token, id);
       await load();
-    } catch (e: any) {
-      setError(e?.message || "Error marcando como completada");
+    } catch (e) {
+      const message = e instanceof Error ? e.message : "Error marcando completada";
+      setError(message);
     }
   };
 
@@ -275,8 +283,9 @@ export default function AdminAppointmentsPage() {
     try {
       await markNoShow(token, id);
       await load();
-    } catch (e: any) {
-      setError(e?.message || "Error marcando como no asistida");
+    } catch (e) {
+      const message = e instanceof Error ? e.message : "Error marcando como no asistida";
+      setError(message);
     }
   };
 
@@ -327,9 +336,20 @@ export default function AdminAppointmentsPage() {
       stepMinutes,
     })
       .then((res) => setRescheduleSlots(res.slots))
-      .catch((e: any) => setError(e?.message || "Error cargando disponibilidad"))
+      .catch((e: unknown) => {
+        if (e instanceof ApiError && (e.status === 401 || e.status === 403)) {
+          nav("/login", { replace: true });
+          return;
+        }
+
+        if (e instanceof Error) {
+          setError(e.message);
+        } else {
+          setError("Error cargando disponibilidad");
+        }
+      })
       .finally(() => setRescheduleLoading(false));
-  }, [token, rescheduleId, rescheduleDay, items]);
+    }, [token, rescheduleId, rescheduleDay, items]);
 
   const onSaveReschedule = async () => {
     if (!token) return;
@@ -346,8 +366,9 @@ export default function AdminAppointmentsPage() {
       await rescheduleAppointment(token, rescheduleId, withSeconds(rescheduleStart));
       closeReschedule();
       await load();
-    } catch (e: any) {
-      setError(e?.message || "Error reprogramando cita");
+    } catch (e) {
+      const message = e instanceof Error ? e.message : "Error reprogramando cita";
+      setError(message);
     } finally {
       setRescheduleSaving(false);
     }

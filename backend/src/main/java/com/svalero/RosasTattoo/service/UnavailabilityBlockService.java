@@ -5,6 +5,7 @@ import com.svalero.RosasTattoo.domain.UnavailabilityBlock;
 import com.svalero.RosasTattoo.dto.UnavailabilityBlockDto;
 import com.svalero.RosasTattoo.dto.UnavailabilityBlockInDto;
 import com.svalero.RosasTattoo.exception.ProfessionalNotFoundException;
+import com.svalero.RosasTattoo.exception.UnavailabilityBlockNotFoundException;
 import com.svalero.RosasTattoo.repository.ProfessionalRepository;
 import com.svalero.RosasTattoo.repository.UnavailabilityBlockRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,7 +31,7 @@ public class UnavailabilityBlockService {
 
     public UnavailabilityBlockDto create(long professionalId, UnavailabilityBlockInDto inDto) throws ProfessionalNotFoundException {
         if (inDto.getEndDateTime().isBefore(inDto.getStartDateTime()) || inDto.getEndDateTime().isEqual(inDto.getStartDateTime())) {
-            throw new IllegalArgumentException("endDateTime must be after startDateTime");
+            throw new IllegalArgumentException("La fecha/hora final debe ser más tarde que la de inicio.");
         }
 
         Professional professional = professionalRepository.findById(professionalId)
@@ -46,17 +47,17 @@ public class UnavailabilityBlockService {
         return toDto(unavailabilityBlockRepository.save(b));
     }
 
-    public UnavailabilityBlockDto toggle(long blockId) {
+    public UnavailabilityBlockDto toggle(long blockId) throws UnavailabilityBlockNotFoundException {
         UnavailabilityBlock b = unavailabilityBlockRepository.findById(blockId)
-                .orElseThrow(() -> new IllegalArgumentException("UnavailabilityBlock not found"));
+                .orElseThrow(() -> new UnavailabilityBlockNotFoundException("Unavailability block not found"));
 
         b.setEnabled(!b.isEnabled());
         return toDto(unavailabilityBlockRepository.save(b));
     }
 
-    public void delete(long blockId) {
+    public void delete(long blockId) throws UnavailabilityBlockNotFoundException{
         UnavailabilityBlock b = unavailabilityBlockRepository.findById(blockId)
-                .orElseThrow(() -> new IllegalArgumentException("UnavailabilityBlock not found"));
+                .orElseThrow(() -> new UnavailabilityBlockNotFoundException("Unavailability block not found"));
         unavailabilityBlockRepository.delete(b);
     }
 

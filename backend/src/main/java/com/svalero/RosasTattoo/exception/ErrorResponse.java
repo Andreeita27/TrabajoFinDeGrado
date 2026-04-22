@@ -24,11 +24,27 @@ public class ErrorResponse {
         return new ErrorResponse(404, "not-found", message, new HashMap<>());
     }
 
+    public static ErrorResponse badRequest(String message) {
+        return new ErrorResponse(400, "bad-request", message, new HashMap<>());
+    }
+
     public static ErrorResponse validationError(Map<String, String> errors) {
         return new ErrorResponse(400, "bad-request", "Validation error", errors);
     }
 
     public static ErrorResponse conflict(String message) {
         return new ErrorResponse(409, "conflict", message, new HashMap<>());
+    }
+
+    public static ErrorResponse forbidden(String message) {
+        return new ErrorResponse(403, "forbidden", message, new HashMap<>());
+    }
+
+    public static ErrorResponse unauthorized(String message) {
+        return new ErrorResponse(401, "unauthorized", message, new HashMap<>());
+    }
+
+    public static ErrorResponse internalServerError(String message) {
+        return new ErrorResponse(500, "internal-server-error", message, new HashMap<>());
     }
 }

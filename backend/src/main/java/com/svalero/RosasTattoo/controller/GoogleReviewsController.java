@@ -1,9 +1,7 @@
 package com.svalero.RosasTattoo.controller;
 
 import com.svalero.RosasTattoo.dto.GoogleReviewsResponseDto;
-import com.svalero.RosasTattoo.exception.ErrorResponse;
 import com.svalero.RosasTattoo.service.GoogleReviewsService;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,15 +17,5 @@ public class GoogleReviewsController {
     @GetMapping("/google-reviews")
     public ResponseEntity<GoogleReviewsResponseDto> getGoogleReviews() {
         return ResponseEntity.ok(googleReviewsService.getGoogleReviews());
-    }
-
-    @ExceptionHandler(IllegalStateException.class)
-    public ResponseEntity<ErrorResponse> handleIllegalStateException(IllegalStateException e) {
-        ErrorResponse error = ErrorResponse.generalError(
-                500,
-                "google_reviews_error",
-                e.getMessage()
-        );
-        return new ResponseEntity<>(error, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 }

@@ -3,19 +3,13 @@ package com.svalero.RosasTattoo.controller;
 import com.svalero.RosasTattoo.dto.ClientInDto;
 import com.svalero.RosasTattoo.dto.ClientDto;
 import com.svalero.RosasTattoo.exception.ClientNotFoundException;
-import com.svalero.RosasTattoo.exception.ErrorResponse;
 import com.svalero.RosasTattoo.service.ClientService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.validation.FieldError;
-import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 @RestController
 public class ClientController {
@@ -55,24 +49,5 @@ public class ClientController {
     public ResponseEntity<Void> deleteClient(@PathVariable long id) throws ClientNotFoundException {
         clientService.delete(id);
         return ResponseEntity.noContent().build();
-    }
-
-    @ExceptionHandler(ClientNotFoundException.class)
-    public ResponseEntity<ErrorResponse> handleException(ClientNotFoundException cnfe) {
-        ErrorResponse errorResponse = ErrorResponse.notFound(cnfe.getMessage());
-        return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
-    }
-
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ErrorResponse> handleException(MethodArgumentNotValidException manve) {
-        Map<String, String> errors = new HashMap<>();
-        manve.getBindingResult().getAllErrors().forEach(error -> {
-            String fieldName = ((FieldError) error).getField();
-            String message = error.getDefaultMessage();
-            errors.put(fieldName, message);
-        });
-
-        ErrorResponse errorResponse = ErrorResponse.validationError(errors);
-        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
     }
 }

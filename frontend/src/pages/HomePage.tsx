@@ -2,21 +2,14 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
 import HomeCarousel from "../components/HomeCarousel";
-import "../styles/homeOnePage.css";
+import "../styles/homePage.css";
 import HomeMap from "../components/HomeMap";
 import GoogleReviewsSection from "../components/GoogleReviewsSection";
 import BookingPreviewCard from "../components/BookingPreviewCard";
 
 import { getProfessionals } from "../api/showroomApi";
 import type { ProfessionalDto } from "../types/professional";
-
-const BASE_URL = import.meta.env.VITE_API_BASE_URL as string;
-
-function withBase(url?: string | null) {
-  if (!url) return "";
-  if (/^https?:\/\//i.test(url)) return url;
-  return `${BASE_URL}${url}`;
-}
+import { withBase } from "../utils/url";
 
 const LASER_URL = "https://eliminartatuajeszaragoza.com/";
 const MAP_EMBED = "https://www.google.com/maps?q=62%20Rosas%20Tattoo%20Zaragoza&output=embed";
@@ -153,7 +146,7 @@ function HomeResidentProfessionals() {
   const instagramByName = useMemo(() => {
     return {
       "david el titi": "https://instagram.com/davideltiti",
-      "acerete tattoo": "https://instagram.com/acerete.tattoo",
+      "acerete": "https://instagram.com/acerete.tattoo",
     } as Record<string, string>;
   }, []);
 
@@ -322,10 +315,10 @@ function HomeStylesMosaic() {
       filterValue: "Realismo",
     },
     {
-      title: "Neotribal",
+      title: "NeoGothic",
       subtitle: "Líneas orgánicas y composición moderna",
       image: "/home/neotribal.jpg",
-      filterValue: "Neotribal",
+      filterValue: "NeoGothic",
     },
   ];
 
@@ -630,7 +623,7 @@ export default function HomePage() {
             </p>
 
             <p>
-              Nuestro horario de atención es <strong>de martes a viernes, de 12:00 a 20:00h</strong>.
+              Nuestro horario de atención es <strong>de lunes a viernes, de 12:00 a 20:00h</strong>.
             </p>
           </>
         }

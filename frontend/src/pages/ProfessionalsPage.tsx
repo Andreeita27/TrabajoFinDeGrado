@@ -3,14 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { getProfessionals } from "../api/showroomApi";
 import type { ProfessionalDto } from "../types/professional";
 import "../styles/professionals.css";
-
-const BASE_URL = import.meta.env.VITE_API_BASE_URL as string;
-
-function withBase(url?: string | null) {
-  if (!url) return "";
-  if (/^https?:\/\//i.test(url)) return url;
-  return `${BASE_URL}${url}`;
-}
+import { withBase } from "../utils/url";
 
 export default function ProfessionalsPage() {
   const nav = useNavigate();
@@ -25,8 +18,9 @@ export default function ProfessionalsPage() {
     try {
       const data = await getProfessionals();
       setItems(data);
-    } catch (e: any) {
-      setError(e?.message || "Error cargando profesionales");
+    } catch (e) {
+      const message = e instanceof Error ? e.message : "Error cargando profesionales";
+      setError(message);
     } finally {
       setLoading(false);
     }

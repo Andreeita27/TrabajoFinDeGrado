@@ -7,14 +7,6 @@ export function getProfessional(id: number) {
   });
 }
 
-export function createProfessional(token: string, data: Omit<ProfessionalDto, "id">) {
-  return apiFetch<ProfessionalDto>("/professionals", {
-    method: "POST",
-    token,
-    body: JSON.stringify(data),
-  });
-}
-
 export function updateProfessional(token: string, id: number, data: ProfessionalDto) {
   return apiFetch<ProfessionalDto>(`/professionals/${id}`, {
     method: "PUT",

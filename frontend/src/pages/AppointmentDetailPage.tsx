@@ -4,7 +4,7 @@ import { ApiError } from "../api/apiFetch";
 import {
   getAppointment,
   uploadAppointmentReferenceImage,
-  fetchAppointmentReferenceImageBlob,
+  fetchAppointmentReferenceImageUrl,
 } from "../api/appointmentsApi";
 import { useAuth } from "../auth/AuthContext";
 import type { AppointmentDto } from "../types/appointment";
@@ -91,6 +91,7 @@ export default function AppointmentDetailPage() {
   const [loading, setLoading] = useState(false);
 
   const [refUrl, setRefUrl] = useState<string>("");
+  const [localRefPreview, setLocalRefPreview] = useState<string>("");
   const [refLoading, setRefLoading] = useState(false);
   const [refError, setRefError] = useState("");
   const [uploading, setUploading] = useState(false);
@@ -112,12 +113,17 @@ export default function AppointmentDetailPage() {
     try {
       const data = await getAppointment(token, appointmentId);
       setItem(data);
-    } catch (e: any) {
+    } catch (e: unknown) {
       if (e instanceof ApiError && e.status === 401) {
         nav("/login", { replace: true, state: { from: loc.pathname } });
         return;
       }
-      setError(e?.message || "Error cargando el detalle de la cita");
+
+      if (e instanceof Error) {
+        setError(e.message);
+      } else {
+        setError("Error cargando el detalle de la cita");
+      }
     } finally {
       setLoading(false);
     }
@@ -128,7 +134,6 @@ export default function AppointmentDetailPage() {
   }, [token, appointmentId]);
 
   useEffect(() => {
-    if (refUrl) URL.revokeObjectURL(refUrl);
     setRefUrl("");
     setRefError("");
 
@@ -138,12 +143,11 @@ export default function AppointmentDetailPage() {
     let alive = true;
     setRefLoading(true);
 
-    fetchAppointmentReferenceImageBlob(token, appointmentId)
-      .then((blob) => {
+    fetchAppointmentReferenceImageUrl(token, appointmentId)
+      .then((data) => {
         if (!alive) return;
-        if (!blob || blob.size === 0) return;
-        const url = URL.createObjectURL(blob);
-        setRefUrl(url);
+        if (!data?.referenceImageUrl) return;
+        setRefUrl(data.referenceImageUrl);
       })
       .catch((e: any) => {
         if (!alive) return;
@@ -157,6 +161,14 @@ export default function AppointmentDetailPage() {
       alive = false;
     };
   }, [token, appointmentId, item?.referenceImageUrl]);
+
+  useEffect(() => {
+    return () => {
+      if (localRefPreview) {
+        URL.revokeObjectURL(localRefPreview);
+      }
+    };
+  }, [localRefPreview]);
 
   const onUploadReference = async (e: FormEvent) => {
     e.preventDefault();
@@ -172,24 +184,27 @@ export default function AppointmentDetailPage() {
 
     try {
       setUploading(true);
-      await uploadAppointmentReferenceImage(token, appointmentId, file);
+      const uploaded = await uploadAppointmentReferenceImage(token, appointmentId, file);
 
       await load();
 
-      if (refUrl) URL.revokeObjectURL(refUrl);
-      setRefUrl("");
-
-      setRefLoading(true);
-      const blob = await fetchAppointmentReferenceImageBlob(token, appointmentId);
-      if (blob && blob.size > 0) {
-        setRefUrl(URL.createObjectURL(blob));
+      if (localRefPreview) {
+        URL.revokeObjectURL(localRefPreview);
       }
-    } catch (e: any) {
+      setLocalRefPreview("");
+
+      setRefUrl(uploaded.referenceImageUrl || "");
+    } catch (e: unknown) {
       if (e instanceof ApiError && (e.status === 401 || e.status === 403)) {
         nav("/login", { replace: true, state: { from: loc.pathname } });
         return;
       }
-      setRefError(e?.message || "Error subiendo imagen de referencia");
+
+      if (e instanceof Error) {
+        setRefError(e.message);
+      } else {
+        setRefError("Error subiendo imagen de referencia");
+      }
     } finally {
       setUploading(false);
       setRefLoading(false);
@@ -340,9 +355,9 @@ export default function AppointmentDetailPage() {
                   <div className="apdEmptyMedia">
                     <div className="apdEmptyBox">Cargando imagen de referencia…</div>
                   </div>
-                ) : refUrl ? (
+                ) : (localRefPreview || refUrl) ? (
                   <>
-                    <img src={refUrl} alt="Imagen de referencia de la cita" />
+                    <img src={localRefPreview || refUrl} alt="Imagen de referencia de la cita" />
                     <div className="apdHeroShade" />
                     <div className="apdHeroBadge">Imagen de referencia</div>
                   </>
@@ -406,6 +421,18 @@ export default function AppointmentDetailPage() {
                       accept="image/*"
                       disabled={uploading || !token}
                       className="apdFileInput"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+
+                        if (localRefPreview) {
+                          URL.revokeObjectURL(localRefPreview);
+                        }
+
+                        const preview = URL.createObjectURL(file);
+                        setLocalRefPreview(preview);
+                        setRefError("");
+                      }}
                     />
 
                     <span className="file-upload__button">

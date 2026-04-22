@@ -1,43 +1,72 @@
 package com.svalero.RosasTattoo.service;
 
-import lombok.Getter;
-import org.springframework.beans.factory.annotation.Value;
+import com.cloudinary.Cloudinary;
+import com.cloudinary.utils.ObjectUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.nio.file.*;
+import java.util.Map;
 import java.util.Set;
-import java.util.UUID;
 
 @Service
 public class FileStorageService {
 
     private static final Set<String> ALLOWED = Set.of("image/jpeg", "image/png", "image/webp");
 
-    @Getter
-    @Value("${app.upload.dir}")
-    private String uploadDir;
+    private final Cloudinary cloudinary;
 
-    @Value("${app.upload.public-base:/uploads}")
-    private String publicBase;
+    public FileStorageService(Cloudinary cloudinary) {
+        this.cloudinary = cloudinary;
+    }
 
     public String storePublicImage(MultipartFile file, String folder) {
-        String filename = store(file, Paths.get(uploadDir, "public", folder));
-        // Devuelve RUTA RELATIVA (mejor para localhost e IP)
-        return publicBase + "/" + folder + "/" + filename;
+        validateImage(file);
+
+        try {
+            Map<?, ?> result = cloudinary.uploader().upload(
+                    file.getBytes(),
+                    ObjectUtils.asMap(
+                            "folder", "62rosas/" + folder,
+                            "resource_type", "image"
+                    )
+            );
+
+            Object secureUrl = result.get("secure_url");
+            if (secureUrl == null) {
+                throw new RuntimeException("Cloudinary no devolvió secure_url");
+            }
+
+            return secureUrl.toString();
+        } catch (IOException e) {
+            throw new RuntimeException("Error subiendo imagen a Cloudinary", e);
+        }
     }
 
-    public String storePrivateImage(MultipartFile file, String folder) {
-        // Para privado devuelvo solo el nombre del fichero
-        return store(file, Paths.get(uploadDir, "private", folder));
+    public String savePrivateAppointmentImage(long appointmentId, MultipartFile file) {
+        validateImage(file);
+
+        try {
+            Map<?, ?> result = cloudinary.uploader().upload(
+                    file.getBytes(),
+                    ObjectUtils.asMap(
+                            "folder", "62rosas/appointments/" + appointmentId,
+                            "resource_type", "image"
+                    )
+            );
+
+            Object secureUrl = result.get("secure_url");
+            if (secureUrl == null) {
+                throw new RuntimeException("Cloudinary no devolvió secure_url");
+            }
+
+            return secureUrl.toString();
+        } catch (IOException e) {
+            throw new RuntimeException("Error subiendo imagen de cita a Cloudinary", e);
+        }
     }
 
-    public Path resolvePrivate(String folder, String filename) {
-        return Paths.get(uploadDir, "private", folder, filename);
-    }
-
-    private String store(MultipartFile file, Path dir) {
+    private void validateImage(MultipartFile file) {
         if (file == null || file.isEmpty()) {
             throw new IllegalArgumentException("Archivo vacío");
         }
@@ -46,50 +75,5 @@ public class FileStorageService {
         if (ct == null || !ALLOWED.contains(ct)) {
             throw new IllegalArgumentException("Tipo no permitido. Usa JPG/PNG/WebP");
         }
-
-        String ext = switch (ct) {
-            case "image/jpeg" -> ".jpg";
-            case "image/png" -> ".png";
-            case "image/webp" -> ".webp";
-            default -> "";
-        };
-
-        String filename = UUID.randomUUID() + ext;
-
-        try {
-            Files.createDirectories(dir);
-            Path target = dir.resolve(filename);
-            Files.copy(file.getInputStream(), target, StandardCopyOption.REPLACE_EXISTING);
-            return filename;
-        } catch (Exception e) {
-            throw new RuntimeException("Error guardando archivo", e);
-        }
-    }
-
-    public String savePrivateAppointmentImage(long appointmentId, MultipartFile file) throws IOException {
-        if (file == null || file.isEmpty()) throw new IllegalArgumentException("File is empty");
-
-        String ct = file.getContentType();
-        if (ct == null || !ALLOWED.contains(ct)) {
-            throw new IllegalArgumentException("Invalid content type: " + ct);
-        }
-
-        String ext = switch (ct) {
-            case "image/jpeg" -> ".jpg";
-            case "image/png" -> ".png";
-            case "image/webp" -> ".webp";
-            default -> "";
-        };
-
-        Path base = Paths.get(uploadDir, "private", "appointments", String.valueOf(appointmentId));
-        Files.createDirectories(base);
-
-        String filename = UUID.randomUUID() + ext;
-        Path target = base.resolve(filename);
-
-        Files.copy(file.getInputStream(), target, StandardCopyOption.REPLACE_EXISTING);
-
-        // OJO: esto NO es una URL pública. Es una “ruta lógica” privada para el endpoint protegido.
-        return "/private/appointments/" + appointmentId + "/" + filename;
     }
 }

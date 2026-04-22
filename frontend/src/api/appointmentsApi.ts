@@ -84,10 +84,11 @@ export async function uploadAppointmentReferenceImage(token: string, appointment
     const text = await res.text().catch(() => "");
     throw new Error(text || "Error subiendo imagen");
   }
-  return (await res.json()) as { referenceImagePath: string };
+
+  return (await res.json()) as { referenceImageUrl: string };
 }
 
-export async function fetchAppointmentReferenceImageBlob(token: string, appointmentId: number) {
+export async function fetchAppointmentReferenceImageUrl(token: string, appointmentId: number) {
   const BASE_URL = import.meta.env.VITE_API_BASE_URL as string;
 
   const res = await fetch(`${BASE_URL}/appointments/${appointmentId}/reference-image`, {
@@ -95,5 +96,6 @@ export async function fetchAppointmentReferenceImageBlob(token: string, appointm
   });
 
   if (!res.ok) throw new Error("No se pudo cargar la imagen");
-  return await res.blob();
+
+  return (await res.json()) as { referenceImageUrl: string };
 }

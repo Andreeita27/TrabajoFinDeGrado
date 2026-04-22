@@ -3,7 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { ApiError } from "../api/apiFetch";
 import { getAppointment } from "../api/appointmentsApi";
 import { createTattoo } from "../api/tattoosApi";
-import { uploadPublicImage } from "../api/filesApi";
+import { uploadPublicImage } from "../api/publicFilesApi";
 import { useAuth } from "../auth/AuthContext";
 import type { TattooInDto } from "../types/tattoo";
 import type { AppointmentDto } from "../types/appointment";
@@ -70,6 +70,7 @@ export default function AdminTattooCreatePage() {
   const [tattooDescription, setTattooDescription] = useState("");
   const [tattooDate, setTattooDate] = useState("");
   const [imageUrl, setImageUrl] = useState("");
+  const [localPreview, setLocalPreview] = useState("");
 
   const [sessions, setSessions] = useState<number>(1);
   const [coverUp, setCoverUp] = useState(false);
@@ -83,14 +84,21 @@ export default function AdminTattooCreatePage() {
   const load = async () => {
     if (!token || !appointmentId) return;
     setError("");
+
     try {
       const a = await getAppointment(token, appointmentId);
       setAppointment(a);
 
-      setTattooDate(toDateOnly((a as any).startDateTime ?? (a as any).startDate ?? ""));
-      setTattooDescription((a as any).ideaDescription ?? "");
-    } catch (e: any) {
-      setError(e instanceof ApiError ? e.message : e?.message || "Error cargando la cita");
+      setTattooDate(toDateOnly(a.startDateTime));
+      setTattooDescription(a.ideaDescription ?? "");
+    } catch (e: unknown) {
+      if (e instanceof ApiError) {
+        setError(e.message);
+      } else if (e instanceof Error) {
+        setError(e.message);
+      } else {
+        setError("Error cargando la cita");
+      }
     }
   };
 
@@ -104,17 +112,38 @@ export default function AdminTattooCreatePage() {
     setError("");
     setOk("");
 
+    if (localPreview) {
+      URL.revokeObjectURL(localPreview);
+    }
+
+    const preview = URL.createObjectURL(file);
+    setLocalPreview(preview);
+
     try {
       setUploadingImage(true);
       const url = await uploadPublicImage("tattoos", file, token);
       setImageUrl(url);
       setOk("Imagen subida correctamente.");
-    } catch (e: any) {
-      setError(e instanceof ApiError ? e.message : e?.message || "Error subiendo imagen");
+    } catch (e: unknown) {
+      if (e instanceof ApiError) {
+        setError(e.message);
+      } else if (e instanceof Error) {
+        setError(e.message);
+      } else {
+        setError("Error subiendo imagen");
+      }
     } finally {
       setUploadingImage(false);
     }
   };
+
+  useEffect(() => {
+    return () => {
+      if (localPreview) {
+        URL.revokeObjectURL(localPreview);
+      }
+    };
+  }, [localPreview]);
 
   const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -183,17 +212,21 @@ export default function AdminTattooCreatePage() {
       await createTattoo(token, payload);
       setOk("Tattoo registrado correctamente.");
       setTimeout(() => nav("/showroom"), 600);
-    } catch (e: any) {
+    } catch (e: unknown) {
       if (e instanceof ApiError) {
-        const body: any = e.body;
+        const body = e.body as { errors?: Record<string, string> } | undefined;
+
         const validationMsg = body?.errors
           ? Object.entries(body.errors)
               .map(([k, v]) => `${k}: ${v}`)
               .join(" | ")
           : "";
+
         setError(validationMsg || e.message || "Error registrando tattoo");
+      } else if (e instanceof Error) {
+        setError(e.message);
       } else {
-        setError(e?.message || "Error registrando tattoo");
+        setError("Error registrando tattoo");
       }
     } finally {
       setLoading(false);
@@ -215,7 +248,7 @@ export default function AdminTattooCreatePage() {
     );
   }
 
-  const previewUrl = withBase(imageUrl);
+  const previewUrl = localPreview || withBase(imageUrl);
   const clientName =
     (appointment as any)?.clientFullName ??
     `${(appointment as any)?.clientName ?? ""} ${(appointment as any)?.clientSurname ?? ""}`.trim();
@@ -437,7 +470,7 @@ export default function AdminTattooCreatePage() {
               Comprueba la imagen antes de guardar el tattoo definitivo.
             </p>
 
-            {imageUrl ? (
+            {previewUrl ? (
               <div className="admin-tattoo-create-preview-wrap">
                 <div className="admin-tattoo-create-preview-url">{imageUrl}</div>
 

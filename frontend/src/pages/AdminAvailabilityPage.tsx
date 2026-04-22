@@ -82,8 +82,9 @@ export default function AdminAvailabilityPage() {
       if (!professionalId && list.length > 0) {
         setProfessionalId(String(list[0].id));
       }
-    } catch (e: any) {
-      setError(e?.message || "Error cargando profesionales");
+    } catch (e) {
+      const message = e instanceof Error ? e.message : "Error cargando profesionales";
+      setError(message);
     } finally {
       setProLoading(false);
     }
@@ -101,12 +102,17 @@ export default function AdminAvailabilityPage() {
 
       setWindows(win);
       setBlocks(blo);
-    } catch (e: any) {
+    } catch (e: unknown) {
       if (e instanceof ApiError && (e.status === 401 || e.status === 403)) {
         nav("/login", { replace: true });
         return;
       }
-      setError(e?.message || "Error cargando disponibilidad");
+
+      if (e instanceof Error) {
+        setError(e.message);
+      } else {
+        setError("Error cargando disponibilidad");
+      }
     }
   };
 
@@ -177,8 +183,9 @@ export default function AdminAvailabilityPage() {
       setWTo("");
       setWNote("");
       await load();
-    } catch (e: any) {
-      setError(e?.message || "Error creando la ventana de disponibilidad");
+    } catch (e) {
+      const message = e instanceof Error ? e.message : "Error creando la ventana de disponibilidad";
+      setError(message);
     } finally {
       setLoading(false);
     }
@@ -210,8 +217,9 @@ export default function AdminAvailabilityPage() {
       setBTo("");
       setBReason("");
       await load();
-    } catch (e: any) {
-      setError(e?.message || "Error creando el bloqueo");
+    } catch (e) {
+      const message = e instanceof Error ? e.message : "Error creando el bloqueo";
+      setError(message);
     } finally {
       setLoading(false);
     }
@@ -226,8 +234,9 @@ export default function AdminAvailabilityPage() {
     try {
       await toggleAvailabilityWindow(token, id);
       await load();
-    } catch (e: any) {
-      setError(e?.message || "Error cambiando el estado de la ventana");
+    } catch (e) {
+      const message = e instanceof Error ? e.message : "Error cambiando el estado de la ventana";
+      setError(message);
     }
   };
 
@@ -240,8 +249,9 @@ export default function AdminAvailabilityPage() {
     try {
       await toggleUnavailabilityBlock(token, id);
       await load();
-    } catch (e: any) {
-      setError(e?.message || "Error cambiando el estado del bloqueo");
+    } catch (e) {
+      const message = e instanceof Error ? e.message : "Error cambiando el estado de bloqueo";
+      setError(message);
     }
   };
 
@@ -256,8 +266,9 @@ export default function AdminAvailabilityPage() {
     try {
       await deleteAvailabilityWindow(token, id);
       await load();
-    } catch (e: any) {
-      setError(e?.message || "Error eliminando la ventana");
+    } catch (e) {
+      const message = e instanceof Error ? e.message : "Error eliminando la ventana";
+      setError(message);
     }
   };
 
@@ -272,8 +283,9 @@ export default function AdminAvailabilityPage() {
     try {
       await deleteUnavailabilityBlock(token, id);
       await load();
-    } catch (e: any) {
-      setError(e?.message || "Error eliminando el bloqueo");
+    } catch (e) {
+      const message = e instanceof Error ? e.message : "Error eliminando el bloqueo";
+      setError(message);
     }
   };
 

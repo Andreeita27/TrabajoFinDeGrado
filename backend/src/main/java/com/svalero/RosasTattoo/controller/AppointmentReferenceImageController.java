@@ -5,15 +5,12 @@ import com.svalero.RosasTattoo.domain.enums.Role;
 import com.svalero.RosasTattoo.repository.AppointmentRepository;
 import com.svalero.RosasTattoo.repository.UserAccountRepository;
 import com.svalero.RosasTattoo.service.FileStorageService;
-import org.springframework.core.io.Resource;
-import org.springframework.core.io.UrlResource;
-import org.springframework.http.*;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Map;
 
 @RestController
@@ -39,7 +36,6 @@ public class AppointmentReferenceImageController {
                 .orElseThrow(() -> new RuntimeException("Appointment not found"));
     }
 
-    //SUBIR
     private boolean canUpload(Authentication auth, Appointment appt) {
         if (auth == null || auth.getName() == null) return false;
 
@@ -53,7 +49,6 @@ public class AppointmentReferenceImageController {
                 && acc.getClient().getId() == appt.getClient().getId();
     }
 
-    // VER/DESCARGAR
     private boolean canRead(Authentication auth, Appointment appt) {
         if (auth == null || auth.getName() == null) return false;
 
@@ -69,13 +64,12 @@ public class AppointmentReferenceImageController {
                 && acc.getClient().getId() == appt.getClient().getId();
     }
 
-    // SUBIR
-    @PostMapping(value = "/{id}/reference-image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PostMapping(value = "/{id}/reference-image", consumes = "multipart/form-data")
     public ResponseEntity<Map<String, String>> uploadReferenceImage(
             @PathVariable long id,
             @RequestParam("file") MultipartFile file,
             Authentication auth
-    ) throws Exception {
+    ) {
         Appointment appt = mustFind(id);
 
         if (!canUpload(auth, appt)) {
@@ -83,41 +77,27 @@ public class AppointmentReferenceImageController {
                     .body(Map.of("message", "Solo el cliente puede subir la imagen de referencia"));
         }
 
-        String privatePath = storage.savePrivateAppointmentImage(id, file);
+        String imageUrl = storage.savePrivateAppointmentImage(id, file);
 
-        appt.setReferenceImageUrl(privatePath);
+        appt.setReferenceImageUrl(imageUrl);
         appointmentRepository.save(appt);
 
-        // devuelvo el path lógico para pedirlo luego
-        return ResponseEntity.ok(Map.of("referenceImagePath", privatePath));
+        return ResponseEntity.ok(Map.of("referenceImageUrl", imageUrl));
     }
 
-    // DESCARGAR/VER
     @GetMapping("/{id}/reference-image")
-    public ResponseEntity<Resource> getReferenceImage(@PathVariable long id, Authentication auth) throws Exception {
+    public ResponseEntity<Map<String, String>> getReferenceImage(@PathVariable long id, Authentication auth) {
         Appointment appt = mustFind(id);
 
         if (!canRead(auth, appt)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
 
-        String p = appt.getReferenceImageUrl();
-        if (p == null || p.isBlank()) {
+        String imageUrl = appt.getReferenceImageUrl();
+        if (imageUrl == null || imageUrl.isBlank()) {
             return ResponseEntity.notFound().build();
         }
 
-        // p = "/private/appointments/{id}/{file}"
-        // lo convierto a ruta física: uploadDir + p
-        // (sin “/” inicial para no romper Paths.get)
-        String rel = p.startsWith("/") ? p.substring(1) : p;
-        Path filePath = Paths.get(storage.getUploadDir()).resolve(rel).normalize();
-
-        Resource res = new UrlResource(filePath.toUri());
-        if (!res.exists()) return ResponseEntity.notFound().build();
-
-        return ResponseEntity.ok()
-                .header(HttpHeaders.CACHE_CONTROL, "no-store")
-                .contentType(MediaType.APPLICATION_OCTET_STREAM)
-                .body(res);
+        return ResponseEntity.ok(Map.of("referenceImageUrl", imageUrl));
     }
 }

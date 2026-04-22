@@ -212,7 +212,13 @@ export default function CalendarPage() {
         setProfessionals(p);
         if (p.length > 0) setProfessionalId(p[0].id);
       })
-      .catch((e: any) => setError(e?.message || "Error cargando profesionales"));
+      .catch((e: unknown) => {
+        if (e instanceof Error) {
+          setError(e.message);
+        } else {
+          setError("Error cargando profesionales");
+        }
+      });
   }, []);
 
   useEffect(() => {
@@ -229,14 +235,19 @@ export default function CalendarPage() {
       .then((res) => {
         setMonthSummary(res.days);
       })
-      .catch((e: any) => {
+      .catch((e: unknown) => {
         if (e instanceof ApiError && e.status === 401) {
           nav("/login", { replace: true, state: { from: "/calendar" } });
           return;
         }
-        setError(e?.message || "Error cargando calendario");
+
+        if (e instanceof Error) {
+          setError(e.message);
+        } else {
+          setError("Error cargando calendario");
+        }
       });
-  }, [token, professionalId, monthDate, durationMinutes, nav]);
+    }, [token, professionalId, monthDate, durationMinutes, nav]);
 
   useEffect(() => {
     if (!token) return;
@@ -262,14 +273,19 @@ export default function CalendarPage() {
         setSlots(res.slots);
         setAvailabilityInfo(buildAvailabilityInfo(res));
       })
-      .catch((e: any) => {
+      .catch((e: unknown) => {
         if (e instanceof ApiError && e.status === 401) {
           nav("/login", { replace: true, state: { from: "/calendar" } });
           return;
         }
-        setError(e?.message || "Error cargando disponibilidad");
+
+        if (e instanceof Error) {
+          setError(e.message);
+        } else {
+          setError("Error cargando disponibilidad");
+        }
       });
-  }, [token, professionalId, day, durationMinutes, nav]);
+    }, [token, professionalId, day, durationMinutes, nav]);
 
   const onCreateAppointment = async () => {
     if (!token) return;
@@ -320,13 +336,18 @@ export default function CalendarPage() {
       }
 
       nav(`/my-appointments/${created.id}`, { replace: true });
-    } catch (e: any) {
-      if (e instanceof ApiError && e.status === 401) {
-        nav("/login", { replace: true, state: { from: "/calendar" } });
-        return;
+      } catch (e: unknown) {
+        if (e instanceof ApiError && e.status === 401) {
+          nav("/login", { replace: true, state: { from: "/calendar" } });
+          return;
+        }
+
+        if (e instanceof Error) {
+          setError(e.message);
+        } else {
+          setError("Error creando cita");
+        }
       }
-      setError(e?.message || "Error creando cita");
-    }
   };
 
   const disableCreate = !selectedStart || (role === "ADMIN" && !selectedClient);

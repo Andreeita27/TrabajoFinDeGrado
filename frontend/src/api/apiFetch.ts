@@ -43,11 +43,13 @@ export async function apiFetch<T>(path: string, options: ApiFetchOptions = {}): 
     : await res.text().catch(() => null);
 
   if (!res.ok) {
+    const errorData = data as { message?: string; error?: string } | null;
+
     const message =
       typeof data === "string"
         ? data
-        : (data as any)?.message ||
-          (data as any)?.error ||
+        : errorData?.message ||
+          errorData?.error ||
           res.statusText;
 
     throw new ApiError(res.status, message, data);

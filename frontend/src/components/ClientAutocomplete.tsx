@@ -23,7 +23,14 @@ type Props = {
   onChange: (client: ClientLite | null) => void;
 };
 
-function normalizeClient(c: any): ClientLite {
+type ClientInput = {
+  id: number;
+  clientName?: string;
+  clientSurname?: string;
+  email: string;
+};
+
+function normalizeClient(c: ClientInput): ClientLite {
   return {
     id: c.id,
     clientName: c.clientName ?? "",
@@ -60,9 +67,14 @@ export default function ClientAutocomplete({ token, value, onChange }: Props) {
         if (cancelled) return;
         setAllClients((res || []).map(normalizeClient));
       })
-      .catch((e: any) => {
+      .catch((e: unknown) => {
         if (cancelled) return;
-        setErrAll(e?.message || "Error cargando clientes");
+
+        if (e instanceof Error) {
+          setErrAll(e.message);
+        } else {
+          setErrAll("Error cargando clientes");
+        }
       })
       .finally(() => {
         if (cancelled) return;

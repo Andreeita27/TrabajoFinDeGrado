@@ -61,9 +61,4 @@ public class DesignController {
     public ResponseEntity<ErrorResponse> handleProfessional(ProfessionalNotFoundException ex) {
         return new ResponseEntity<>(ErrorResponse.notFound("Profesional no encontrado"), HttpStatus.NOT_FOUND);
     }
-
-    @ExceptionHandler(IllegalStateException.class)
-    public ResponseEntity<ErrorResponse> handleBad(IllegalStateException ex) {
-        return new ResponseEntity<>(ErrorResponse.generalError(400, "bad_request", ex.getMessage()), HttpStatus.BAD_REQUEST);
-    }
 }

@@ -3,21 +3,14 @@ import { useNavigate, useParams } from "react-router-dom";
 import { ApiError } from "../api/apiFetch";
 import { getTattoos } from "../api/showroomApi";
 import { deleteProfessional, getProfessional, updateProfessional } from "../api/professionalsApi";
-import { uploadPublicImage } from "../api/filesApi";
+import { uploadPublicImage } from "../api/publicFilesApi";
 import { useAuth } from "../auth/AuthContext";
 import type { ProfessionalDto } from "../types/professional";
 import type { TattooDto } from "../types/tattoo";
 import "../styles/professionalDetail.css";
+import { withBase } from "../utils/url";
 
 type FormState = Omit<ProfessionalDto, "id">;
-
-const BASE_URL = import.meta.env.VITE_API_BASE_URL as string;
-
-function withBase(url?: string | null) {
-  if (!url) return "";
-  if (/^https?:\/\//i.test(url)) return url;
-  return `${BASE_URL}${url}`;
-}
 
 export default function ProfessionalDetailPage() {
   const nav = useNavigate();
@@ -39,6 +32,7 @@ export default function ProfessionalDetailPage() {
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [localProfilePreview, setLocalProfilePreview] = useState("");
 
   const [form, setForm] = useState<FormState>({
     professionalName: "",
@@ -99,8 +93,9 @@ export default function ProfessionalDetailPage() {
         booksOpened: !!p.booksOpened,
         yearsExperience: Number.isFinite(p.yearsExperience) ? p.yearsExperience : 0,
       });
-    } catch (e: any) {
-      setError(e?.message || "Error cargando profesional");
+    } catch (e) {
+      const message = e instanceof Error ? e.message : "Error cargando profesional";
+      setError(message);
     } finally {
       setLoading(false);
     }
@@ -131,6 +126,16 @@ export default function ProfessionalDetailPage() {
     loadLatest();
   }, [professionalId]);
 
+  useEffect(() => {
+    return () => {
+      if (localProfilePreview) {
+        URL.revokeObjectURL(localProfilePreview);
+      }
+    };
+  }, [localProfilePreview]);
+
+  const profilePreviewUrl = localProfilePreview || withBase(form.profilePhoto);
+
   const onStartEdit = () => {
     if (!isAdmin) return;
     setError("");
@@ -144,6 +149,10 @@ export default function ProfessionalDetailPage() {
     setError("");
     setOk("");
     setEditing(false);
+    if (localProfilePreview) {
+      URL.revokeObjectURL(localProfilePreview);
+    }
+    setLocalProfilePreview("");
     setForm({
       professionalName: pro.professionalName ?? "",
       style: pro.style ?? "",
@@ -161,13 +170,26 @@ export default function ProfessionalDetailPage() {
     setError("");
     setOk("");
 
+    if (localProfilePreview) {
+      URL.revokeObjectURL(localProfilePreview);
+    }
+
+    const preview = URL.createObjectURL(file);
+    setLocalProfilePreview(preview);
+
     try {
       setUploadingPhoto(true);
       const url = await uploadPublicImage("professionals", file, token);
-      setForm({ ...form, profilePhoto: url });
+      setForm((prev) => ({ ...prev, profilePhoto: url }));
       setOk("Foto subida correctamente");
-    } catch (e: any) {
-      setError(e instanceof ApiError ? e.message : e?.message || "Error subiendo foto");
+    } catch (e: unknown) {
+      if (e instanceof ApiError) {
+        setError(e.message);
+      } else if (e instanceof Error) {
+        setError(e.message);
+      } else {
+        setError("Error subiendo foto");
+      }
     } finally {
       setUploadingPhoto(false);
     }
@@ -190,15 +212,24 @@ export default function ProfessionalDetailPage() {
       setSaving(true);
       const payload: ProfessionalDto = { id: professionalId, ...form };
       await updateProfessional(token, professionalId, payload);
+      if (localProfilePreview) {
+        URL.revokeObjectURL(localProfilePreview);
+      }
+      setLocalProfilePreview("");
       setOk("Profesional actualizado");
       setEditing(false);
       await loadPro();
-    } catch (e: any) {
+    } catch (e: unknown) {
       if (e instanceof ApiError && (e.status === 401 || e.status === 403)) {
         nav("/login", { replace: true });
         return;
       }
-      setError(e?.message || "Error guardando profesional");
+
+      if (e instanceof Error) {
+        setError(e.message);
+      } else {
+        setError("Error guardando profesional");
+      }
     } finally {
       setSaving(false);
     }
@@ -216,12 +247,17 @@ export default function ProfessionalDetailPage() {
     try {
       await deleteProfessional(token, professionalId);
       nav("/professionals", { replace: true });
-    } catch (e: any) {
+    } catch (e: unknown) {
       if (e instanceof ApiError && (e.status === 401 || e.status === 403)) {
         nav("/login", { replace: true });
         return;
       }
-      setError(e?.message || "Error eliminando profesional");
+
+      if (e instanceof Error) {
+        setError(e.message);
+      } else {
+        setError("Error eliminando profesional");
+      }
     }
   };
 
@@ -342,7 +378,7 @@ export default function ProfessionalDetailPage() {
                 <label className="professional-edit-form__field professional-edit-form__field--full">
                   <span>Foto de perfil</span>
 
-                  <label className="file-upload">
+                  <div className="file-upload">
                     <input
                       type="file"
                       accept="image/*"
@@ -358,18 +394,16 @@ export default function ProfessionalDetailPage() {
                     <span className="file-upload__button">
                       {uploadingPhoto ? "Subiendo..." : "Seleccionar imagen"}
                     </span>
-                  </label>
+                  </div>
                 </label>
 
-                {form.profilePhoto.trim() && (
+                {profilePreviewUrl && (
                   <div className="professional-edit-form__previewWrap">
                     <img
-                      src={withBase(form.profilePhoto)}
+                      key={profilePreviewUrl}
+                      src={profilePreviewUrl}
                       alt="Vista previa"
                       className="professional-edit-form__preview"
-                      onError={(e) => {
-                        (e.currentTarget as HTMLImageElement).style.display = "none";
-                      }}
                     />
                   </div>
                 )}

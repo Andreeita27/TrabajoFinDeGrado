@@ -2,13 +2,15 @@
 # BACKEND (Spring Boot)
 ############################
 
-# Logs
-*.log
-logs/
-
+# Compilación / ejecución
 backend/target/
 backend/logs/
-backend/.mvn/wrapper/maven-wrapper.jar
+backend/out/
+backend/build/
+
+# Variables de entorno
+backend/.env
+backend/.env.*
 
 # IntelliJ / IDE
 backend/.idea/
@@ -21,11 +23,14 @@ backend/.settings/
 # FRONTEND (React / Vite)
 ############################
 
+# Dependencias / build
 frontend/node_modules/
 frontend/dist/
 frontend/.vite/
+frontend/coverage/
+frontend/.cache/
 
-# variables entorno
+# Variables de entorno
 frontend/.env
 frontend/.env.*
 
@@ -37,6 +42,6 @@ frontend/*.iml
 # GENERAL
 ############################
 
+*.log
 .DS_Store
 Thumbs.db
-*.log

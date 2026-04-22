@@ -1,5 +1,5 @@
 import { apiFetch } from "./apiFetch";
-import type { ClientDto, ClientInDto } from "../types/client";
+import type { ClientDto } from "../types/client";
 
 export function getClients(
   token: string,
@@ -13,14 +13,6 @@ export function getClients(
   return apiFetch<ClientDto[]>(`/clients${qs ? `?${qs}` : ""}`, {
     method: "GET",
     token,
-  });
-}
-
-export function createClient(token: string, payload: ClientInDto) {
-  return apiFetch<ClientDto>("/clients", {
-    method: "POST",
-    token,
-    body: JSON.stringify(payload),
   });
 }
 

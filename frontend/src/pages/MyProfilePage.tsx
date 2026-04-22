@@ -42,12 +42,17 @@ export default function MyProfilePage({ embedded = false }: Props) {
         phone: me.phone ?? "",
         showPhoto: !!me.showPhoto,
       });
-    } catch (e: any) {
+    } catch (e: unknown) {
       if (e instanceof ApiError && e.status === 401) {
         nav("/login", { replace: true, state: { from: "/my-account" } });
         return;
       }
-      setError(e?.message || "Error cargando tus datos");
+
+      if (e instanceof Error) {
+        setError(e.message);
+      } else {
+        setError("Error cargando tus datos");
+      }
     } finally {
       setLoading(false);
     }
@@ -95,16 +100,22 @@ export default function MyProfilePage({ embedded = false }: Props) {
       setOk(
         "Datos actualizados. Si cambiaste el email, puede que tengas que volver a iniciar sesión."
       );
-    } catch (e: any) {
+    } catch (e: unknown) {
       if (e instanceof ApiError && e.status === 409) {
         setError("Ese email ya está registrado.");
         return;
       }
+
       if (e instanceof ApiError && e.status === 401) {
         nav("/login", { replace: true, state: { from: "/my-account" } });
         return;
       }
-      setError(e?.message || "Error guardando tus datos");
+
+      if (e instanceof Error) {
+        setError(e.message);
+      } else {
+        setError("Error guardando tus datos");
+      }
     } finally {
       setLoading(false);
     }
@@ -137,16 +148,22 @@ export default function MyProfilePage({ embedded = false }: Props) {
       setCurrentPassword("");
       setNewPassword("");
       setNewPassword2("");
-    } catch (e: any) {
+    } catch (e: unknown) {
       if (e instanceof ApiError && e.status === 400) {
         setError("La contraseña actual no es correcta.");
         return;
       }
+
       if (e instanceof ApiError && e.status === 401) {
         nav("/login", { replace: true, state: { from: "/my-account" } });
         return;
       }
-      setError(e?.message || "Error cambiando la contraseña");
+
+      if (e instanceof Error) {
+        setError(e.message);
+      } else {
+        setError("Error cambiando la contraseña");
+      }
     } finally {
       setLoading(false);
     }

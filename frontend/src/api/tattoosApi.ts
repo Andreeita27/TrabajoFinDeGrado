@@ -1,10 +1,6 @@
 import { apiFetch } from "./apiFetch";
 import type { TattooDto, TattooInDto } from "../types/tattoo";
 
-export function getAllTattoos(token: string) {
-  return apiFetch<TattooDto[]>("/tattoos", { method: "GET", token });
-}
-
 export function getTattoo(token: string, id: number) {
   return apiFetch<TattooDto>(`/tattoos/${id}`, { method: "GET", token });
 }

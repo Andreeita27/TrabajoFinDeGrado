@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { ApiError } from "../api/apiFetch";
 import {
   cancelAppointment,
-  confirmDeposit,
   getMyAppointments,
   rescheduleAppointment,
 } from "../api/appointmentsApi";
@@ -68,7 +67,7 @@ function getStateBadgeClass(state?: string) {
 }
 
 export default function MyAppointmentsPage({ embedded = false }: Props) {
-  const { token, role } = useAuth();
+  const { token } = useAuth();
   const nav = useNavigate();
 
   const [items, setItems] = useState<AppointmentDto[]>([]);
@@ -105,23 +104,6 @@ export default function MyAppointmentsPage({ embedded = false }: Props) {
     load();
   }, [token]);
 
-  const onPayDeposit = async (id: number) => {
-    if (!token) return;
-
-    if (role !== "ADMIN") {
-      setError("Solo el tatuador puede confirmar la señal.");
-      return;
-    }
-
-    try {
-      setError("");
-      await confirmDeposit(token, id);
-      await load();
-    } catch (e) {
-      const message = e instanceof Error ? e.message : "Error confirmando señal";
-      setError(message);
-    }
-  };
 
   const onCancel = async (id: number) => {
     if (!token) return;
@@ -277,16 +259,6 @@ export default function MyAppointmentsPage({ embedded = false }: Props) {
                 </div>
 
                 <div className="account-actions">
-                  {role === "ADMIN" && !a.depositPaid && a.state === "PENDING" && (
-                    <button
-                      type="button"
-                      onClick={() => onPayDeposit(a.id)}
-                      className="account-btn account-btn--ghost"
-                    >
-                      Confirmar señal
-                    </button>
-                  )}
-
                   {isPendingOrConfirmed && canModify && (
                     <>
                       <button

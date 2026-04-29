@@ -247,6 +247,8 @@ public class AppointmentService {
         int durationMinutes = calculateDurationMinutes(type, appointment.getTattooSize());
         appointment.setDurationMinutes(durationMinutes);
 
+        validateSlotInBusinessRules(professional.getId(), appointment.getStartDateTime(), durationMinutes);
+
         validateNoOverlap(professional.getId(), appointment.getStartDateTime(), durationMinutes, null);
 
         Appointment saved = appointmentRepository.save(appointment);
@@ -272,6 +274,8 @@ public class AppointmentService {
         Professional professional = professionalRepository.findById(appointmentInDto.getProfessionalId())
                 .orElseThrow(ProfessionalNotFoundException::new);
 
+        validateByType(appointmentInDto);
+
         modelMapper.map(appointmentInDto, existing);
         existing.setId(id);
         existing.setClient(client);
@@ -283,6 +287,8 @@ public class AppointmentService {
 
         int durationMinutes = calculateDurationMinutes(type, existing.getTattooSize());
         existing.setDurationMinutes(durationMinutes);
+
+        validateSlotInBusinessRules(professional.getId(), existing.getStartDateTime(), durationMinutes);
 
         validateNoOverlap(professional.getId(), existing.getStartDateTime(), durationMinutes, existing.getId());
 
@@ -344,7 +350,7 @@ public class AppointmentService {
 
         // No permitir pasado
         if (start.isBefore(LocalDateTime.now())) {
-            throw new IllegalStateException("You cannot move an appointment to the past");
+            throw new IllegalStateException("You cannot create or move an appointment to the past");
         }
 
         // No fines de semana
@@ -465,51 +471,6 @@ public class AppointmentService {
                 .orElseThrow(AppointmentNotFoundException::new);
 
         appointmentRepository.delete(appointment);
-    }
-
-    public AppointmentDto findById(long id) throws AppointmentNotFoundException {
-        Appointment appointment = appointmentRepository.findById(id)
-                .orElseThrow(AppointmentNotFoundException::new);
-
-        return enrichHasReview(appointment);
-    }
-
-    public AppointmentDto add(AppointmentInDto appointmentInDto) throws ClientNotFoundException, ProfessionalNotFoundException {
-        Client client = clientRepository.findById(appointmentInDto.getClientId())
-                .orElseThrow(ClientNotFoundException::new);
-
-        Professional professional = professionalRepository.findById(appointmentInDto.getProfessionalId())
-                .orElseThrow(ProfessionalNotFoundException::new);
-
-        Appointment appointment = new Appointment();
-        modelMapper.map(appointmentInDto, appointment);
-
-        appointment.setClient(client);
-        appointment.setProfessional(professional);
-
-        Appointment saved = appointmentRepository.save(appointment);
-        return enrichHasReview(saved);
-    }
-
-    public AppointmentDto modify(long id, AppointmentInDto appointmentInDto)
-            throws AppointmentNotFoundException, ClientNotFoundException, ProfessionalNotFoundException {
-
-        Appointment existing = appointmentRepository.findById(id)
-                .orElseThrow(AppointmentNotFoundException::new);
-
-        Client client = clientRepository.findById(appointmentInDto.getClientId())
-                .orElseThrow(ClientNotFoundException::new);
-
-        Professional professional = professionalRepository.findById(appointmentInDto.getProfessionalId())
-                .orElseThrow(ProfessionalNotFoundException::new);
-
-        modelMapper.map(appointmentInDto, existing);
-        existing.setId(id);
-        existing.setClient(client);
-        existing.setProfessional(professional);
-
-        Appointment saved = appointmentRepository.save(existing);
-        return enrichHasReview(saved);
     }
 
     public AvailabilityResponseDto getAvailability(long professionalId,

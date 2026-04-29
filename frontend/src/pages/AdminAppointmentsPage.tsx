@@ -700,6 +700,7 @@ export default function AdminAppointmentsPage() {
                       <input
                         className="input"
                         type="date"
+                        min={new Date().toISOString().slice(0, 10)} // Evita seleccionar días pasados
                         value={rescheduleDay}
                         onChange={(e) => setRescheduleDay(e.target.value)}
                         disabled={rescheduleLoading || rescheduleSaving}

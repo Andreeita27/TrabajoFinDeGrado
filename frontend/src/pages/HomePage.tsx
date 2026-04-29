@@ -519,7 +519,7 @@ export default function HomePage() {
 
             <p>
               Nuestros tatuadores residentes son <strong>David el Titi</strong> y{" "}
-              <strong>Acerete Tattoo</strong>, dos artistas con estilos muy definidos y una gran
+              <strong>Acerete</strong>, dos artistas con estilos muy definidos y una gran
               trayectoria profesional.
             </p>
 

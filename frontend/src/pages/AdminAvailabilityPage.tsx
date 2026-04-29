@@ -22,7 +22,7 @@ import { getProfessionals } from "../api/showroomApi";
 import type { ProfessionalDto } from "../types/professional";
 import "../styles/adminAvailability.css";
 
-const toIso = (v: string) => (v ? new Date(v).toISOString() : "");
+const toLocalDateTime = (v: string) => v;
 
 function formatDateTime(value?: string) {
   if (!value) return "-";
@@ -173,8 +173,8 @@ export default function AdminAvailabilityPage() {
     try {
       setLoading(true);
       await createAvailabilityWindow(token, professionalIdNum, {
-        startDateTime: toIso(wFrom),
-        endDateTime: toIso(wTo),
+        startDateTime: toLocalDateTime(wFrom),
+        endDateTime: toLocalDateTime(wTo),
         note: wNote.trim() || undefined,
       });
 
@@ -207,8 +207,8 @@ export default function AdminAvailabilityPage() {
     try {
       setLoading(true);
       await createUnavailabilityBlock(token, professionalIdNum, {
-        startDateTime: toIso(bFrom),
-        endDateTime: toIso(bTo),
+        startDateTime: toLocalDateTime(bFrom),
+        endDateTime: toLocalDateTime(bTo),
         reason: bReason.trim() || undefined,
       });
 

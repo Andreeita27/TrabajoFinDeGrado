@@ -247,7 +247,7 @@ export default function CalendarPage() {
           setError("Error cargando calendario");
         }
       });
-    }, [token, professionalId, monthDate, durationMinutes, nav]);
+  }, [token, professionalId, monthDate, durationMinutes, nav]);
 
   useEffect(() => {
     if (!token) return;
@@ -285,7 +285,7 @@ export default function CalendarPage() {
           setError("Error cargando disponibilidad");
         }
       });
-    }, [token, professionalId, day, durationMinutes, nav]);
+  }, [token, professionalId, day, durationMinutes, nav]);
 
   const onCreateAppointment = async () => {
     if (!token) return;
@@ -336,22 +336,56 @@ export default function CalendarPage() {
       }
 
       nav(`/my-appointments/${created.id}`, { replace: true });
-      } catch (e: unknown) {
-        if (e instanceof ApiError && e.status === 401) {
-          nav("/login", { replace: true, state: { from: "/calendar" } });
-          return;
-        }
-
-        if (e instanceof Error) {
-          setError(e.message);
-        } else {
-          setError("Error creando cita");
-        }
+    } catch (e: unknown) {
+      if (e instanceof ApiError && e.status === 401) {
+        nav("/login", { replace: true, state: { from: "/calendar" } });
+        return;
       }
+
+      if (e instanceof Error) {
+        setError(e.message);
+      } else {
+        setError("Error creando cita");
+      }
+    }
   };
 
   const disableCreate = !selectedStart || (role === "ADMIN" && !selectedClient);
   const selectedProfessional = professionals.find((p) => p.id === professionalId);
+
+  const monthHasAvailableDays = useMemo(
+    () => monthSummary.some((d) => d.status === "AVAILABLE" && !d.past),
+    [monthSummary]
+  );
+
+  const monthHasPublishedWindows = useMemo(
+    () => monthSummary.some((d) => d.status !== "NO_WINDOWS" && d.status !== "WEEKEND"),
+    [monthSummary]
+  );
+
+  const monthlyAvailabilityMessage = useMemo(() => {
+    if (!professionalId || monthSummary.length === 0) return "";
+
+    const professionalName = selectedProfessional?.professionalName ?? "Este profesional";
+    const monthName = formatMonthLabel(monthDate).toLowerCase();
+
+    if (!monthHasPublishedWindows) {
+      return `${professionalName} todavía no tiene agenda publicada para ${monthName}. Puede tratarse de un artista invitado o de fechas pendientes de confirmar.`;
+    }
+
+    if (!monthHasAvailableDays) {
+      return `${professionalName} no tiene huecos disponibles en ${monthName}. Prueba con otro mes o revisa próximas fechas más adelante.`;
+    }
+
+    return "";
+  }, [
+    professionalId,
+    monthSummary,
+    selectedProfessional,
+    monthDate,
+    monthHasPublishedWindows,
+    monthHasAvailableDays,
+  ]);
 
   return (
     <div className="calendar-page">
@@ -454,7 +488,7 @@ export default function CalendarPage() {
                 </span>
               )}
             </div>
-                        {appointmentType === "TATTOO" && (
+            {appointmentType === "TATTOO" && (
               <label className="calendar-field">
                 <span className="calendar-label">Zona del cuerpo</span>
                 <input
@@ -577,11 +611,19 @@ export default function CalendarPage() {
             </div>
           )}
 
+          {!day && monthlyAvailabilityMessage && (
+            <div className="calendar-feedback calendar-feedback--info">
+              {monthlyAvailabilityMessage}
+            </div>
+          )}
+
           {slots.length === 0 ? (
             <div className="calendar-empty">
               {day
                 ? "No hay horarios disponibles para este día."
-                : "Todavía no has seleccionado ningún día."}
+                : monthlyAvailabilityMessage
+                  ? "Revisa otro mes o contacta con el estudio para próximas fechas."
+                  : "Todavía no has seleccionado ningún día."}
             </div>
           ) : (
             <div className="calendar-slots">

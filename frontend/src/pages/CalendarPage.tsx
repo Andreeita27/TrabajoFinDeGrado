@@ -513,7 +513,7 @@ export default function CalendarPage() {
               const clickable =
                 cell.inCurrentMonth &&
                 !summary?.past &&
-                summary?.status !== "WEEKEND";
+                summary?.status === "AVAILABLE";
 
               return (
                 <button

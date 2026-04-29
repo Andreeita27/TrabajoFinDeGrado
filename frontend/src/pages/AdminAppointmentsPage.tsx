@@ -27,6 +27,16 @@ function withSeconds(isoOrLocal: string) {
   return isoOrLocal.length === 16 ? `${isoOrLocal}:00` : isoOrLocal;
 }
 
+// Asi no coge la hora del UTC, la coge del navegador
+function todayLocalDate() {
+  const d = new Date();
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
+}
+
 function formatSlotLabel(iso: string) {
   try {
     return new Date(iso).toLocaleString("es-ES");
@@ -119,7 +129,10 @@ export default function AdminAppointmentsPage() {
   const [rescheduleLoading, setRescheduleLoading] = useState(false);
   const [rescheduleSaving, setRescheduleSaving] = useState(false);
 
-  const toIso = (v: string) => (v ? new Date(v).toISOString() : undefined);
+  const toLocalDateTimeParam = (v: string) => {
+    if (!v) return undefined;
+    return withSeconds(v);
+  };
 
   const load = async () => {
     if (!token) return;
@@ -129,25 +142,25 @@ export default function AdminAppointmentsPage() {
       const data = await getAllAppointments(token, {
         state: stateFilter === "ALL" ? undefined : stateFilter,
         depositPaid: depositFilter === "ALL" ? undefined : depositFilter === "PAID",
-        dateFrom: toIso(dateFrom),
-        dateTo: toIso(dateTo),
+        dateFrom: toLocalDateTimeParam(dateFrom),
+        dateTo: toLocalDateTimeParam(dateTo),
         professionalName: professionalName.trim() ? professionalName.trim() : undefined,
         clientName: clientName.trim() ? clientName.trim() : undefined,
       });
 
       setItems(data);
-      } catch (e: unknown) {
-        if (e instanceof ApiError && (e.status === 401 || e.status === 403)) {
-          nav("/login", { replace: true });
-          return;
-        }
-
-        if (e instanceof Error) {
-          setError(e.message);
-        } else {
-          setError("Error cargando citas");
-        }
+    } catch (e: unknown) {
+      if (e instanceof ApiError && (e.status === 401 || e.status === 403)) {
+        nav("/login", { replace: true });
+        return;
       }
+
+      if (e instanceof Error) {
+        setError(e.message);
+      } else {
+        setError("Error cargando citas");
+      }
+    }
   };
 
   useEffect(() => {
@@ -349,7 +362,7 @@ export default function AdminAppointmentsPage() {
         }
       })
       .finally(() => setRescheduleLoading(false));
-    }, [token, rescheduleId, rescheduleDay, items]);
+  }, [token, rescheduleId, rescheduleDay, items]);
 
   const onSaveReschedule = async () => {
     if (!token) return;
@@ -604,11 +617,10 @@ export default function AdminAppointmentsPage() {
 
                       {a.appointmentType === "TATTOO" && (
                         <span
-                          className={`admin-appts-badge ${
-                            a.depositPaid
-                              ? "admin-appts-badge--deposit-paid"
-                              : "admin-appts-badge--deposit-unpaid"
-                          }`}
+                          className={`admin-appts-badge ${a.depositPaid
+                            ? "admin-appts-badge--deposit-paid"
+                            : "admin-appts-badge--deposit-unpaid"
+                            }`}
                         >
                           {a.depositPaid ? "Señal pagada" : "Señal pendiente"}
                         </span>
@@ -700,7 +712,7 @@ export default function AdminAppointmentsPage() {
                       <input
                         className="input"
                         type="date"
-                        min={new Date().toISOString().slice(0, 10)} // Evita seleccionar días pasados
+                        min={todayLocalDate()} // Evita seleccionar días pasados
                         value={rescheduleDay}
                         onChange={(e) => setRescheduleDay(e.target.value)}
                         disabled={rescheduleLoading || rescheduleSaving}

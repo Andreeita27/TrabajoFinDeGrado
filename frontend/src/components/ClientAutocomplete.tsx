@@ -159,9 +159,10 @@ export default function ClientAutocomplete({ token, value, onChange }: Props) {
   };
 
   return (
-    <div ref={wrapRef} style={{ position: "relative" }}>
-      <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+    <div ref={wrapRef} className="calendar-client-picker">
+      <div className="calendar-client-picker__search">
         <input
+          className="calendar-client-picker__input"
           placeholder="Buscar cliente por nombre, apellidos o email…"
           value={query}
           onChange={(e) => {
@@ -174,59 +175,47 @@ export default function ClientAutocomplete({ token, value, onChange }: Props) {
             // al abrir sin escribir enseña los primeros
             if (!query.trim()) setItems(allClients.slice(0, 20));
           }}
-          style={{ padding: 8, width: "100%" }}
         />
 
         {value && (
-          <button type="button" onClick={clearSelection}>
+          <button
+            type="button"
+            onClick={clearSelection}
+            className="calendar-client-picker__clear"
+          >
             Quitar
           </button>
         )}
       </div>
 
       {open && (
-        <div
-          style={{
-            position: "absolute",
-            top: "calc(100% + 6px)",
-            left: 0,
-            right: 0,
-            border: "1px solid #333",
-            borderRadius: 8,
-            background: "#111",
-            zIndex: 20,
-            maxHeight: 240,
-            overflow: "auto",
-          }}
-        >
-          {(err || errAll) && <div style={{ padding: 10, color: "tomato" }}>{err || errAll}</div>}
+        <div className="calendar-client-picker__dropdown">
+          {(err || errAll) && (
+            <div className="calendar-client-picker__message calendar-client-picker__message--error">
+              {err || errAll}
+            </div>
+          )}
 
           {!err && !errAll && (loadingAll || items.length === 0) && (
-            <div style={{ padding: 10, opacity: 0.8 }}>{showHint}</div>
+            <div className="calendar-client-picker__message">{showHint}</div>
           )}
 
           {!err &&
             !errAll &&
             items.map((c) => {
               const title = `${c.clientName} ${c.clientSurname}`.trim();
+
               return (
                 <button
                   key={c.id}
                   type="button"
                   onClick={() => selectClient(c)}
-                  style={{
-                    width: "100%",
-                    textAlign: "left",
-                    padding: 10,
-                    border: "none",
-                    background: "transparent",
-                    color: "white",
-                    cursor: "pointer",
-                    borderBottom: "1px solid #222",
-                  }}
+                  className="calendar-client-picker__option"
                 >
-                  <div style={{ fontWeight: 600 }}>{title}</div>
-                  {!!c.email && <div style={{ opacity: 0.8, fontSize: 12 }}>{c.email}</div>}
+                  <span className="calendar-client-picker__name">{title}</span>
+                  {!!c.email && (
+                    <span className="calendar-client-picker__email">{c.email}</span>
+                  )}
                 </button>
               );
             })}
@@ -234,11 +223,11 @@ export default function ClientAutocomplete({ token, value, onChange }: Props) {
       )}
 
       {value && (
-        <div style={{ marginTop: 6, opacity: 0.85 }}>
-          Seleccionado:{" "}
-          <b>
+        <div className="calendar-client-picker__selected">
+          <span>Seleccionado: </span>
+          <strong>
             {value.clientName} {value.clientSurname}
-          </b>
+          </strong>
         </div>
       )}
     </div>
